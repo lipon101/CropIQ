@@ -21,13 +21,15 @@ export async function GET(req: NextRequest) {
     const dailyMap = new Map<string, any>()
     for (const item of raw.list) {
       const date = item.dt_txt.split(" ")[0]
+      const rainAmount = Math.round((item.rain?.["3h"] || 0) * 10) / 10
       if (!dailyMap.has(date)) {
         dailyMap.set(date, {
           date,
+          temp: item.main.temp,          // ← বর্তমান তাপমাত্রা
           temp_min: item.main.temp_min,
           temp_max: item.main.temp_max,
           humidity: item.main.humidity,
-          rain_mm: item.rain?.["3h"] || 0,
+          rain_mm: rainAmount,
           wind_kmh: Math.round(item.wind.speed * 3.6),
           description: item.weather[0].description,
           icon: item.weather[0].icon,
@@ -37,7 +39,7 @@ export async function GET(req: NextRequest) {
         d.temp_min = Math.min(d.temp_min, item.main.temp_min)
         d.temp_max = Math.max(d.temp_max, item.main.temp_max)
         d.humidity = Math.round((d.humidity + item.main.humidity) / 2)
-        d.rain_mm += item.rain?.["3h"] || 0
+        d.rain_mm = Math.round((d.rain_mm + rainAmount) * 10) / 10
       }
     }
 
