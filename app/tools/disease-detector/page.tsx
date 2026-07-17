@@ -8,6 +8,21 @@ import { createClient } from "@/lib/supabase/client"
 import { queueDelete, queueDeleteAll, getPendingCount, processQueue, isOnline } from "@/lib/offline-queue"
 import type { DiagnosisResult } from "@/types"
 
+// ── Crop name Bengali mapping ──
+const CROP_NAMES_BN: Record<string, string> = {
+  "paddy": "ধান", "rice": "ধান",
+  "wheat": "গম", "corn": "ভুট্টা", "maize": "ভুট্টা",
+  "potato": "আলু", "onion": "পেঁয়াজ", "garlic": "রসুন",
+  "tomato": "টমেটো", "chili": "মরিচ", "pepper": "মরিচ",
+  "brinjal": "বেগুন", "eggplant": "বেগুন",
+  "sugarcane": "আখ", "jute": "পাট", "tea": "চা",
+  "banana": "কলা", "mango": "আম", "jackfruit": "কাঁঠাল",
+  "mustard": "সরিষা", "pulse": "ডাল", "lentil": "ডাল",
+  "cucumber": "শসা", "pumpkin": "কুমড়া",
+  "cabbage": "বাঁধাকপি", "cauliflower": "ফুলকপি",
+}
+const toBn = (crop: string | undefined | null) => crop ? (CROP_NAMES_BN[crop.toLowerCase()] || crop) : "ফসল"
+
 export default function DiseaseDetectorPage() {
   const { user } = useAuth()
   const supabase = createClient()
@@ -50,8 +65,8 @@ export default function DiseaseDetectorPage() {
       setSyncing(true)
       const result = await processQueue({
         deleteOne: async (scanId) => {
-          const { data: delData, error } = await supabase.from("disease_scans").delete().eq("id", scanId).select()
-          return { error: error || (!delData || delData.length === 0 ? new Error("RLS blocked") : null) }
+          const { error } = await supabase.from("disease_scans").delete().eq("id", scanId)
+          return { error }
         }
       })
       const synced = result.synced
@@ -99,17 +114,15 @@ export default function DiseaseDetectorPage() {
     }
 
     // 🟢 Online → delete from Supabase directly
-    const { data: deletedRows, error: deleteError } = await supabase.from("disease_scans").delete().eq("id", id).select()
+    const { error: deleteError } = await supabase.from("disease_scans").delete().eq("id", id)
 
-    if (deleteError || !deletedRows || deletedRows.length === 0) {
-      if (deleteError) console.error("Delete failed:", deleteError)
-      else console.warn("Delete: no rows deleted (RLS?)")
+    if (deleteError) {
+      console.error("Delete failed:", deleteError)
       setDeletingIds(prev => {
         const next = new Set(prev)
         next.delete(id)
         return next
       })
-      if (!deleteError) { await fetchHistory(); return }
       setError("ডিলিট করতে সমস্যা হয়েছে — আবার চেষ্টা করুন")
       return
     }
@@ -144,13 +157,11 @@ export default function DiseaseDetectorPage() {
     }
 
     // 🟢 Online → delete from Supabase
-    const { data: deletedAll, error: deleteError } = await supabase.from("disease_scans").delete().eq("user_id", user.id).select()
+    const { error: deleteError } = await supabase.from("disease_scans").delete().eq("user_id", user.id)
 
-    if (deleteError || !deletedAll || deletedAll.length === 0) {
-      if (deleteError) console.error("Delete all failed:", deleteError)
-      else console.warn("Delete all: no rows deleted (RLS?)")
+    if (deleteError) {
+      console.error("Delete all failed:", deleteError)
       setDeletingIds(new Set())
-      if (!deleteError) { await fetchHistory(); return }
       setError("সব ডিলিট করতে সমস্যা হয়েছে — আবার চেষ্টা করুন")
       return
     }
@@ -326,7 +337,7 @@ export default function DiseaseDetectorPage() {
                   </div>
                   <div>
                     <h3 className="font-extrabold text-gray-900">{result.disease_name}</h3>
-                    <p className="text-xs text-gray-500">{result.crop_type || "ফসল"}</p>
+                    <p className="text-xs text-gray-500">{toBn(result.crop_type)}</p>
                   </div>
                   <div className="ml-auto">
                     <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-white rounded-full text-xs font-extrabold text-emerald-600 shadow-sm">
@@ -342,7 +353,7 @@ export default function DiseaseDetectorPage() {
                     </div>
                     <div className="bg-gray-50 rounded-lg p-2 text-center">
                       <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wide mb-1">ফসল</p>
-                      <p className="text-sm font-extrabold text-gray-800">{result.crop_type || "—"}</p>
+                      <p className="text-sm font-extrabold text-gray-800">{toBn(result.crop_type)}</p>
                     </div>
                     <div className="bg-red-50 rounded-lg p-2 text-center">
                       <p className="text-[11px] font-bold text-red-400 uppercase tracking-wide mb-1">কারণ</p>
@@ -434,7 +445,7 @@ export default function DiseaseDetectorPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-[13px] font-semibold text-gray-800 truncate">{scan.disease_name}</p>
-                        <p className="text-[11px] text-gray-400">{scan.crop_type || "ফসল"} · {timeAgo}</p>
+                        <p className="text-[11px] text-gray-400">{toBn(scan.crop_type)} · {timeAgo}</p>
                       </div>
                       <div className="shrink-0 flex items-center gap-2">
                         <span className="text-[11px] font-bold text-emerald-600">{Math.round(scan.confidence * 100)}%</span>
