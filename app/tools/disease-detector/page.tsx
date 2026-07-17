@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useRef, useCallback } from "react"
-import { Upload, Microscope, Loader2, AlertCircle, Trash2, ShieldAlert, ImageIcon, FileText, Scan, RefreshCw } from "lucide-react"
+import { useState, useRef, useCallback, useEffect } from "react"
+import { Upload, Microscope, Loader2, AlertCircle, Trash2, ShieldAlert, ImageIcon, FileText, Scan, RefreshCw, Clock, ChevronRight } from "lucide-react"
 import { ToolPageLayout, TOOLS } from "@/components/tools/ToolPageLayout"
 import { useAuth } from "@/lib/auth/AuthContext"
 import { createClient } from "@/lib/supabase/client"
@@ -18,6 +18,24 @@ export default function DiseaseDetectorPage() {
   const [result, setResult] = useState<DiagnosisResult | null>(null)
   const [error, setError] = useState("")
   const [mode, setMode] = useState<"image" | "text">("image")
+  const [scanHistory, setScanHistory] = useState<any[]>([])
+  const [historyLoading, setHistoryLoading] = useState(false)
+
+  const fetchHistory = async () => {
+    if (!user) return
+    setHistoryLoading(true)
+    try {
+      const { data } = await supabase
+        .from("disease_scans")
+        .select("id, crop_type, disease_name, confidence, cause, remedy_bn, prevention_bn, created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(20)
+      if (data) setScanHistory(data)
+    } catch {} finally { setHistoryLoading(false) }
+  }
+
+  useEffect(() => { fetchHistory() }, [user])
 
   const handleFile = useCallback((file: File) => {
     if (file.size > 10 * 1024 * 1024) { setError("ছবির আকার ১০MB এর বেশি হতে পারবে না"); return }
@@ -47,7 +65,7 @@ export default function DiseaseDetectorPage() {
             cause: d.result.cause,
             remedy_bn: d.result.remedy_bn,
             prevention_bn: d.result.prevention_bn,
-          }).then(() => {})
+          }).then(() => { fetchHistory() })
         }
       } else {
         setError("বিশ্লেষণ ব্যর্থ হয়েছে")
@@ -55,6 +73,21 @@ export default function DiseaseDetectorPage() {
     } catch (e: any) { setError(e.message) } finally { setLoading(false) }
   }
   const reset = () => { setImage(null); setImageFile(null); setDescription(""); setResult(null); setError("") }
+
+  const viewHistoryResult = (scan: any) => {
+    setImage(null); setImageFile(null); setDescription(""); setError("")
+    setResult({
+      crop_type: scan.crop_type,
+      disease_name: scan.disease_name,
+      confidence: scan.confidence,
+      cause: scan.cause,
+      remedy_bn: scan.remedy_bn,
+      prevention_bn: scan.prevention_bn,
+      remedy_en: "",
+      prevention_en: "",
+      is_common_in_bd: false,
+    })
+  }
 
   const hasContent = mode === "image" ? !!image : !!description.trim()
 
@@ -212,8 +245,58 @@ export default function DiseaseDetectorPage() {
               </div>
             </>
           )}
+
+          {/* ── Scan History ── */}
+          {scanHistory.length > 0 && (
+            <div className="pb-4">
+              <div className="flex items-center gap-2 mb-2.5 px-1">
+                <Clock className="w-3.5 h-3.5 text-gray-400" />
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">স্ক্যান হিস্ট্রি</span>
+                {historyLoading && <Loader2 className="w-3 h-3 text-gray-400 animate-spin ml-1" />}
+              </div>
+              <div className="space-y-1.5">
+                {scanHistory.map((scan: any) => {
+                  const date = new Date(scan.created_at)
+                  const timeAgo = getTimeAgo(date)
+                  return (
+                    <button
+                      key={scan.id}
+                      onClick={() => viewHistoryResult(scan)}
+                      className="w-full text-left px-3.5 py-2.5 bg-white border border-gray-100 hover:border-leaf-200 hover:bg-leaf-50/50 rounded-xl flex items-center gap-3 transition-all group"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center shrink-0">
+                        <ShieldAlert className="w-3.5 h-3.5 text-red-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13px] font-semibold text-gray-800 truncate">{scan.disease_name}</p>
+                        <p className="text-[11px] text-gray-400">{scan.crop_type || "ফসল"} · {timeAgo}</p>
+                      </div>
+                      <div className="shrink-0 flex items-center gap-2">
+                        <span className="text-[11px] font-bold text-emerald-600">{Math.round(scan.confidence * 100)}%</span>
+                        <ChevronRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-leaf-400 group-hover:translate-x-0.5 transition-all" />
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </ToolPageLayout>
   )
+}
+
+function getTimeAgo(date: Date): string {
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffMin = Math.floor(diffMs / 60000)
+  const diffHr = Math.floor(diffMs / 3600000)
+  const diffDay = Math.floor(diffMs / 86400000)
+
+  if (diffMin < 1) return "এইমাত্র"
+  if (diffMin < 60) return `${diffMin} মিনিট আগে`
+  if (diffHr < 24) return `${diffHr} ঘন্টা আগে`
+  if (diffDay < 7) return `${diffDay} দিন আগে`
+  return date.toLocaleDateString("bn-BD", { day: "numeric", month: "short" })
 }
