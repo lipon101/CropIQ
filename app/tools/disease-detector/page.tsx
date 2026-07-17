@@ -1,10 +1,11 @@
 "use client"
 
 import { useState, useRef, useCallback, useEffect } from "react"
-import { Upload, Microscope, Loader2, AlertCircle, Trash2, ShieldAlert, ImageIcon, FileText, Scan, RefreshCw, Clock, ChevronRight } from "lucide-react"
+import { Upload, Microscope, Loader2, AlertCircle, Trash2, ShieldAlert, ImageIcon, FileText, Scan, RefreshCw, Clock, ChevronRight, WifiOff, Wifi } from "lucide-react"
 import { ToolPageLayout, TOOLS } from "@/components/tools/ToolPageLayout"
 import { useAuth } from "@/lib/auth/AuthContext"
 import { createClient } from "@/lib/supabase/client"
+import { queueDelete, queueDeleteAll, getPendingCount, processQueue, isOnline } from "@/lib/offline-queue"
 import type { DiagnosisResult } from "@/types"
 
 export default function DiseaseDetectorPage() {
@@ -21,6 +22,9 @@ export default function DiseaseDetectorPage() {
   const [scanHistory, setScanHistory] = useState<any[]>([])
   const [historyLoading, setHistoryLoading] = useState(false)
   const [deletingIds, setDeletingIds] = useState<Set<number>>(new Set())
+  const [online, setOnline] = useState(true)
+  const [pendingCount, setPendingCount] = useState(0)
+  const [syncing, setSyncing] = useState(false)
 
   const fetchHistory = async () => {
     if (!user) return
@@ -38,15 +42,62 @@ export default function DiseaseDetectorPage() {
 
   useEffect(() => { fetchHistory() }, [user])
 
+  // ── Online / Offline detection ──
+  useEffect(() => {
+    const update = () => setOnline(isOnline())
+    const syncPending = async () => {
+      if (!isOnline() || !user) return
+      setSyncing(true)
+      const { synced, failed } = await processQueue({
+        deleteOne: (scanId) => supabase.from("disease_scans").delete().eq("id", scanId),
+        deleteAll: (userId) => supabase.from("disease_scans").delete().eq("user_id", userId),
+      })
+      if (synced > 0 || failed > 0) {
+        await fetchHistory()
+        setPendingCount(0)
+      }
+      setSyncing(false)
+    }
+
+    window.addEventListener("online", update)
+    window.addEventListener("offline", update)
+    setOnline(isOnline())
+    getPendingCount().then(setPendingCount)
+
+    // Sync on mount if online
+    if (isOnline()) syncPending()
+
+    return () => {
+      window.removeEventListener("online", update)
+      window.removeEventListener("offline", update)
+    }
+  }, [user])
+
   const deleteScan = async (id: number) => {
     if (!confirm("এই স্ক্যান রেকর্ড ডিলিট করতে চান?")) return
+
     // Start fade-out animation
     setDeletingIds(prev => new Set(prev).add(id))
-    
+
+    // 🔴 Offline → queue to IndexedDB, remove from UI immediately
+    if (!isOnline() && user) {
+      await queueDelete(id, user.id)
+      setPendingCount(prev => prev + 1)
+      setTimeout(() => {
+        setScanHistory(prev => prev.filter(s => s.id !== id))
+        setDeletingIds(prev => {
+          const next = new Set(prev)
+          next.delete(id)
+          return next
+        })
+      }, 300)
+      return
+    }
+
+    // 🟢 Online → delete from Supabase directly
     const { error: deleteError } = await supabase.from("disease_scans").delete().eq("id", id)
-    
+
     if (deleteError) {
-      // Supabase delete failed — revert animation, show error
       console.error("Delete failed:", deleteError)
       setDeletingIds(prev => {
         const next = new Set(prev)
@@ -56,8 +107,8 @@ export default function DiseaseDetectorPage() {
       setError("ডিলিট করতে সমস্যা হয়েছে — আবার চেষ্টা করুন")
       return
     }
-    
-    // Supabase confirmed deletion — animate out then remove from UI
+
+    // Supabase confirmed — animate out then remove
     setTimeout(() => {
       setScanHistory(prev => prev.filter(s => s.id !== id))
       setDeletingIds(prev => {
@@ -71,20 +122,31 @@ export default function DiseaseDetectorPage() {
   const deleteAllScans = async () => {
     if (!user || scanHistory.length === 0) return
     if (!confirm(`সব ${scanHistory.length}টি স্ক্যান রেকর্ড ডিলিট করতে চান?`)) return
-    // Fade out all items
+
     const allIds = new Set(scanHistory.map(s => s.id))
     setDeletingIds(allIds)
-    
+
+    // 🔴 Offline → queue to IndexedDB
+    if (!isOnline()) {
+      await queueDeleteAll(user.id)
+      setPendingCount(prev => prev + 1)
+      setTimeout(() => {
+        setScanHistory([])
+        setDeletingIds(new Set())
+      }, 300)
+      return
+    }
+
+    // 🟢 Online → delete from Supabase
     const { error: deleteError } = await supabase.from("disease_scans").delete().eq("user_id", user.id)
-    
+
     if (deleteError) {
       console.error("Delete all failed:", deleteError)
       setDeletingIds(new Set())
       setError("সব ডিলিট করতে সমস্যা হয়েছে — আবার চেষ্টা করুন")
       return
     }
-    
-    // Supabase confirmed — remove after animation
+
     setTimeout(() => {
       setScanHistory([])
       setDeletingIds(new Set())
@@ -303,6 +365,24 @@ export default function DiseaseDetectorPage() {
           {/* ── Scan History ── */}
           {scanHistory.length > 0 && (
             <div className="pb-4">
+              {/* Online/Offline + pending indicators */}
+              {(!online || pendingCount > 0 || syncing) && (
+                <div className="flex items-center justify-center gap-1.5 mb-2">
+                  {!online ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-50 border border-amber-200 rounded-full text-[10px] font-bold text-amber-700">
+                      <WifiOff className="w-3 h-3" /> অফলাইন — {pendingCount}টি ডিলিট পেন্ডিং
+                    </span>
+                  ) : syncing ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 border border-blue-200 rounded-full text-[10px] font-bold text-blue-700">
+                      <Loader2 className="w-3 h-3 animate-spin" /> সিঙ্ক হচ্ছে...
+                    </span>
+                  ) : pendingCount > 0 ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 border border-emerald-200 rounded-full text-[10px] font-bold text-emerald-700">
+                      <Wifi className="w-3 h-3" /> {pendingCount}টি পেন্ডিং — রিকানেক্টেড
+                    </span>
+                  ) : null}
+                </div>
+              )}
               <div className="flex items-center justify-between mb-2.5 px-1">
                 <div className="flex items-center gap-2">
                   <Clock className="w-3.5 h-3.5 text-gray-400" />
