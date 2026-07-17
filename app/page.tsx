@@ -148,9 +148,6 @@ export default function HomePage() {
                 <Link href={user ? "/dashboard" : "/auth/signup"} className="btn-primary group">
                   <Sprout className="w-[18px] h-[18px] group-hover:rotate-12 transition-transform" /> বিনামূল্যে শুরু করুন <ArrowRight className="w-[18px] h-[18px] group-hover:translate-x-1 transition-transform" />
                 </Link>
-                <Link href="/tools/disease-detector" className="btn-accent group">
-                  <Microscope className="w-[18px] h-[18px] group-hover:scale-110 transition-transform" /> এআই রোগ সনাক্তকরণ <span className="badge-beta">বিটা</span>
-                </Link>
               </div>
             </div>
 

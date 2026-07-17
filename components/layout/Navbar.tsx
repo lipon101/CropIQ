@@ -60,7 +60,7 @@ export function Navbar() {
               {user ? (
                 <div className="relative">
                   <button onClick={() => setProfileOpen(!profileOpen)} className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-all border border-transparent hover:border-gray-200">
-                    <div className="w-8 h-8 bg-gradient-to-br from-leaf-500 to-leaf-700 rounded-xl flex items-center justify-center text-white text-xs font-bold shadow-sm">{user.email?.[0]?.toUpperCase() || "কৃ"}</div>
+                    <div className="w-8 h-8 bg-gradient-to-br from-leaf-500 to-leaf-700 rounded-xl flex items-center justify-center text-white shadow-sm"><Sprout className="w-4 h-4" /></div>
                     <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${profileOpen ? "rotate-180" : ""}`} />
                   </button>
                   {profileOpen && (<>
