@@ -137,21 +137,33 @@ export default function HomePage() {
                   })}
                 </div>
 
-                {/* Inner circle layers */}
-                <div className="absolute inset-[54px] bg-gradient-to-br from-leaf-200/40 to-emerald-200/30 rounded-full blur-sm animate-pulse-gentle" />
-                <div className="absolute inset-[68px] bg-gradient-to-br from-leaf-100/80 to-emerald-100/60 rounded-full shadow-inner" />
-                <div className="absolute inset-[94px] bg-white rounded-full shadow-2xl shadow-gray-200/40 flex items-center justify-center">
-                  <div className="text-center">
+                {/* Inner circle — premium depth layers */}
+                {/* Layer 1: outer soft glow */}
+                <div className="absolute inset-[48px] bg-gradient-to-br from-leaf-300/20 via-emerald-200/15 to-leaf-200/25 rounded-full blur-md animate-pulse-gentle" />
+                {/* Layer 2: frosted glass ring */}
+                <div className="absolute inset-[60px] rounded-full bg-gradient-to-br from-white/40 via-leaf-50/30 to-emerald-50/25 backdrop-blur-sm shadow-inner border border-white/30" />
+                {/* Layer 3: deeper glass */}
+                <div className="absolute inset-[72px] rounded-full bg-gradient-to-br from-white/60 via-leaf-50/40 to-emerald-50/35 backdrop-blur-sm border border-white/20" />
+                {/* Layer 4: solid premium white center */}
+                <div className="absolute inset-[94px] bg-white rounded-full shadow-[0_0_60px_-15px_rgba(34,197,94,0.15),0_20px_60px_-20px_rgba(0,0,0,0.08)] flex items-center justify-center">
+                  {/* Decorative inner rings */}
+                  <div className="absolute inset-3 rounded-full border border-leaf-100/60" />
+                  <div className="absolute inset-5 rounded-full border border-dashed border-leaf-100/30" />
+                  <div className="text-center relative z-10">
+                    {/* Logo with glow */}
                     <div className="relative mx-auto mb-3">
-                      <div className="absolute inset-0 bg-leaf-500 rounded-2xl blur-xl opacity-25 animate-pulse-gentle" />
-                      <div className="relative w-[68px] h-[68px] bg-gradient-to-br from-leaf-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-xl shadow-leaf-300/30">
-                        <Sprout className="w-8 h-8 text-white" />
+                      <div className="absolute inset-0 bg-gradient-to-br from-leaf-400 to-emerald-500 rounded-2xl blur-lg opacity-30 animate-pulse-gentle" />
+                      <div className="absolute -inset-1 bg-gradient-to-br from-leaf-300/20 to-emerald-300/20 rounded-2xl blur-md" />
+                      <div className="relative w-[64px] h-[64px] bg-gradient-to-br from-leaf-500 via-leaf-600 to-emerald-600 rounded-2xl flex items-center justify-center shadow-xl shadow-leaf-400/20 ring-1 ring-leaf-300/30">
+                        <Sprout className="w-7 h-7 text-white drop-shadow-sm" />
                       </div>
                     </div>
-                    <div className="text-3xl font-extrabold bg-gradient-to-r from-leaf-600 to-emerald-600 bg-clip-text text-transparent">
-                      Crop<span className="text-earth-500">IQ</span>
+                    {/* Brand name */}
+                    <div className="text-[1.65rem] font-extrabold bg-gradient-to-br from-leaf-600 via-leaf-500 to-emerald-600 bg-clip-text text-transparent leading-tight">
+                      Crop<span className="bg-gradient-to-br from-earth-500 to-amber-500 bg-clip-text text-transparent">IQ</span>
                     </div>
-                    <p className="text-[11px] text-gray-400 mt-1.5 font-bold tracking-[0.2em] uppercase">কৃষি · এআই · প্রযুক্তি</p>
+                    {/* Tagline */}
+                    <p className="text-[10px] text-gray-400 mt-1.5 font-bold tracking-[0.22em] uppercase">কৃষি · এআই · প্রযুক্তি</p>
                   </div>
                 </div>
               </div>
