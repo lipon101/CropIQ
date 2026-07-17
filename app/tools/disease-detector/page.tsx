@@ -3,9 +3,13 @@
 import { useState, useRef, useCallback } from "react"
 import { Upload, Microscope, Loader2, AlertCircle, Trash2, ShieldAlert, ImageIcon, FileText, Scan, RefreshCw } from "lucide-react"
 import { ToolPageLayout, TOOLS } from "@/components/tools/ToolPageLayout"
+import { useAuth } from "@/lib/auth/AuthContext"
+import { createClient } from "@/lib/supabase/client"
 import type { DiagnosisResult } from "@/types"
 
 export default function DiseaseDetectorPage() {
+  const { user } = useAuth()
+  const supabase = createClient()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [image, setImage] = useState<string | null>(null)
   const [imageFile, setImageFile] = useState<File | null>(null)
@@ -30,7 +34,24 @@ export default function DiseaseDetectorPage() {
       else if (mode === "text" && description.trim()) { r = await fetch("/api/disease-detect-text", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ description, language: "bn" }) }) }
       else { setError("দয়া করে ছবি আপলোড করুন বা লক্ষণ লিখুন"); setLoading(false); return }
       if (!r.ok) throw new Error((await r.json()).error || "বিশ্লেষণ ব্যর্থ")
-      const d = await r.json(); d.result ? setResult(d.result) : setError("বিশ্লেষণ ব্যর্থ হয়েছে")
+      const d = await r.json()
+      if (d.result) {
+        setResult(d.result)
+        // 💾 Save to Supabase for dashboard
+        if (user) {
+          supabase.from("disease_scans").insert({
+            user_id: user.id,
+            crop_type: d.result.crop_type,
+            disease_name: d.result.disease_name,
+            confidence: d.result.confidence,
+            cause: d.result.cause,
+            remedy_bn: d.result.remedy_bn,
+            prevention_bn: d.result.prevention_bn,
+          }).then(() => {})
+        }
+      } else {
+        setError("বিশ্লেষণ ব্যর্থ হয়েছে")
+      }
     } catch (e: any) { setError(e.message) } finally { setLoading(false) }
   }
   const reset = () => { setImage(null); setImageFile(null); setDescription(""); setResult(null); setError("") }
