@@ -2,32 +2,21 @@ import { NextRequest, NextResponse } from "next/server"
 
 export async function POST(req: NextRequest) {
   try {
-    const { description, language } = await req.json()
-
-    if (!description?.trim()) {
-      return NextResponse.json({ error: "No symptoms described" }, { status: 400 })
-    }
+    const { description } = await req.json()
+    if (!description?.trim()) return NextResponse.json({ error: "কোন লক্ষণ বর্ণনা করা হয়নি" }, { status: 400 })
 
     const apiKey = process.env.OPENROUTER_API_KEY
-    if (!apiKey) {
-      return NextResponse.json({ error: "AI service not configured" }, { status: 500 })
-    }
+    if (!apiKey) return NextResponse.json({ error: "এআই সার্ভিস কনফিগার করা হয়নি" }, { status: 500 })
 
-    const prompt = `You are an expert agricultural scientist and plant pathologist with deep knowledge of Bangladesh farming practices. Your role is to help farmers and growers identify and treat plant diseases.
+    const prompt = `তুমি একজন কৃষি বিজ্ঞানী। এই লক্ষণ বর্ণনা পড়ে ফসলের রোগ সনাক্ত করো।
 
-When a user describes symptoms, you should:
-1. Identify the possible disease(s)
-2. Explain the cause (fungus, bacteria, virus, pest, etc.)
-3. Suggest organic and chemical treatment options
-4. Give prevention tips for the future
-5. Mention if the disease is common in Bangladesh
+শুধুমাত্র একটি JSON অবজেক্ট ফেরত দাও:
 
-Return ONLY a valid JSON object (no markdown, no extra text):
 {
-  "crop_type": "name of crop",
-  "disease_name": "disease name or 'Unclear - need more information'",
+  "crop_type": "ফসলের নাম বাংলায়",
+  "disease_name": "রোগের নাম বা 'পরিষ্কার নয় — আরও তথ্য প্রয়োজন'",
   "confidence": 0.85,
-  "cause": "cause of disease",
+  "cause": "রোগের কারণ",
   "remedy_bn": "বাংলায় চিকিৎসা পদ্ধতি",
   "remedy_en": "Treatment in English",
   "prevention_bn": "বাংলায় প্রতিরোধের উপায়",
@@ -47,30 +36,30 @@ Return ONLY a valid JSON object (no markdown, no extra text):
         model: "openrouter/free",
         messages: [
           { role: "system", content: prompt },
-          { role: "user", content: `My crop has these symptoms: ${description}` },
+          { role: "user", content: `লক্ষণ বর্ণনা: ${description}\n\nরোগ সনাক্ত করো। শুধুমাত্র JSON উত্তর দাও।` },
         ],
         max_tokens: 600,
-        temperature: 0.4,
+        temperature: 0.3,
       }),
     })
 
     if (!response.ok) {
-      return NextResponse.json({ error: "AI analysis failed" }, { status: 502 })
+      console.error("OpenRouter error:", response.status)
+      return NextResponse.json({ error: "বিশ্লেষণ ব্যর্থ — আবার চেষ্টা করুন" }, { status: 502 })
     }
 
     const data = await response.json()
     const content = data.choices?.[0]?.message?.content || ""
-
     let result: any
     const jsonMatch = content.match(/\{[\s\S]*\}/)
     if (jsonMatch) {
-      try { result = JSON.parse(jsonMatch[0]) } catch { result = { disease_name: "Analysis Incomplete", remedy_bn: content, remedy_en: content } }
+      try { result = JSON.parse(jsonMatch[0]) } catch { result = { disease_name: "বিশ্লেষণ অসম্পূর্ণ", remedy_bn: content, remedy_en: content } }
     } else {
-      result = { disease_name: "Analysis Incomplete", remedy_bn: content, remedy_en: content }
+      result = { disease_name: "নির্ণয় করা যায়নি", remedy_bn: content, remedy_en: content }
     }
-
     return NextResponse.json({ result })
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || "Analysis failed" }, { status: 500 })
+    console.error("রোগ সনাক্তকরণ ত্রুটি:", error)
+    return NextResponse.json({ error: error.message || "বিশ্লেষণ ব্যর্থ" }, { status: 500 })
   }
 }
