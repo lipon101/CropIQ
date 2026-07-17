@@ -130,7 +130,7 @@ export default function HomePage() {
               </div>
 
               {/* Main heading */}
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[3.5rem] font-black text-gray-900 leading-[1.05] tracking-tight">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[3.5rem] font-black text-gray-800 leading-[1.05] tracking-tight">
                 বাংলাদেশের{" "}
                 <span className="bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 bg-clip-text text-transparent">
                   স্মার্ট কৃষি
@@ -140,15 +140,15 @@ export default function HomePage() {
                 <span className="bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">
                   বায়োইনফরমেটিক্স
                 </span>{" "}
-                <span className="text-gray-800">হাব</span>
+                <span className="text-gray-700">হাব</span>
               </h1>
 
-              <p className="text-base md:text-lg text-gray-500 leading-relaxed max-w-xl font-medium">
+              <p className="text-base md:text-lg text-gray-600 leading-relaxed max-w-xl font-medium">
                 এআই-চালিত ফসলের রোগ সনাক্তকরণ, লাইভ বাজার মূল্য, আবহাওয়া পরামর্শ এবং কৃষি চ্যাটবট — বাংলায়, সম্পূর্ণ বিনামূল্যে।
               </p>
 
               {/* Trust badges */}
-              <div className="flex flex-wrap items-center gap-5 text-sm text-gray-400">
+              <div className="flex flex-wrap items-center gap-5 text-sm text-gray-600">
                 <span className="flex items-center gap-1.5 font-semibold px-3 py-1.5 bg-white/60 rounded-lg border border-gray-100"><ShieldCheck className="w-4 h-4 text-emerald-500" />৯৮% নির্ভুল</span>
                 <span className="flex items-center gap-1.5 font-semibold px-3 py-1.5 bg-white/60 rounded-lg border border-gray-100"><Globe className="w-4 h-4 text-blue-500" />বাংলা ভাষায়</span>
                 <span className="flex items-center gap-1.5 font-semibold px-3 py-1.5 bg-white/60 rounded-lg border border-gray-100"><Zap className="w-4 h-4 text-amber-500" />তাৎক্ষণিক ফলাফল</span>
@@ -231,7 +231,7 @@ export default function HomePage() {
                     <div className="text-[1.6rem] font-black bg-gradient-to-br from-emerald-600 via-emerald-500 to-teal-600 bg-clip-text text-transparent leading-none">
                       Crop<span className="bg-gradient-to-br from-amber-500 to-orange-500 bg-clip-text text-transparent">IQ</span>
                     </div>
-                    <p className="text-[10px] text-gray-400 mt-1.5 font-bold tracking-[0.22em] uppercase">কৃষি · এআই · প্রযুক্তি</p>
+                    <p className="text-[10px] text-gray-500 mt-1.5 font-bold tracking-[0.22em] uppercase">কৃষি · এআই · প্রযুক্তি</p>
                   </div>
                 </div>
               </div>
@@ -258,7 +258,7 @@ export default function HomePage() {
                 </div>
                 <div>
                   <div className="text-xl font-extrabold text-gray-900 group-hover:scale-105 transition-transform duration-300">{s.value}</div>
-                  <div className="text-[10px] text-gray-400 font-semibold tracking-wide">{s.label}</div>
+                  <div className="text-[10px] text-gray-500 font-semibold tracking-wide">{s.label}</div>
                 </div>
               </div>
             ))}
@@ -278,7 +278,7 @@ export default function HomePage() {
               <Zap className="w-3.5 h-3.5 text-amber-500" /> আমাদের সেবাসমূহ
             </div>
             <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-2">একজন কৃষকের যা যা প্রয়োজন</h2>
-            <p className="text-sm text-gray-400 max-w-xl mx-auto font-medium">একটি প্লাটফর্মে চারটি শক্তিশালী টুল — আপনার প্রয়োজন অনুযায়ী বেছে নিন</p>
+            <p className="text-sm text-gray-500 max-w-xl mx-auto font-medium">একটি প্লাটফর্মে চারটি শক্তিশালী টুল — আপনার প্রয়োজন অনুযায়ী বেছে নিন</p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
             {features.map((f, i) => (
@@ -287,7 +287,7 @@ export default function HomePage() {
                   <f.icon className="w-5 h-5 text-white" />
                 </div>
                 <h3 className="text-sm font-bold text-gray-900 mb-1.5">{f.title}</h3>
-                <p className="text-xs text-gray-500 leading-relaxed mb-4">{f.desc}</p>
+                <p className="text-xs text-gray-600 leading-relaxed mb-4">{f.desc}</p>
                 <div className="flex items-center justify-between">
                   <span className="text-emerald-600 text-xs font-bold inline-flex items-center gap-1 group-hover:gap-1.5 transition-all">ব্যবহার করুন<ChevronRight className="w-3.5 h-3.5" /></span>
                   {f.badge && <span className="text-[9px] font-bold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">{f.badge}</span>}
@@ -320,7 +320,7 @@ export default function HomePage() {
                 </div>
                 <span className="text-2xl mb-2">{s.emoji}</span>
                 <h3 className="text-base font-bold text-gray-900 mb-2">{s.title}</h3>
-                <p className="text-sm text-gray-400 leading-relaxed max-w-xs font-medium">{s.desc}</p>
+                <p className="text-sm text-gray-500 leading-relaxed max-w-xs font-medium">{s.desc}</p>
               </div>
             ))}
           </div>
@@ -375,7 +375,7 @@ export default function HomePage() {
             </div>
           </div>
           <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-3">আজই CropIQ ব্যবহার শুরু করুন</h2>
-          <p className="text-sm text-gray-400 mb-8 font-medium">বাংলাদেশের প্রতিটি কৃষকের জন্য সম্পূর্ণ বিনামূল্যে। কোন লুকানো খরচ নেই।</p>
+          <p className="text-sm text-gray-500 mb-8 font-medium">বাংলাদেশের প্রতিটি কৃষকের জন্য সম্পূর্ণ বিনামূল্যে। কোন লুকানো খরচ নেই।</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link href={user ? "/dashboard" : "/auth/signup"} className="btn-primary group">
               <Sprout className="w-[18px] h-[18px] group-hover:rotate-12 transition-transform" /> বিনামূল্যে শুরু করুন<ArrowRight className="w-[18px] h-[18px] group-hover:translate-x-1 transition-transform" />
