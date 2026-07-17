@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { useAuth } from "@/lib/auth/AuthContext"
 import { Sprout, Microscope, MessageCircle, DollarSign, CloudSun, ArrowRight, Users, TrendingUp, MapPin, ShieldCheck, Sparkles, ChevronRight, Leaf, Zap, Star, Globe } from "lucide-react"
+import { Footer } from '@/components/layout/Footer'
 
 export default function HomePage() {
   const { user } = useAuth()
@@ -189,6 +190,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      <Footer />
     </div>
   )
 }
