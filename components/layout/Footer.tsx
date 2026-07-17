@@ -18,7 +18,7 @@ export function Footer() {
               <span className="text-lg font-extrabold">Crop<span className="text-earth-400">IQ</span></span>
             </Link>
             <p className="text-gray-400 text-xs leading-relaxed mb-3">বাংলাদেশের জন্য এআই-চালিত স্মার্ট কৃষি প্ল্যাটফর্ম।</p>
-            <span className="text-[10px] bg-gray-800 px-2.5 py-1 rounded-full font-medium">🇧🇩 বাংলা</span>
+            
           </div>
 
           <div>
@@ -47,7 +47,7 @@ export function Footer() {
 
         <div className="border-t border-gray-800 mt-7 pt-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <p className="text-[11px] text-gray-500">&copy; {new Date().getFullYear()} CropIQ — গ্রুপ ৫ · সিএসই ৪০০ · বিইউবিটি · ইনটেক ৫১</p>
-          <p className="flex items-center gap-1 text-[11px] text-gray-500">বাংলাদেশের কৃষকদের জন্য <Heart className="w-3 h-3 text-red-400 fill-red-400" /> 🇧🇩</p>
+          
         </div>
       </div>
     </footer>
