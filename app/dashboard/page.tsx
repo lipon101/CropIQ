@@ -75,17 +75,18 @@ export default function DashboardPage() {
 
     try {
       let error: any = null
+      let data: any[] | null = null
       if (item.type === "scan") {
-        ;({ error } = await supabase.from("disease_scans").delete().eq("id", item.id))
+        ;({ error, data } = await supabase.from("disease_scans").delete().eq("id", item.id).select())
       } else if (item.type === "chat") {
-        ;({ error } = await supabase.from("chat_sessions").delete().eq("id", item.id))
+        ;({ error, data } = await supabase.from("chat_sessions").delete().eq("id", item.id).select())
       } else {
-        ;({ error } = await supabase.from("weather_advisories").delete().eq("id", item.id))
+        ;({ error, data } = await supabase.from("weather_advisories").delete().eq("id", item.id).select())
       }
 
-      if (error) {
-        console.error("Dashboard delete failed:", error)
-        // Revert — re-fetch all
+      if (error || !data || data.length === 0) {
+        if (error) console.error("Dashboard delete failed:", error)
+        else console.warn("Dashboard delete: no rows deleted (RLS?)")
         setLoading(true)
         fetchAll()
         return
