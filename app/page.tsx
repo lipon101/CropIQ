@@ -90,7 +90,7 @@ export default function HomePage() {
       <div className="relative z-10 bg-gradient-to-r from-emerald-800 via-emerald-700 to-emerald-800 text-white py-1.5 px-4 text-center overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.08)_0%,transparent_70%)]" />
         <p className="relative text-[11px] md:text-xs font-semibold tracking-wide">
-          🌾 কৃষি ও প্রযুক্তির সেতুবন্ধন · বাংলাদেশের স্মার্ট কৃষি হাব · সম্পূর্ণ বিনামূল্যে
+          🌾 এআই কৃষি · সম্পূর্ণ বিনামূল্যে
         </p>
       </div>
 
@@ -122,14 +122,8 @@ export default function HomePage() {
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[3.5rem] font-black text-gray-800 leading-[1.08] tracking-tight">
                 বাংলাদেশের{" "}
                 <span className="text-emerald-600">
-                  স্মার্ট কৃষি
+                  এআই কৃষি
                 </span>
-                <br />
-                <span className="text-amber-500">&</span>{" "}
-                <span className="text-emerald-600">
-                  বায়োইনফরমেটিক্স
-                </span>{" "}
-                হাব
               </h1>
 
               <p className="text-base md:text-lg text-gray-600 leading-relaxed max-w-xl font-medium">
