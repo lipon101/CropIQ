@@ -165,26 +165,44 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* ── RIGHT — Premium Globe Scene ── */}
+            {/* ── RIGHT — 3D Hologram Globe Scene ── */}
             <div className="hidden lg:flex justify-center items-center">
-              <div className="relative w-[440px] h-[440px]">
+              <div className="relative w-[440px] h-[440px] animate-[hologramFloat_8s_ease-in-out_infinite]">
                 {/* Outer atmospheric glow */}
-                <div className="absolute -inset-4 rounded-full bg-gradient-to-br from-emerald-200/15 via-sky-200/10 to-amber-200/10 blur-xl animate-pulse-gentle" />
+                <div className="absolute -inset-4 rounded-full bg-gradient-to-br from-emerald-300/15 via-sky-300/10 to-amber-200/10 blur-xl animate-pulse-gentle" />
 
-                {/* Spin rings — slow & atmospheric */}
-                <div className="absolute inset-0 rounded-full border border-emerald-200/25 animate-[spin_35s_linear_infinite]" />
-                <div className="absolute inset-1 rounded-full border border-dashed border-emerald-300/12 animate-[spin_45s_linear_infinite_reverse]" />
-                <div className="absolute inset-8 rounded-full border border-sky-200/15 animate-[spin_40s_linear_infinite]" />
+                {/* Ring 1 — thick metallic outer */}
+                <div className="absolute inset-0 rounded-full animate-[spin_35s_linear_infinite]">
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-emerald-300/30 via-sky-300/20 to-amber-300/15 shadow-[0_0_40px_-10px_rgba(16,185,129,0.2),inset_0_0_30px_-10px_rgba(16,185,129,0.1)]" />
+                  <div className="absolute inset-[3px] rounded-full bg-white/5 backdrop-blur-[1px]" />
+                </div>
 
-                {/* Data dots ring */}
+                {/* Ring 2 — dashed metallic, reverse spin */}
+                <div className="absolute inset-1 rounded-full animate-[spin_45s_linear_infinite_reverse]">
+                  <div className="absolute inset-0 rounded-full border-2 border-dashed border-emerald-300/25 shadow-[0_0_20px_-5px_rgba(16,185,129,0.15)]" />
+                </div>
+
+                {/* Ring 3 — thin inner metallic */}
+                <div className="absolute inset-8 rounded-full animate-[spin_40s_linear_infinite]">
+                  <div className="absolute inset-0 rounded-full border border-sky-300/25 shadow-[0_0_25px_-8px_rgba(56,189,248,0.15)]" />
+                </div>
+
+                {/* Hologram scanline sweep */}
+                <div className="absolute inset-1 rounded-full overflow-hidden animate-[spin_12s_linear_infinite] opacity-25 pointer-events-none">
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-emerald-300/40 to-transparent -translate-y-full animate-[scanSweep_3s_ease-in-out_infinite]" />
+                </div>
+
+                {/* 3D glowing data dots ring */}
                 <div className="absolute inset-4 rounded-full animate-[spin_50s_linear_infinite]">
                   {[0, 45, 90, 120, 180, 220, 270, 315].map((deg, i) => (
-                    <div key={i} className="absolute w-1 h-1 bg-emerald-400/30 rounded-full"
+                    <div key={i} className="absolute"
                       style={{
-                        left: `calc(50% + ${Math.cos(deg * Math.PI / 180) * 210}px - 2px)`,
-                        top: `calc(50% + ${Math.sin(deg * Math.PI / 180) * 210}px - 2px)`,
+                        left: `calc(50% + ${Math.cos(deg * Math.PI / 180) * 210}px - 3px)`,
+                        top: `calc(50% + ${Math.sin(deg * Math.PI / 180) * 210}px - 3px)`,
                       }}
-                    />
+                    >
+                      <div className="w-1.5 h-1.5 bg-emerald-300 rounded-full shadow-[0_0_8px_2px_rgba(16,185,129,0.5),0_0_2px_1px_rgba(16,185,129,0.8)]" />
+                    </div>
                   ))}
                 </div>
 
