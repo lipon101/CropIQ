@@ -30,7 +30,7 @@ export function ToolPageLayout({ title, icon, currentIndex, children }: ToolPage
   return (
     <div className="h-[calc(100vh-64px)] flex flex-col overflow-hidden">
       {/* ── Premium Navigation Header ── */}
-      <div className="bg-white/90 backdrop-blur-xl border-b border-gray-100 px-4 md:px-6 py-2.5 flex items-center shrink-0 shadow-sm">
+      <div className="bg-white/90 backdrop-blur-xl border-b border-gray-100 px-4 md:px-6 py-1.5 flex items-center shrink-0 shadow-sm">
         {/* Left: back button */}
         <div className="flex-1 flex justify-start min-w-0">
           {prev ? (
@@ -48,7 +48,7 @@ export function ToolPageLayout({ title, icon, currentIndex, children }: ToolPage
 
         {/* Center: title */}
         <div className="flex items-center gap-2 shrink-0 px-2">
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center shadow-sm" style={{ background: TOOLS[currentIndex].color }}>
+          <div className="w-6 h-6 rounded-md flex items-center justify-center shadow-sm" style={{ background: TOOLS[currentIndex].color }}>
             {icon}
           </div>
           <h1 className="text-sm md:text-sm font-extrabold text-gray-800 whitespace-nowrap">{title}</h1>

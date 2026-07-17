@@ -39,7 +39,7 @@ export default function DiseaseDetectorPage() {
 
   return (
     <ToolPageLayout title="ফসল রোগ সনাক্তকারী" icon={<Microscope className="w-4 h-4 text-white" />} currentIndex={1}>
-      <div className="space-y-4 overflow-y-auto h-full">
+      <div className="space-y-2 h-full">
         {/* Mode Switch — icon only */}
         <div className="flex justify-center">
           <div className="inline-flex bg-white rounded-2xl border border-gray-200 p-1.5 shadow-sm">
@@ -65,7 +65,7 @@ export default function DiseaseDetectorPage() {
                     </div>
                   </div>
                 ) : (
-                  <button onClick={() => fileInputRef.current?.click()} className="w-full p-10 flex flex-col items-center justify-center gap-3 text-gray-400 hover:text-gray-600 transition-colors">
+                  <button onClick={() => fileInputRef.current?.click()} className="w-full p-6 flex flex-col items-center justify-center gap-3 text-gray-400 hover:text-gray-600 transition-colors">
                     <Upload className="w-8 h-8" />
                   </button>
                 )}
@@ -84,7 +84,7 @@ export default function DiseaseDetectorPage() {
 
         {/* Loading */}
         {loading && (
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm py-16 text-center">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm py-10 text-center">
             <Loader2 className="w-8 h-8 text-emerald-500 animate-spin mx-auto mb-3" />
             <p className="text-sm font-semibold text-gray-500">বিশ্লেষণ চলছে...</p>
           </div>
@@ -92,9 +92,9 @@ export default function DiseaseDetectorPage() {
 
         {/* Results */}
         {result && !loading && (
-          <div className="space-y-4 overflow-y-auto h-full">
+          <div className="space-y-2 h-full">
             <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-              <div className="px-5 py-4 bg-gradient-to-r from-red-50 to-rose-50 border-b border-red-100 flex items-center gap-3">
+              <div className="px-4 py-3 bg-gradient-to-r from-red-50 to-rose-50 border-b border-red-100 flex items-center gap-3">
                 <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm"><ShieldAlert className="w-5 h-5 text-red-500" /></div>
                 <div>
                   <h3 className="font-extrabold text-gray-900">{result.disease_name}</h3>
@@ -106,18 +106,18 @@ export default function DiseaseDetectorPage() {
                   </span>
                 </div>
               </div>
-              <div className="p-5 space-y-4">
+              <div className="p-4 space-y-3">
                 <div className="grid grid-cols-3 gap-3">
-                  <div className="bg-emerald-50 rounded-xl p-3 text-center"><p className="text-[11px] font-bold text-emerald-500 uppercase tracking-wide mb-1">নির্ভুলতা</p><p className="text-lg font-extrabold text-emerald-700">{Math.round(result.confidence * 100)}%</p></div>
-                  <div className="bg-gray-50 rounded-xl p-3 text-center"><p className="text-[11px] font-bold text-gray-400 uppercase tracking-wide mb-1">ফসল</p><p className="text-sm font-extrabold text-gray-800">{result.crop_type || "—"}</p></div>
-                  <div className="bg-red-50 rounded-xl p-3 text-center"><p className="text-[11px] font-bold text-red-400 uppercase tracking-wide mb-1">কারণ</p><p className="text-xs font-extrabold text-red-600">{result.cause || "—"}</p></div>
+                  <div className="bg-emerald-50 rounded-lg p-2 text-center"><p className="text-[11px] font-bold text-emerald-500 uppercase tracking-wide mb-1">নির্ভুলতা</p><p className="text-lg font-extrabold text-emerald-700">{Math.round(result.confidence * 100)}%</p></div>
+                  <div className="bg-gray-50 rounded-lg p-2 text-center"><p className="text-[11px] font-bold text-gray-400 uppercase tracking-wide mb-1">ফসল</p><p className="text-sm font-extrabold text-gray-800">{result.crop_type || "—"}</p></div>
+                  <div className="bg-red-50 rounded-lg p-2 text-center"><p className="text-[11px] font-bold text-red-400 uppercase tracking-wide mb-1">কারণ</p><p className="text-xs font-extrabold text-red-600">{result.cause || "—"}</p></div>
                 </div>
-                <div className="bg-emerald-50/60 rounded-2xl p-4 border border-emerald-100">
+                <div className="bg-emerald-50/60 rounded-xl p-3 border border-emerald-100">
                   <p className="text-xs font-extrabold text-emerald-700 uppercase tracking-wide mb-2">💊 চিকিৎসা</p>
                   <p className="text-sm text-gray-800 leading-relaxed font-medium">{result.remedy_bn}</p>
                 </div>
                 {result.prevention_bn && (
-                  <div className="bg-blue-50/60 rounded-2xl p-4 border border-blue-100">
+                  <div className="bg-blue-50/60 rounded-xl p-3 border border-blue-100">
                     <p className="text-xs font-extrabold text-blue-700 uppercase tracking-wide mb-2">🛡️ প্রতিরোধ</p>
                     <p className="text-sm text-gray-800 leading-relaxed font-medium">{result.prevention_bn}</p>
                   </div>
@@ -141,7 +141,7 @@ export default function DiseaseDetectorPage() {
         {/* CTA */}
         {hasContent && !loading && !result && (
           <div className="flex justify-center">
-            <button onClick={analyze} className="btn-primary py-4 px-8 rounded-2xl shadow-xl shadow-emerald-300/30 text-base">
+            <button onClick={analyze} className="btn-primary py-3 px-6 rounded-xl shadow-lg shadow-emerald-300/20 text-sm">
               <Scan className="w-5 h-5" />রোগ সনাক্তকরণ শুরু করুন
             </button>
           </div>

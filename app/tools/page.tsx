@@ -28,7 +28,6 @@ export default function ToolsPage() {
         <div className="w-full space-y-5">
           {/* Section heading */}
           <div className="text-center space-y-1.5">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-[0.2em]">CropIQ টুলস</p>
             <h2 className="text-lg md:text-xl font-extrabold text-gray-800">আপনার প্রয়োজনীয় টুল বেছে নিন</h2>
             <p className="text-sm text-gray-500 max-w-md mx-auto">স্মার্ট কৃষির জন্য চারটি শক্তিশালী এআই টুল — এক ক্লিকেই শুরু</p>
           </div>

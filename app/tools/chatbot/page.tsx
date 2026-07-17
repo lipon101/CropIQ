@@ -48,7 +48,7 @@ export default function ChatbotPage() {
       currentIndex={0}
     >
       <div className="flex flex-col h-full max-w-2xl mx-auto w-full bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
-        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
+        <div className="flex-1 overflow-y-auto px-3 py-2 space-y-3">
           {messages.length === 0 ? (
             <div className="flex items-center justify-center h-full"><div className="text-center max-w-sm">
               <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center mx-auto mb-3"><Bot className="w-6 h-6 text-blue-600" /></div>
