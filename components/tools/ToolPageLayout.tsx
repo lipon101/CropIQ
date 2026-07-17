@@ -28,7 +28,7 @@ export function ToolPageLayout({ title, icon, currentIndex, children }: ToolPage
   const next = currentIndex < TOOLS.length - 1 ? TOOLS[currentIndex + 1] : null
 
   return (
-    <div className="h-[calc(100vh-64px)] flex flex-col overflow-hidden">
+    <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
       {/* ── Premium Navigation Header ── */}
       <div className="bg-white/90 backdrop-blur-xl border-b border-gray-100 px-4 md:px-6 py-1.5 flex items-center shrink-0 shadow-sm">
         {/* Left: back button */}

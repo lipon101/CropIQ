@@ -38,7 +38,7 @@ export default function MarketPricesPage() {
 
   return (
     <ToolPageLayout title="বাজার মূল্য বোর্ড" icon={<BarChart3 className="w-4 h-4 text-white" />} currentIndex={2}>
-      <div className="flex flex-col h-full overflow-hidden max-w-lg mx-auto w-full">
+      <div className="flex flex-col flex-1 min-h-0 overflow-hidden max-w-lg mx-auto w-full">
 
         {/* ── Selectors ── */}
         <div className="flex flex-wrap items-end gap-2 mb-3 shrink-0">

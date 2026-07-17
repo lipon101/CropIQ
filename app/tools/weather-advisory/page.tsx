@@ -41,7 +41,7 @@ export default function WeatherAdvisoryPage() {
 
   return (
     <ToolPageLayout title="আবহাওয়া পরামর্শ" icon={<CloudSun className="w-4 h-4 text-white" />} currentIndex={3}>
-      <div className="flex flex-col h-full overflow-hidden">
+      <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
 
         {/* ── Selectors ── */}
         <div className="flex flex-wrap items-end gap-1.5 mb-2 shrink-0">
