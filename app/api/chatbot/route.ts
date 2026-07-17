@@ -40,10 +40,62 @@ const CHATBOT_SYSTEM_PROMPT = `তুমি কৃষি বন্ধু — ব
 - প্রশ্ন ২?
 - প্রশ্ন ৩?`
 
+// ─── HARDCODED SAFE RESPONSE (never goes to LLM) ───
+const SAFE_DEFLECT = "ভাই, আমি তো শুধু কৃষি নিয়ে কথা বলি। ফসল, জমি বা রোগ-পোকা নিয়ে কিছু জানতে চান?"
+
+// ─── INPUT GUARD: block jailbreak/phishing before hitting LLM ───
+const JAILBREAK_PATTERNS = [
+  /system\s*prompt/i,              /instructions?/i,
+  /repeat\s.*words/i,              /word\s*for\s*word/i,
+  /developer\s*mode/i,             /jailbreak/i,
+  /show\s*me\s*your/i,            /previous\s.*instructions?/i,
+  /internal\s*(prompt|instruction)/i, /print\s.*(prompt|instruction)/i,
+  /tell\s*me\s*your/i,            /what\s*are\s*your\s*(rules|instructions)/i,
+  /prefix\s*(above|your)/i,        /start\s*of\s*(prompt|instruction)/i,
+  /ignore\s*(above|previous|all)/i, /disregard\s*(above|previous)/i,
+  /forget\s*(above|previous|all)/i, /pretend\s*(you|to\s*be)/i,
+  /roleplay/i,                      /dan\s*mode/i,
+  /how\s*were\s*you\s*(made|built|created|trained)/i,
+  /reveal\s*your/i,                /show\s*your/i,
+]
+
+function isJailbreakAttempt(text: string): boolean {
+  const lower = text.toLowerCase()
+  // Quick check: if message is entirely English and short, likely jailbreak
+  const isMostlyEnglish = /^[a-zA-Z0-9\s!?.,'":;()\-]{10,}$/.test(text.trim())
+  if (isMostlyEnglish) return true
+  
+  for (const pattern of JAILBREAK_PATTERNS) {
+    if (pattern.test(lower)) return true
+  }
+  return false
+}
+
+// ─── OUTPUT GUARD: detect if LLM leaked the system prompt ───
+function isSystemPromptLeak(reply: string): boolean {
+  const leakMarkers = [
+    "তুমি কৃষি বন্ধু", "কঠোর নিরাপত্তা নিয়ম", "সিস্টেম প্রম্পট",
+    "system prompt", "CHATBOT_SYSTEM_PROMPT", "কৃষকের জন্য একজন অভিজ্ঞ",
+    "বলার নিয়ম:", "কখনো এইরকম বলবে না:", "তোমার ভাষা হবে একদম সহজ:",
+  ]
+  for (const marker of leakMarkers) {
+    if (reply.includes(marker)) return true
+  }
+  return false
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { message, language, history } = await req.json()
     if (!message?.trim()) return NextResponse.json({ error: "কোন বার্তা প্রদান করা হয়নি" }, { status: 400 })
+
+    // 🔒 INPUT FILTER: block jailbreak before LLM sees it
+    if (isJailbreakAttempt(message)) {
+      return NextResponse.json({
+        reply: SAFE_DEFLECT,
+        suggestions: ["ধান গাছে ব্লাস্ট রোগের চিকিৎসা?", "আলু চাষের সঠিক সময়?", "পোকা দমনে নিম তেল কীভাবে ব্যবহার করবেন?"],
+      })
+    }
 
     const apiKey = process.env.OPENROUTER_API_KEY
     if (!apiKey) return NextResponse.json({ error: "এআই সার্ভিস কনফিগার করা হয়নি" }, { status: 500 })
@@ -72,6 +124,14 @@ export async function POST(req: NextRequest) {
 
     const data = await response.json()
     let reply = data.choices?.[0]?.message?.content || "দুঃখিত, এখন উত্তর দিতে পারছি না। আবার চেষ্টা করুন।"
+
+    // 🔒 OUTPUT FILTER: if LLM leaked system prompt, replace with safe deflect
+    if (isSystemPromptLeak(reply)) {
+      return NextResponse.json({
+        reply: SAFE_DEFLECT,
+        suggestions: ["ধান গাছে ব্লাস্ট রোগের চিকিৎসা?", "আলু চাষের সঠিক সময়?", "পোকা দমনে নিম তেল কীভাবে ব্যবহার করবেন?"],
+      })
+    }
 
     // Parse suggestions
     let suggestions: string[] = []
