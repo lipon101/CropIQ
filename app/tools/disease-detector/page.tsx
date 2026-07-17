@@ -90,7 +90,7 @@ const CAUSE_BN: Record<string, string> = {
   "low temperature": "নিম্ন তাপমাত্রা",
   "high temperature": "উচ্চ তাপমাত্রা",
 }
-const toBnCause = (cause: string | undefined | null) => cause ? (CAUSE_BN[cause.toLowerCase()] || cause) : 
+const toBnCause = (cause: string | undefined | null) => cause ? (CAUSE_BN[cause.toLowerCase()] || cause) : "—"
 
 export default function DiseaseDetectorPage() {
   const { user } = useAuth()
@@ -134,8 +134,8 @@ export default function DiseaseDetectorPage() {
       setSyncing(true)
       const result = await processQueue({
         deleteOne: async (scanId) => {
-          const { error } = await supabase.from("disease_scans").delete().eq("id", scanId)
-          return { error }
+          const { data: delData, error } = await supabase.from("disease_scans").delete().eq("id", scanId).select()
+          return { error: error || (!delData || delData.length === 0 ? new Error("RLS blocked") : null) }
         }
       })
       const synced = result.synced
@@ -183,10 +183,11 @@ export default function DiseaseDetectorPage() {
     }
 
     // 🟢 Online → delete from Supabase directly
-    const { error: deleteError } = await supabase.from("disease_scans").delete().eq("id", id)
+    const { data: deletedRows, error: deleteError } = await supabase.from("disease_scans").delete().eq("id", id).select()
 
-    if (deleteError) {
-      console.error("Delete failed:", deleteError)
+    if (deleteError || !deletedRows || deletedRows.length === 0) {
+      if (deleteError) console.error("Delete failed:", deleteError)
+      else console.warn("Delete: RLS blocked or no rows found")
       setDeletingIds(prev => {
         const next = new Set(prev)
         next.delete(id)
@@ -226,10 +227,11 @@ export default function DiseaseDetectorPage() {
     }
 
     // 🟢 Online → delete from Supabase
-    const { error: deleteError } = await supabase.from("disease_scans").delete().eq("user_id", user.id)
+    const { data: deletedAll, error: deleteError } = await supabase.from("disease_scans").delete().eq("user_id", user.id).select()
 
-    if (deleteError) {
-      console.error("Delete all failed:", deleteError)
+    if (deleteError || !deletedAll || deletedAll.length === 0) {
+      if (deleteError) console.error("Delete all failed:", deleteError)
+      else console.warn("Delete all: RLS blocked or no rows found")
       setDeletingIds(new Set())
       setError("সব ডিলিট করতে সমস্যা হয়েছে — আবার চেষ্টা করুন")
       return
