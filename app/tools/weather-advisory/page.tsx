@@ -7,7 +7,7 @@ import { CloudSun, CloudRain, Wind, Droplets, Loader2, MapPin, AlertTriangle, Li
 
 interface ForecastDay { date: string; temp: number; temp_min: number; temp_max: number; humidity: number; rain_mm: number; wind_kmh: number; description?: string; description_bn?: string; icon: string }
 interface WeatherData { district: string; current: ForecastDay; forecast: ForecastDay[] }
-interface Advisory { summary: string; actions: string[]; irrigation: string; warning: string | null }
+interface Advisory { summary: string; actions: string[]; irrigation: string; warning: string }
 
 const WI: Record<string, string> = { "01d": "☀️", "01n": "🌙", "02d": "⛅", "02n": "☁️", "03d": "☁️", "03n": "☁️", "04d": "☁️", "04n": "☁️", "09d": "🌧️", "09n": "🌧️", "10d": "🌦️", "10n": "🌧️", "11d": "⛈️", "11n": "⛈️", "13d": "🌨️", "13n": "🌨️", "50d": "🌫️", "50n": "🌫️" }
 const WDAY: Record<string, string> = { "Sat": "শনি", "Sun": "রবি", "Mon": "সোম", "Tue": "মঙ্গল", "Wed": "বুধ", "Thu": "বৃহঃ", "Fri": "শুক্র" }
@@ -107,38 +107,39 @@ export default function WeatherAdvisoryPage() {
 
             {/* Advisory Cards */}
             {advisory && (
-              <div className="space-y-2.5">
-                <div className="flex items-center gap-2 px-1">
-                  <div className="w-6 h-6 bg-gradient-to-br from-leaf-500 to-emerald-600 rounded-lg flex items-center justify-center shadow-sm"><Lightbulb className="w-3 h-3 text-white" /></div>
-                  <h3 className="text-xs font-bold text-gray-800">{districtBn} — {cropBn} পরামর্শ</h3>
+              <div className="space-y-4">
+                <div className="flex items-center gap-2.5 px-1 pt-1">
+                  <div className="w-7 h-7 bg-gradient-to-br from-leaf-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-md"><Lightbulb className="w-3.5 h-3.5 text-white" /></div>
+                  <h3 className="text-sm font-bold text-gray-800">{districtBn} — {cropBn} পরামর্শ</h3>
                 </div>
 
-                <div className="bg-gradient-to-r from-blue-50 to-sky-50 rounded-xl border border-blue-100 p-3">
-                  <p className="text-xs text-blue-900 font-medium leading-relaxed">{advisory.summary}</p>
+                <div className="bg-gradient-to-r from-blue-50 to-sky-50 rounded-2xl border border-blue-100 p-4 shadow-sm">
+                  <p className="text-sm text-blue-900 font-semibold leading-relaxed">{advisory.summary}</p>
                 </div>
 
                 {advisory.actions?.length > 0 && (
-                  <div className="bg-white rounded-xl border border-gray-200 p-3 space-y-1.5">
+                  <div className="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm space-y-3">
+                    <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">করণীয়</p>
                     {advisory.actions.map((a, i) => (
-                      <div key={i} className="flex items-start gap-2.5 p-2 rounded-lg bg-gray-50">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-leaf-500 shrink-0 mt-0.5" />
-                        <p className="text-xs text-gray-700 font-medium">{a}</p>
+                      <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-gray-50 hover:bg-leaf-50/50 transition-colors">
+                        <div className="w-5 h-5 bg-leaf-500 rounded-full flex items-center justify-center shrink-0 mt-0.5"><CheckCircle2 className="w-3 h-3 text-white" /></div>
+                        <p className="text-sm text-gray-700 font-semibold leading-relaxed">{a}</p>
                       </div>
                     ))}
                   </div>
                 )}
 
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {advisory.irrigation && (
-                    <div className="bg-gradient-to-br from-sky-50 to-blue-50 rounded-xl border border-sky-100 p-3">
-                      <p className="text-[10px] font-bold text-sky-400 uppercase mb-1 flex items-center gap-1"><Droplets className="w-3 h-3" />সেচ</p>
-                      <p className="text-[11px] text-sky-900 font-medium">{advisory.irrigation}</p>
+                    <div className="bg-gradient-to-br from-sky-50 to-blue-50 rounded-2xl border border-sky-100 p-4 shadow-sm">
+                      <p className="text-[11px] font-bold text-sky-400 uppercase tracking-wider mb-2 flex items-center gap-1.5"><Droplets className="w-3.5 h-3.5" />সেচ</p>
+                      <p className="text-sm text-sky-900 font-semibold leading-relaxed">{advisory.irrigation}</p>
                     </div>
                   )}
                   {advisory.warning && (
-                    <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl border border-amber-100 p-3">
-                      <p className="text-[10px] font-bold text-amber-500 uppercase mb-1 flex items-center gap-1"><AlertCircle className="w-3 h-3" />সতর্কতা</p>
-                      <p className="text-[11px] text-amber-900 font-medium">{advisory.warning}</p>
+                    <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl border border-amber-100 p-4 shadow-sm">
+                      <p className="text-[11px] font-bold text-amber-500 uppercase tracking-wider mb-2 flex items-center gap-1.5"><AlertCircle className="w-3.5 h-3.5" />সতর্কতা</p>
+                      <p className="text-sm text-amber-900 font-semibold leading-relaxed">{advisory.warning}</p>
                     </div>
                   )}
                 </div>
