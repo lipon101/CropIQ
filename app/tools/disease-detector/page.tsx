@@ -48,13 +48,14 @@ export default function DiseaseDetectorPage() {
     const syncPending = async () => {
       if (!isOnline() || !user) return
       setSyncing(true)
-      const { synced, failed } = await processQueue({
+      const result = await processQueue({
         deleteOne: (scanId) => supabase.from("disease_scans").delete().eq("id", scanId),
-        deleteAll: (userId) => supabase.from("disease_scans").delete().eq("user_id", userId),
       })
-      if (synced > 0 || failed > 0) {
+      const synced = result.synced
+      if (result.synced > 0 || result.failed > 0) {
         await fetchHistory()
-        setPendingCount(0)
+        // Re-read pending count after sync
+        getPendingCount().then(setPendingCount)
       }
       setSyncing(false)
     }
@@ -128,7 +129,7 @@ export default function DiseaseDetectorPage() {
 
     // 🔴 Offline → queue to IndexedDB
     if (!isOnline()) {
-      await queueDeleteAll(user.id)
+      await queueDeleteAll(user.id, scanHistory.map(s => s.id))
       setPendingCount(prev => prev + 1)
       setTimeout(() => {
         setScanHistory([])
