@@ -1,13 +1,21 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { Send, Loader2, Copy, Check, Bot, User, ChevronRight } from "lucide-react"
+import { Send, Loader2, Copy, Check, Bot, User, ChevronRight, MessageCircle } from "lucide-react"
+import { ToolPageLayout } from "@/components/tools/ToolPageLayout"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 
 interface Message { id: string; role: "user" | "assistant"; content: string; timestamp: Date }
 let msgCounter = 0
 function genId() { return `msg-${++msgCounter}-${Date.now()}` }
+
+const TOOLS = [
+  { href: "/tools/chatbot", label: "চ্যাটবট", icon: null, color: "linear-gradient(135deg, #3b82f6, #1d4ed8)" },
+  { href: "/tools/disease-detector", label: "রোগ সনাক্ত", icon: null, color: "linear-gradient(135deg, #ef4444, #e11d48)" },
+  { href: "/tools/market-prices", label: "বাজার মূল্য", icon: null, color: "linear-gradient(135deg, #f59e0b, #ea580c)" },
+  { href: "/tools/weather-advisory", label: "আবহাওয়া", icon: null, color: "linear-gradient(135deg, #0ea5e9, #2563eb)" },
+]
 
 export default function ChatbotPage() {
   const [messages, setMessages] = useState<Message[]>([])
@@ -41,14 +49,13 @@ export default function ChatbotPage() {
   const starters = ["ধান গাছে ব্লাস্ট রোগের চিকিৎসা?", "আলু চাষের সঠিক সময়?", "টমেটো পাতা কুঁকড়ে যায় কেন?", "জৈব সার তৈরির পদ্ধতি?"]
 
   return (
-    <div className="h-[calc(100vh-64px)] flex flex-col bg-transparent">
-      <div className="bg-white/90 backdrop-blur-sm border-b border-gray-100 px-4 py-2 flex items-center gap-3 shrink-0">
-        <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center shadow-sm"><Bot className="w-4 h-4 text-white" /></div>
-        <h1 className="font-bold text-gray-900 text-sm">এআই কৃষি চ্যাটবট</h1>
-        {messages.length > 0 && <button onClick={newChat} className="ml-auto text-xs font-medium text-gray-400 hover:text-red-500 px-3 py-1.5 rounded-lg hover:bg-red-50">নতুন</button>}
-      </div>
-
-      <div className="flex-1 flex flex-col overflow-hidden">
+    <ToolPageLayout
+      title="এআই কৃষি চ্যাটবট"
+      icon={<MessageCircle className="w-4 h-4 text-white" />}
+      tools={TOOLS}
+      currentIndex={0}
+    >
+      <div className="flex flex-col h-[calc(100vh-140px)] max-w-2xl mx-auto w-full bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
           {messages.length === 0 ? (
             <div className="flex items-center justify-center h-full"><div className="text-center max-w-sm">
@@ -90,13 +97,14 @@ export default function ChatbotPage() {
           </div>
         )}
 
-        <div className="p-2.5 border-t border-gray-100 bg-white shrink-0">
-          <form onSubmit={e => { e.preventDefault(); send(input) }} className="flex gap-2">
+        <div className="p-2.5 border-t border-gray-100 bg-white shrink-0 flex items-center gap-2">
+          {messages.length > 0 && <button onClick={newChat} className="text-xs font-medium text-gray-400 hover:text-red-500 px-2.5 py-2 rounded-lg hover:bg-red-50 border border-gray-200 shrink-0 transition-all">নতুন</button>}
+          <form onSubmit={e => { e.preventDefault(); send(input) }} className="flex gap-2 flex-1">
             <input value={input} onChange={e => setInput(e.target.value)} placeholder="আপনার প্রশ্ন লিখুন..." className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-leaf-500 outline-none text-sm" disabled={loading} />
             <button type="submit" disabled={loading || !input.trim()} className="bg-gradient-to-r from-leaf-500 to-emerald-600 hover:from-leaf-600 hover:to-emerald-700 disabled:from-gray-300 disabled:to-gray-400 text-white p-2.5 rounded-xl shadow-md shadow-leaf-200 active:scale-95 transition-all"><Send className="w-4 h-4" /></button>
           </form>
         </div>
       </div>
-    </div>
+    </ToolPageLayout>
   )
 }

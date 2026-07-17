@@ -2,7 +2,15 @@
 
 import { useState, useRef, useCallback } from "react"
 import { Upload, Microscope, Loader2, AlertCircle, Trash2, ShieldAlert, ImageIcon, FileText } from "lucide-react"
+import { ToolPageLayout } from "@/components/tools/ToolPageLayout"
 import type { DiagnosisResult } from "@/types"
+
+const TOOLS = [
+  { href: "/tools/chatbot", label: "চ্যাটবট", icon: null, color: "linear-gradient(135deg, #3b82f6, #1d4ed8)" },
+  { href: "/tools/disease-detector", label: "রোগ সনাক্ত", icon: null, color: "linear-gradient(135deg, #ef4444, #e11d48)" },
+  { href: "/tools/market-prices", label: "বাজার মূল্য", icon: null, color: "linear-gradient(135deg, #f59e0b, #ea580c)" },
+  { href: "/tools/weather-advisory", label: "আবহাওয়া", icon: null, color: "linear-gradient(135deg, #0ea5e9, #2563eb)" },
+]
 
 export default function DiseaseDetectorPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -35,18 +43,20 @@ export default function DiseaseDetectorPage() {
   const reset = () => { setImage(null); setImageFile(null); setDescription(""); setResult(null); setError("") }
 
   return (
-    <div className="h-[calc(100vh-64px)] flex flex-col bg-transparent">
-      <div className="bg-white/90 backdrop-blur-sm border-b border-gray-100 px-4 py-2 flex items-center gap-3 shrink-0">
-        <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-rose-600 rounded-lg flex items-center justify-center shadow-sm"><Microscope className="w-4 h-4 text-white" /></div>
-        <h1 className="font-bold text-gray-900 text-sm">ফসল রোগ সনাক্তকারী</h1>
-        <div className="ml-auto flex bg-gray-100 rounded-lg p-0.5">
-          <button onClick={() => setMode("image")} className={`px-3 py-1.5 rounded-md text-xs font-bold flex items-center gap-1.5 ${mode === "image" ? "bg-white shadow text-gray-900" : "text-gray-500"}`}><ImageIcon className="w-3.5 h-3.5" />ছবি</button>
-          <button onClick={() => setMode("text")} className={`px-3 py-1.5 rounded-md text-xs font-bold flex items-center gap-1.5 ${mode === "text" ? "bg-white shadow text-gray-900" : "text-gray-500"}`}><FileText className="w-3.5 h-3.5" />লক্ষণ</button>
+    <ToolPageLayout
+      title="ফসল রোগ সনাক্তকারী"
+      icon={<Microscope className="w-4 h-4 text-white" />}
+      tools={TOOLS}
+      currentIndex={1}
+    >
+      {/* Mode toggle */}
+      <div className="flex justify-center mb-4">
+        <div className="inline-flex bg-white rounded-xl border border-gray-200 p-1 shadow-sm">
+          <button onClick={() => setMode("image")} className={`px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${mode === "image" ? "bg-gray-900 text-white shadow-md" : "text-gray-500 hover:text-gray-700"}`}><ImageIcon className="w-3.5 h-3.5" />ছবি</button>
+          <button onClick={() => setMode("text")} className={`px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${mode === "text" ? "bg-gray-900 text-white shadow-md" : "text-gray-500 hover:text-gray-700"}`}><FileText className="w-3.5 h-3.5" />লক্ষণ</button>
         </div>
       </div>
-
-      <div className="flex-1 overflow-y-auto">
-        <div className="max-w-xl mx-auto p-3 space-y-3">
+      <div className="max-w-xl mx-auto space-y-3">
           {mode === "image" ? (
             <div onDrop={handleDrop} onDragOver={e => e.preventDefault()} className={`border-2 border-dashed rounded-2xl p-4 text-center transition-all ${image ? "border-leaf-400 bg-leaf-50/30" : "border-gray-300 hover:border-leaf-400 bg-white"}`}>
               {image ? (
@@ -91,8 +101,7 @@ export default function DiseaseDetectorPage() {
               </div>
             </div>
           )}
-        </div>
       </div>
-    </div>
+    </ToolPageLayout>
   )
 }

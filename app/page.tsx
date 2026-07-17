@@ -99,21 +99,10 @@ export default function HomePage() {
         {/* Rich earth-tone ambient background */}
         <div className="absolute inset-0 bg-organic" />
         
-        {/* Large organic blobs */}
+        {/* Single subtle decorative blob */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute -top-32 -right-32 w-[700px] h-[700px] bg-gradient-to-bl from-emerald-200/20 via-leaf-100/15 to-transparent rounded-full blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 w-[600px] h-[600px] bg-gradient-to-tr from-amber-100/20 via-earth-100/15 to-transparent rounded-full blur-3xl" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-to-br from-sky-100/10 to-transparent rounded-full blur-3xl" />
-        </div>
-
-        {/* Floating decorative elements */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {/* Small floating crop icons */}
-          <span className="absolute top-[15%] left-[8%] text-xl opacity-20 animate-float [animation-delay:0s]">🌾</span>
-          <span className="absolute top-[25%] right-[12%] text-lg opacity-15 animate-float [animation-delay:2s]">🌿</span>
-          <span className="absolute bottom-[20%] left-[15%] text-lg opacity-15 animate-float [animation-delay:1.2s]">🍃</span>
-          <span className="absolute top-[70%] right-[8%] text-sm opacity-20 animate-float [animation-delay:3s]">💧</span>
-          <span className="absolute top-[40%] left-[5%] text-sm opacity-10 animate-float [animation-delay:0.6s]">☀️</span>
+          <div className="absolute -top-20 right-[10%] w-[600px] h-[600px] bg-gradient-to-bl from-emerald-100/15 to-transparent rounded-full blur-3xl" />
+          <div className="absolute -bottom-20 left-[5%] w-[500px] h-[500px] bg-gradient-to-tr from-amber-50/10 to-transparent rounded-full blur-3xl" />
         </div>
 
         <div className="container-cropiq relative py-14 md:py-20 lg:py-24">
@@ -121,26 +110,26 @@ export default function HomePage() {
             {/* ── LEFT — Content ── */}
             <div className="space-y-7">
               {/* Live badge */}
-              <div className="inline-flex items-center gap-2.5 px-4 py-2 bg-white/80 backdrop-blur-md rounded-full border border-emerald-200/60 shadow-sm shadow-emerald-100/30 cursor-default">
+              <div className="inline-flex items-center gap-2.5 px-4 py-2 bg-white rounded-full border border-gray-200/60 shadow-sm cursor-default">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
                 </span>
-                <span className="text-xs md:text-sm font-bold text-emerald-700">এআই-চালিত · সম্পূর্ণ বিনামূল্যে</span>
+                <span className="text-xs md:text-sm font-bold text-gray-600">এআই-চালিত · সম্পূর্ণ বিনামূল্যে</span>
               </div>
 
               {/* Main heading */}
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[3.5rem] font-black text-gray-800 leading-[1.05] tracking-tight">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[3.5rem] font-black text-gray-800 leading-[1.08] tracking-tight">
                 বাংলাদেশের{" "}
-                <span className="bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 bg-clip-text text-transparent">
+                <span className="text-emerald-600">
                   স্মার্ট কৃষি
                 </span>
                 <br />
-                <span className="text-amber-600">&</span>{" "}
-                <span className="bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">
+                <span className="text-amber-500">&</span>{" "}
+                <span className="text-emerald-600">
                   বায়োইনফরমেটিক্স
                 </span>{" "}
-                <span className="text-gray-700">হাব</span>
+                হাব
               </h1>
 
               <p className="text-base md:text-lg text-gray-600 leading-relaxed max-w-xl font-medium">
@@ -148,10 +137,10 @@ export default function HomePage() {
               </p>
 
               {/* Trust badges */}
-              <div className="flex flex-wrap items-center gap-5 text-sm text-gray-600">
-                <span className="flex items-center gap-1.5 font-semibold px-3 py-1.5 bg-white/60 rounded-lg border border-gray-100"><ShieldCheck className="w-4 h-4 text-emerald-500" />৯৮% নির্ভুল</span>
-                <span className="flex items-center gap-1.5 font-semibold px-3 py-1.5 bg-white/60 rounded-lg border border-gray-100"><Globe className="w-4 h-4 text-blue-500" />বাংলা ভাষায়</span>
-                <span className="flex items-center gap-1.5 font-semibold px-3 py-1.5 bg-white/60 rounded-lg border border-gray-100"><Zap className="w-4 h-4 text-amber-500" />তাৎক্ষণিক ফলাফল</span>
+              <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
+                <span className="flex items-center gap-1.5 font-semibold px-3 py-1.5 bg-white rounded-lg border border-gray-200/60 shadow-sm"><ShieldCheck className="w-4 h-4 text-emerald-500" />৯৮% নির্ভুল</span>
+                <span className="flex items-center gap-1.5 font-semibold px-3 py-1.5 bg-white rounded-lg border border-gray-200/60 shadow-sm"><Globe className="w-4 h-4 text-blue-500" />বাংলা ভাষায়</span>
+                <span className="flex items-center gap-1.5 font-semibold px-3 py-1.5 bg-white rounded-lg border border-gray-200/60 shadow-sm"><Zap className="w-4 h-4 text-amber-500" />তাৎক্ষণিক ফলাফল</span>
               </div>
 
               {/* CTAs */}
@@ -248,7 +237,7 @@ export default function HomePage() {
       </section>
 
       {/* ===== STATS BAR ===== */}
-      <section className="relative z-10 bg-white border-b border-gray-100/80">
+      <section className="relative z-10 bg-white border-b border-gray-100">
         <div className="container-cropiq py-6">
           <div className="flex flex-wrap items-center justify-center md:justify-between gap-6">
             {stats.map((s, i) => (
@@ -271,10 +260,10 @@ export default function HomePage() {
       </section>
 
       {/* ===== FEATURES ===== */}
-      <section className="relative z-10 py-16 md:py-20">
+      <section className="relative z-10 py-16 md:py-20 bg-white">
         <div className="container-cropiq">
           <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 rounded-full border border-gray-200 text-xs font-bold mb-4 backdrop-blur-sm shadow-sm">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-full border border-gray-200 text-xs font-bold mb-4 shadow-sm">
               <Zap className="w-3.5 h-3.5 text-amber-500" /> আমাদের সেবাসমূহ
             </div>
             <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-2">একজন কৃষকের যা যা প্রয়োজন</h2>
@@ -282,7 +271,7 @@ export default function HomePage() {
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
             {features.map((f, i) => (
-              <Link key={i} href={f.href} className="group bg-white rounded-2xl border border-gray-100 p-5 hover:border-gray-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+              <Link key={i} href={f.href} className="group bg-white rounded-2xl border border-gray-200 p-5 hover:border-gray-300 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 shadow-sm">
                 <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${f.gradient} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-sm`}>
                   <f.icon className="w-5 h-5 text-white" />
                 </div>
@@ -299,9 +288,9 @@ export default function HomePage() {
       </section>
 
       {/* ===== HOW IT WORKS ===== */}
-      <section className="relative z-10 py-16 md:py-20 bg-gradient-to-b from-white via-gray-50/50 to-white">
+      <section className="relative z-10 py-16 md:py-20 bg-[#f4f0e8]">
         <div className="container-cropiq text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 rounded-full border border-gray-200 text-xs font-bold mb-4 backdrop-blur-sm shadow-sm">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-gray-200 text-xs font-bold mb-4 shadow-sm">
             <Star className="w-3.5 h-3.5 text-amber-500" /> ব্যবহার পদ্ধতি
           </div>
           <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-12">তিনটি সহজ ধাপে শুরু</h2>
@@ -328,7 +317,7 @@ export default function HomePage() {
       </section>
 
       {/* ===== FEATURED HIGHLIGHT ===== */}
-      <section className="relative z-10 py-14">
+      <section className="relative z-10 py-14 bg-white">
         <div className="container-cropiq">
           <div className="relative overflow-hidden bg-gradient-to-br from-emerald-700 via-emerald-800 to-teal-900 rounded-3xl p-8 md:p-10 shadow-2xl shadow-emerald-900/10 group/highlight">
             {/* Inner glow orbs */}
@@ -366,7 +355,7 @@ export default function HomePage() {
       </section>
 
       {/* ===== CTA ===== */}
-      <section className="relative z-10 py-16 md:py-20 bg-gradient-to-b from-white to-gray-50">
+      <section className="relative z-10 py-16 md:py-20 bg-white">
         <div className="container-cropiq max-w-xl text-center">
           <div className="relative mx-auto mb-6 w-fit">
             <div className="absolute inset-0 bg-emerald-500 rounded-2xl blur-xl opacity-10 animate-pulse-gentle" />
