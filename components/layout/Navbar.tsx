@@ -41,7 +41,7 @@ export function Navbar() {
           <div className="hidden md:flex items-center gap-1">
             {[
               { href: "/", label: "হোম" },
-              { href: "/tools/disease-detector", label: "টুলস", badge: true },
+              { href: "/tools", label: "টুলস", badge: true },
               { href: "/dashboard", label: "ড্যাশবোর্ড" },
             ].map(link => {
               const isActive = pathname === link.href || (link.href !== "/" && pathname.startsWith(link.href))
@@ -90,7 +90,7 @@ export function Navbar() {
         {/* Mobile Menu */}
         <div className={`md:hidden transition-all duration-300 overflow-hidden ${mobileOpen ? "max-h-80 border-t border-gray-100" : "max-h-0"}`}>
           <div className="py-3 space-y-1">
-            {[{ href: "/", label: "হোম" }, { href: "/tools/disease-detector", label: "টুলস" }, { href: "/dashboard", label: "ড্যাশবোর্ড" }].map(link => (
+            {[{ href: "/", label: "হোম" }, { href: "/tools", label: "টুলস" }, { href: "/dashboard", label: "ড্যাশবোর্ড" }].map(link => (
               <Link key={link.href} href={link.href} className={`block px-4 py-3 rounded-xl text-sm font-semibold ${pathname === link.href ? "text-leaf-700 bg-leaf-50" : "text-gray-600 hover:bg-gray-50"}`}>{link.label}</Link>
             ))}
             {!user && !isAuthPage && (
