@@ -41,18 +41,18 @@ export default function WeatherAdvisoryPage() {
 
   return (
     <ToolPageLayout title="আবহাওয়া পরামর্শ" icon={<CloudSun className="w-4 h-4 text-white" />} currentIndex={3}>
-      <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+      <div className="flex flex-col flex-1 min-h-0 overflow-hidden pt-2">
 
         {/* ── Selectors ── */}
         <div className="flex flex-wrap items-end gap-1.5 mb-2 shrink-0">
           <div className="relative flex-1 min-w-[90px]">
-            <select value={district} onChange={e => setDistrict(e.target.value)} className="w-full pl-2.5 pr-7 py-2 rounded-lg border border-gray-200 text-xs font-semibold text-gray-700 focus:border-sky-400 outline-none bg-white appearance-none cursor-pointer">
+            <select value={district} onChange={e => setDistrict(e.target.value)} className="w-full pl-2.5 pr-7 py-2 rounded-xl border-2 border-gray-100 text-xs font-semibold text-gray-700 focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none bg-white appearance-none cursor-pointer shadow-sm hover:border-sky-200 transition-colors">
               {DISTRICTS.map(d => <option key={d.name_en} value={d.name_en}>{d.name_bn}</option>)}
             </select>
             <ChevronDown className="w-3 h-3 text-gray-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
           <div className="relative flex-1 min-w-[70px]">
-            <select value={crop} onChange={e => setCrop(e.target.value)} className="w-full pl-2.5 pr-7 py-2 rounded-lg border border-gray-200 text-xs font-semibold text-gray-700 focus:border-sky-400 outline-none bg-white appearance-none cursor-pointer">
+            <select value={crop} onChange={e => setCrop(e.target.value)} className="w-full pl-2.5 pr-7 py-2 rounded-xl border-2 border-gray-100 text-xs font-semibold text-gray-700 focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none bg-white appearance-none cursor-pointer shadow-sm hover:border-sky-200 transition-colors">
               {CROPS.map(c => <option key={c.name_en} value={c.name_en}>{c.name_bn}</option>)}
             </select>
             <ChevronDown className="w-3 h-3 text-gray-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />

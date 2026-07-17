@@ -38,19 +38,19 @@ export default function MarketPricesPage() {
 
   return (
     <ToolPageLayout title="বাজার মূল্য বোর্ড" icon={<BarChart3 className="w-4 h-4 text-white" />} currentIndex={2}>
-      <div className="flex flex-col flex-1 min-h-0 overflow-hidden max-w-lg mx-auto w-full">
+      <div className="flex flex-col flex-1 min-h-0 overflow-hidden max-w-lg mx-auto w-full pt-2">
 
         {/* ── Selectors ── */}
         <div className="flex flex-wrap items-end gap-2 mb-3 shrink-0">
           <div className="flex gap-1.5 flex-1 flex-wrap">
-            <select value={district} onChange={e => setDistrict(e.target.value)} className="flex-1 min-w-[80px] px-2.5 py-2 rounded-lg border border-gray-200 text-xs font-semibold text-gray-700 focus:border-amber-400 outline-none bg-white">
+            <select value={district} onChange={e => setDistrict(e.target.value)} className="flex-1 min-w-[80px] px-2.5 py-2 rounded-xl border-2 border-gray-100 text-xs font-semibold text-gray-700 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none bg-white shadow-sm hover:border-amber-200 transition-colors">
               {DISTRICTS.map(d => <option key={d.name_en} value={d.name_en}>{d.name_bn}</option>)}
             </select>
-            <select value={commodity} onChange={e => setCommodity(e.target.value)} className="flex-1 min-w-[80px] px-2.5 py-2 rounded-lg border border-gray-200 text-xs font-semibold text-gray-700 focus:border-amber-400 outline-none bg-white">
+            <select value={commodity} onChange={e => setCommodity(e.target.value)} className="flex-1 min-w-[80px] px-2.5 py-2 rounded-xl border-2 border-gray-100 text-xs font-semibold text-gray-700 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none bg-white shadow-sm hover:border-amber-200 transition-colors">
               <option value="">সব পণ্য</option>
               {COMMODITIES.map(c => <option key={c.name_en} value={c.name_en}>{c.name_bn}</option>)}
             </select>
-            <input type="date" value={date} onChange={e => setDate(e.target.value)} className="flex-1 min-w-[80px] px-2.5 py-2 rounded-lg border border-gray-200 text-xs font-semibold text-gray-700 focus:border-amber-400 outline-none bg-white" />
+            <input type="date" value={date} onChange={e => setDate(e.target.value)} className="flex-1 min-w-[80px] px-2.5 py-2 rounded-xl border-2 border-gray-100 text-xs font-semibold text-gray-700 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none bg-white shadow-sm hover:border-amber-200 transition-colors" />
           </div>
           <button onClick={fetchPrices} disabled={loading} className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 disabled:from-gray-300 disabled:to-gray-400 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-md shadow-amber-200/30 active:scale-95 transition-all disabled:shadow-none flex items-center gap-1.5 shrink-0">
             {loading ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> নিচ্ছে</> : <><Search className="w-3.5 h-3.5" /> দেখুন</>}

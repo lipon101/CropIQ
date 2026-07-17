@@ -39,10 +39,10 @@ export default function DiseaseDetectorPage() {
 
   return (
     <ToolPageLayout title="ফসল রোগ সনাক্তকারী" icon={<Microscope className="w-4 h-4 text-white" />} currentIndex={1}>
-      <div className="space-y-2 flex-1 min-h-0">
+      <div className="space-y-2 flex-1 min-h-0 pt-2">
         {/* Mode Switch — icon only */}
         <div className="flex justify-center">
-          <div className="inline-flex bg-white rounded-2xl border border-gray-200 p-1.5 shadow-sm">
+          <div className="inline-flex bg-white rounded-2xl border-2 border-gray-100 p-1.5 shadow-md">
             <button onClick={() => { setMode("image"); reset() }} className={`p-3 rounded-xl transition-all duration-200 ${mode === "image" ? "bg-gray-900 text-white shadow-lg" : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"}`}>
               <ImageIcon className="w-5 h-5" />
             </button>
@@ -92,7 +92,7 @@ export default function DiseaseDetectorPage() {
 
         {/* Results */}
         {result && !loading && (
-          <div className="space-y-2 flex-1 min-h-0">
+          <div className="space-y-2 flex-1 min-h-0 pt-2">
             <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
               <div className="px-4 py-3 bg-gradient-to-r from-red-50 to-rose-50 border-b border-red-100 flex items-center gap-3">
                 <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm"><ShieldAlert className="w-5 h-5 text-red-500" /></div>
