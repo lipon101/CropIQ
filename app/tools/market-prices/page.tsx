@@ -58,7 +58,7 @@ export default function MarketPricesPage() {
         </div>
 
         {/* ── Content ── */}
-        <div className="flex-1 overflow-y-auto">
+        <div className={`flex-1 ${hasSearched && prices.length > 0 ? 'overflow-y-auto' : 'flex items-center justify-center'}`}>
           {loading && (
             <div className="flex items-center justify-center py-20">
               <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />

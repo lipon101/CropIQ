@@ -63,7 +63,7 @@ export default function WeatherAdvisoryPage() {
         </div>
 
         {/* ── Content ── */}
-        <div className="flex-1 overflow-y-auto w-full space-y-2">
+        <div className={`flex-1 w-full space-y-2 ${weather && !loading ? 'overflow-y-auto' : 'flex items-center justify-center'}`}>
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2.5 rounded-xl text-xs flex items-center gap-2">
               <AlertTriangle className="w-3.5 h-3.5 shrink-0" />{error}

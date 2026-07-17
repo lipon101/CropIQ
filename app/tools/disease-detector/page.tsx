@@ -52,9 +52,9 @@ export default function DiseaseDetectorPage() {
           </div>
         </div>
 
-        {/* Upload Zone — minimal */}
+        {/* Upload Zone — centered */}
         {!result && !loading && (
-          <>
+          <div className="flex-1 flex flex-col items-center justify-center">
             {mode === "image" ? (
               <div onDrop={handleDrop} onDragOver={e => e.preventDefault()} className={`relative rounded-2xl border-2 border-dashed transition-all duration-300 ${image ? "border-emerald-400 bg-emerald-50/30" : "border-gray-200 hover:border-gray-400 bg-white"}`}>
                 {image ? (
@@ -76,7 +76,7 @@ export default function DiseaseDetectorPage() {
                 <textarea value={description} onChange={e => setDescription(e.target.value)} rows={3} className="w-full p-4 rounded-2xl bg-transparent outline-none text-sm resize-none" placeholder="লক্ষণ বর্ণনা করুন..." />
               </div>
             )}
-          </>
+          </div>
         )}
 
         {/* Error */}
