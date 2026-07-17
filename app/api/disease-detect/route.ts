@@ -14,20 +14,17 @@ export async function POST(req: NextRequest) {
     const apiKey = process.env.OPENROUTER_API_KEY
     if (!apiKey) return NextResponse.json({ error: "এআই সার্ভিস কনফিগার করা হয়নি" }, { status: 500 })
 
-    const prompt = `তুমি একজন কৃষি বিজ্ঞানী ও উদ্ভিদ রোগ বিশেষজ্ঞ। বাংলাদেশের কৃষি সম্পর্কে তোমার গভীর জ্ঞান আছে। এই ফসলের ছবি বিশ্লেষণ করে ফসলের ধরন ও রোগ সনাক্ত করো।
+    const prompt = `তুমি একজন বাংলাদেশি কৃষিবিদ। ফসলের ছবি দেখে রোগ সনাক্ত করো।
 
-শুধুমাত্র একটি JSON অবজেক্ট ফেরত দাও (কোন মার্কডাউন বা অতিরিক্ত টেক্সট নয়):
+শুধুমাত্র একটি JSON দাও:
 
 {
-  "crop_type": "ফসলের নাম বাংলায়",
+  "crop_type": "ধান / গম / আলু / টমেটো...",
   "disease_name": "রোগের নাম বা 'সুস্থ'",
   "confidence": 0.95,
-  "cause": "রোগের কারণ (ছত্রাক/ব্যাকটেরিয়া/ভাইরাস/পোকামাকড়/পুষ্টির অভাব)",
-  "remedy_bn": "বাংলায় বিস্তারিত চিকিৎসা পদ্ধতি ও ঔষধের নাম",
-  "remedy_en": "Treatment details in English",
-  "prevention_bn": "বাংলায় প্রতিরোধের উপায়",
-  "prevention_en": "Prevention tips in English",
-  "is_common_in_bd": true
+  "cause": "ছত্রাক / ব্যাকটেরিয়া / পোকা / ভাইরাস / পুষ্টির অভাব",
+  "remedy_bn": "বাংলায় চিকিৎসা। কৃষকের সাথে কথা বলার মতো সহজ ভাষায়। ওষুধের নাম, মাত্রা (প্রতি লিটার/বিঘা), কখন দিতে হবে। যেমন: 'প্রতি লিটার পানিতে ২ গ্রাম ম্যানকোজেব মিশিয়ে ৭ দিন পরপর ৩ বার স্প্রে করুন।' বৈজ্ঞানিক শব্দ বা ইংরেজি-বাংলা মিশ্রণ নয়।",
+  "prevention_bn": "বাংলায় প্রতিরোধের উপায়। সহজ ও কাজের কথা। যেমন: 'জমিতে পানি জমতে দেবেন না, ফসল কাটার পর নাড়া পুড়িয়ে ফেলবেন।'"
 }`
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -44,7 +41,7 @@ export async function POST(req: NextRequest) {
           { role: "system", content: prompt },
           { role: "user", content: [
             { type: "image_url", image_url: { url: `data:${file.type || "image/jpeg"};base64,${base64}` } },
-            { type: "text", text: "এই ফসল ও রোগ সনাক্ত করো। শুধুমাত্র JSON উত্তর দাও।" },
+            { type: "text", text: "ফসলের রোগ সনাক্ত করো। সহজ বাংলায় চিকিৎসা বলো। শুধু JSON দাও।" },
           ]},
         ],
         max_tokens: 600,
@@ -64,10 +61,10 @@ export async function POST(req: NextRequest) {
     const jsonMatch = content.match(/\{[\s\S]*\}/)
     if (jsonMatch) {
       try { result = JSON.parse(jsonMatch[0]) } catch {
-        result = { crop_type: "অজানা", disease_name: "বিশ্লেষণ অসম্পূর্ণ", confidence: 0, cause: "", remedy_bn: content, remedy_en: content, prevention_bn: "", prevention_en: "", is_common_in_bd: false }
+        result = { crop_type: "অজানা", disease_name: "বিশ্লেষণ অসম্পূর্ণ", confidence: 0, cause: "", remedy_bn: content, prevention_bn: "" }
       }
     } else {
-      result = { crop_type: "অজানা", disease_name: "নির্ণয় করা যায়নি", confidence: 0, cause: "", remedy_bn: content, remedy_en: content, prevention_bn: "", prevention_en: "", is_common_in_bd: false }
+      result = { crop_type: "অজানা", disease_name: "নির্ণয় করা যায়নি", confidence: 0, cause: "", remedy_bn: content, prevention_bn: "" }
     }
 
     return NextResponse.json({ result })

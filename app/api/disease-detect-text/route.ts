@@ -8,20 +8,17 @@ export async function POST(req: NextRequest) {
     const apiKey = process.env.OPENROUTER_API_KEY
     if (!apiKey) return NextResponse.json({ error: "এআই সার্ভিস কনফিগার করা হয়নি" }, { status: 500 })
 
-    const prompt = `তুমি একজন কৃষি বিজ্ঞানী। এই লক্ষণ বর্ণনা পড়ে ফসলের রোগ সনাক্ত করো।
+    const prompt = `তুমি একজন বাংলাদেশি কৃষিবিদ। কৃষকের বলা লক্ষণ থেকে রোগ সনাক্ত করো।
 
-শুধুমাত্র একটি JSON অবজেক্ট ফেরত দাও:
+শুধু JSON দাও:
 
 {
-  "crop_type": "ফসলের নাম বাংলায়",
-  "disease_name": "রোগের নাম বা 'পরিষ্কার নয় — আরও তথ্য প্রয়োজন'",
+  "crop_type": "ধান / গম / আলু / টমেটো...",
+  "disease_name": "রোগ বা 'পরিষ্কার না — আরও তথ্য দরকার'",
   "confidence": 0.85,
-  "cause": "রোগের কারণ",
-  "remedy_bn": "বাংলায় চিকিৎসা পদ্ধতি",
-  "remedy_en": "Treatment in English",
-  "prevention_bn": "বাংলায় প্রতিরোধের উপায়",
-  "prevention_en": "Prevention tips in English",
-  "is_common_in_bd": true
+  "cause": "ছত্রাক / ব্যাকটেরিয়া / পোকা...",
+  "remedy_bn": "বাংলায় সহজ চিকিৎসা। কৃষকের সাথে কথা বলার ভাষায়। ওষুধের নাম, মাত্রা, সময়। যেমন: 'প্রতি লিটার পানিতে ২ গ্রাম কার্বেন্ডাজিম মিশিয়ে স্প্রে করুন।' বৈজ্ঞানিক ভাষা নয়।",
+  "prevention_bn": "প্রতিরোধের সহজ উপায় বাংলায়"
 }`
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -36,7 +33,7 @@ export async function POST(req: NextRequest) {
         model: "openrouter/free",
         messages: [
           { role: "system", content: prompt },
-          { role: "user", content: `লক্ষণ বর্ণনা: ${description}\n\nরোগ সনাক্ত করো। শুধুমাত্র JSON উত্তর দাও।` },
+          { role: "user", content: `লক্ষণ: ${description}\n\nরোগ সনাক্ত করো। সহজ বাংলায় চিকিৎসা বলো। শুধু JSON দাও।` },
         ],
         max_tokens: 600,
         temperature: 0.3,
@@ -53,9 +50,9 @@ export async function POST(req: NextRequest) {
     let result: any
     const jsonMatch = content.match(/\{[\s\S]*\}/)
     if (jsonMatch) {
-      try { result = JSON.parse(jsonMatch[0]) } catch { result = { disease_name: "বিশ্লেষণ অসম্পূর্ণ", remedy_bn: content, remedy_en: content } }
+      try { result = JSON.parse(jsonMatch[0]) } catch { result = { disease_name: "বিশ্লেষণ অসম্পূর্ণ", remedy_bn: content } }
     } else {
-      result = { disease_name: "নির্ণয় করা যায়নি", remedy_bn: content, remedy_en: content }
+      result = { disease_name: "নির্ণয় করা যায়নি", remedy_bn: content }
     }
     return NextResponse.json({ result })
   } catch (error: any) {
