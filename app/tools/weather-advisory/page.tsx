@@ -43,7 +43,7 @@ export default function WeatherAdvisoryPage() {
           user_id: user.id,
           district,
           crop,
-        }).then(() => {}).catch(() => {})
+        }).then(() => {})
       }
     } catch (e: any) { setError(e.message || "তথ্য পাওয়া যায়নি") }
     finally { setLoading(false) }
