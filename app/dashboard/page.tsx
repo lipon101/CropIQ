@@ -68,29 +68,36 @@ export default function DashboardPage() {
 
         <div className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-1">
-            <div className="card-default">
+            <div className="card-default h-full flex flex-col">
               <div className="flex items-center gap-2 mb-4"><div className="w-8 h-8 bg-leaf-100 rounded-xl flex items-center justify-center"><Zap className="w-4 h-4 text-leaf-600" /></div><h3 className="font-bold text-gray-800 text-sm">দ্রুত অ্যাকশন</h3></div>
-              <div className="space-y-0.5">
+              <div className="space-y-1 flex-1">
                 {quickActions.map((a, i) => (
-                  <Link key={i} href={a.href} className={`flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all ${a.hover} group`}>
-                    <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-white border border-gray-100 group-hover:shadow-sm"><a.icon className="w-4 h-4 text-gray-500 group-hover:text-leaf-600" /></div>
+                  <Link key={i} href={a.href} className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all ${a.hover} group`}>
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-white border border-gray-100 group-hover:shadow-sm"><a.icon className="w-4 h-4 text-gray-500 group-hover:text-leaf-600" /></div>
                     <span className="text-sm font-semibold text-gray-700 flex-1">{a.label}</span>
                     <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-leaf-500 group-hover:translate-x-0.5 transition-all" />
                   </Link>
                 ))}
               </div>
+              {/* Decorative footer */}
+              <div className="mt-auto pt-4 border-t border-gray-100">
+                <div className="flex items-center justify-center gap-1.5 text-xs text-gray-400 font-medium">
+                  <Sprout className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>CropIQ টুলস</span>
+                </div>
+              </div>
             </div>
           </div>
 
           <div className="lg:col-span-2">
-            <div className="card-default">
+            <div className="card-default h-full flex flex-col">
               <div className="flex items-center gap-2 mb-4"><div className="w-8 h-8 bg-leaf-100 rounded-xl flex items-center justify-center"><Clock className="w-4 h-4 text-leaf-600" /></div><h3 className="font-bold text-gray-800 text-sm">সাম্প্রতিক কার্যক্রম</h3></div>
               {loading ? (
-                <div className="space-y-3">{[1, 2, 3].map(i => <div key={i} className="flex gap-3 p-3"><div className="w-10 h-10 bg-gray-100 rounded-xl animate-pulse" /><div className="flex-1 space-y-2"><div className="h-4 bg-gray-100 rounded-lg animate-pulse w-3/4" /><div className="h-3 bg-gray-50 rounded-lg animate-pulse w-1/2" /></div></div>)}</div>
+                <div className="space-y-3 flex-1">{[1, 2, 3].map(i => <div key={i} className="flex gap-3 p-3"><div className="w-10 h-10 bg-gray-100 rounded-xl animate-pulse" /><div className="flex-1 space-y-2"><div className="h-4 bg-gray-100 rounded-lg animate-pulse w-3/4" /><div className="h-3 bg-gray-50 rounded-lg animate-pulse w-1/2" /></div></div>)}</div>
               ) : scans.length === 0 ? (
-                <div className="text-center py-8"><div className="w-14 h-14 bg-leaf-50 rounded-2xl flex items-center justify-center mx-auto mb-3"><Sprout className="w-7 h-7 text-leaf-300" /></div><p className="text-sm text-gray-500 font-medium mb-3">এখনও কোন তথ্য নেই। CropIQ টুল ব্যবহার শুরু করুন!</p><Link href="/tools/chatbot" className="btn-primary-sm inline-flex"><MessageCircle className="w-4 h-4" />চ্যাটবট ব্যবহার করুন</Link></div>
+                <div className="flex-1 flex items-center justify-center"><div className="text-center py-8"><div className="w-14 h-14 bg-leaf-50 rounded-2xl flex items-center justify-center mx-auto mb-3"><Sprout className="w-7 h-7 text-leaf-300" /></div><p className="text-sm text-gray-500 font-medium mb-3">এখনও কোন তথ্য নেই। CropIQ টুল ব্যবহার শুরু করুন!</p><Link href="/tools/chatbot" className="btn-primary-sm inline-flex"><MessageCircle className="w-4 h-4" />চ্যাটবট ব্যবহার করুন</Link></div></div>
               ) : (
-                <div className="space-y-1.5">
+                <div className="flex-1 space-y-1.5 overflow-y-auto">
                   {scans.map(s => (
                     <div key={s.id} className="flex items-center gap-3 p-3 bg-gray-50/70 rounded-xl hover:bg-gray-100/70 transition-colors group">
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${s.confidence > 0.8 ? "bg-red-100" : "bg-amber-100"}`}><Microscope className={`w-4 h-4 ${s.confidence > 0.8 ? "text-red-500" : "text-amber-500"}`} /></div>
