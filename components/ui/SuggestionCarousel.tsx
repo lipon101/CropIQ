@@ -21,24 +21,46 @@ export default function SuggestionCarousel({
 
   if (!suggestions.length) return null
 
+  // ── find closest card to viewport center ──
+  const getClosestIndex = () => {
+    const el = carouselRef.current
+    if (!el) return 0
+    const children = Array.from(el.children) as HTMLElement[]
+    const viewCenter = el.scrollLeft + el.offsetWidth / 2
+    let closest = 0
+    let closestDist = Infinity
+    children.forEach((child, i) => {
+      const cardCenter = child.offsetLeft + child.offsetWidth / 2
+      const dist = Math.abs(cardCenter - viewCenter)
+      if (dist < closestDist) { closestDist = dist; closest = i }
+    })
+    return closest
+  }
+
   const handleScroll = () => {
+    setActiveIndex(getClosestIndex())
+  }
+
+  const scrollTo = (i: number) => {
     const el = carouselRef.current
     if (!el) return
-    const idx = Math.round(el.scrollLeft / el.offsetWidth)
-    setActiveIndex(idx)
+    const children = Array.from(el.children) as HTMLElement[]
+    const target = children[i]
+    if (!target) return
+    // center the target card in the viewport
+    el.scrollTo({
+      left: target.offsetLeft - (el.offsetWidth - target.offsetWidth) / 2,
+      behavior: "smooth",
+    })
   }
 
   const scroll = (dir: -1 | 1) => {
-    const el = carouselRef.current
-    if (!el) return
-    el.scrollBy({ left: dir * el.offsetWidth, behavior: "smooth" })
+    const current = getClosestIndex()
+    const next = Math.max(0, Math.min(suggestions.length - 1, current + dir))
+    scrollTo(next)
   }
 
-  const goTo = (i: number) => {
-    const el = carouselRef.current
-    if (!el) return
-    el.scrollTo({ left: i * el.offsetWidth, behavior: "smooth" })
-  }
+  const goTo = (i: number) => scrollTo(i)
 
   return (
     <div className="shrink-0 pb-2">
@@ -68,7 +90,7 @@ export default function SuggestionCarousel({
         </div>
       </div>
 
-      {/* Scrollable cards */}
+      {/* Scrollable cards — dynamic width per card */}
       <div
         ref={carouselRef}
         onScroll={handleScroll}
@@ -79,7 +101,7 @@ export default function SuggestionCarousel({
             key={i}
             onClick={() => onSelect(s)}
             disabled={disabled}
-            className="shrink-0 w-[85%] sm:w-[60%] snap-center text-left px-4 py-3 bg-white border border-gray-200 hover:border-leaf-300 hover:bg-leaf-50 rounded-2xl text-[12px] font-semibold text-gray-700 hover:text-leaf-700 transition-all disabled:opacity-50 shadow-sm leading-relaxed"
+            className="shrink-0 w-auto max-w-[85%] snap-center text-left px-4 py-2.5 bg-white border border-gray-200 hover:border-leaf-300 hover:bg-leaf-50 rounded-2xl text-[12px] font-semibold text-gray-700 hover:text-leaf-700 transition-all disabled:opacity-50 shadow-sm leading-relaxed"
           >
             {s}
           </button>
