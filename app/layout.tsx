@@ -1,50 +1,27 @@
 import type { Metadata } from "next"
 import "./globals.css"
 import { AuthProvider } from "@/lib/auth/AuthContext"
-import { LanguageProvider } from "@/lib/i18n/LanguageContext"
 import { Navbar } from "@/components/layout/Navbar"
 import { Footer } from "@/components/layout/Footer"
 import { ErrorBoundary } from "@/components/ErrorBoundary"
 
 export const metadata: Metadata = {
-  title: "CropIQ — AI-Powered Agriculture Intelligence for Bangladesh",
-  description:
-    "Free AI crop disease detection, live market prices, weather advisory, and farming chatbot in Bengali and English for Bangladeshi farmers. Smart Agriculture & Bioinformatics Hub.",
-  keywords: "crop disease, agriculture AI, Bangladesh farming, crop diagnosis, market price, weather advisory, Bengali farming app, smart agriculture, bioinformatics, plant disease detection",
-  authors: [{ name: "CropIQ Team — Group 5, CSE 400, BUBT" }],
-  openGraph: {
-    title: "CropIQ — Smart Farming for Bangladesh",
-    description: "AI-powered agriculture tools for Bangladeshi farmers — completely free. Disease detection, market prices, weather advisory & AI chatbot in Bengali.",
-    type: "website",
-    locale: "bn_BD",
-    siteName: "CropIQ",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "CropIQ — Smart Farming for Bangladesh",
-    description: "AI-powered agriculture tools for Bangladeshi farmers — completely free.",
-  },
-  robots: {
-    index: true,
-    follow: true,
-  },
-  icons: {
-    icon: "/favicon.svg",
-  },
+  title: "CropIQ — বাংলাদেশের স্মার্ট কৃষি প্ল্যাটফর্ম",
+  description: "এআই-চালিত ফসলের রোগ সনাক্তকরণ, লাইভ বাজার মূল্য, আবহাওয়া পরামর্শ এবং কৃষি চ্যাটবট — সম্পূর্ণ বিনামূল্যে।",
+  keywords: "ফসল রোগ, কৃষি এআই, বাংলাদেশ কৃষি, ফসল সনাক্তকরণ, বাজার মূল্য, আবহাওয়া, বাংলা কৃষি অ্যাপ",
+  openGraph: { title: "CropIQ — বাংলাদেশের স্মার্ট কৃষি", description: "কৃষকদের জন্য সম্পূর্ণ বিনামূল্যের এআই টুল", type: "website", locale: "bn_BD", siteName: "CropIQ" },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="bn" suppressHydrationWarning>
-      <body className="min-h-screen flex flex-col bg-gradient-to-b from-leaf-50/20 via-white to-white" suppressHydrationWarning>
+      <body className="min-h-screen flex flex-col bg-white" suppressHydrationWarning>
         <ErrorBoundary>
-          <LanguageProvider>
-            <AuthProvider>
-              <Navbar />
-              <main className="flex-1">{children}</main>
-              <Footer />
-            </AuthProvider>
-          </LanguageProvider>
+          <AuthProvider>
+            <Navbar />
+            <main className="flex-1">{children}</main>
+            <Footer />
+          </AuthProvider>
         </ErrorBoundary>
       </body>
     </html>
