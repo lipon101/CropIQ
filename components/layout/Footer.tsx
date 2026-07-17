@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Sprout, ArrowUpRight } from "lucide-react"
+import { Sprout } from "lucide-react"
 
 const navLinks = [
   { href: "/", label: "হোম" },
@@ -19,7 +19,7 @@ const toolLinks = [
 
 export function Footer() {
   return (
-    <footer className="relative bg-white border-t border-gray-100 overflow-hidden">
+    <footer className="relative bg-[#f4f0e8] border-t border-gray-200/60 overflow-hidden">
       <div className="relative container-cropiq py-10 md:py-12">
         {/* Main columns */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10">
@@ -92,11 +92,6 @@ export function Footer() {
               <li>গ্রুপ ৫ · সিএসই ৪০০</li>
               <li>বিইউবিটি · ইনটেক ৫১</li>
               <li>বাংলাদেশ</li>
-              <li>
-                <Link href="/" className="text-gray-400 hover:text-emerald-500 transition-colors inline-flex items-center gap-1">
-                  cropiqai.vercel.app <ArrowUpRight className="w-2.5 h-2.5" />
-                </Link>
-              </li>
             </ul>
           </div>
         </div>
@@ -105,9 +100,6 @@ export function Footer() {
         <div className="border-t border-gray-100 mt-10 pt-5 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-[11px] text-gray-400 font-medium">
             &copy; {new Date().getFullYear()} CropIQ. সর্বস্বত্ব সংরক্ষিত।
-          </p>
-          <p className="text-[10px] text-gray-400">
-            বাংলাদেশের কৃষি ও প্রযুক্তির জন্য নিবেদিত
           </p>
         </div>
       </div>
