@@ -2,160 +2,33 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Serif+Bengali:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Serif+Bengali:wght@400;500;600;700&display=swap');
 
 @layer base {
-  * {
-    box-sizing: border-box;
-  }
-  html {
-    scroll-behavior: smooth;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-  body {
-    @apply bg-white text-gray-900 font-sans antialiased;
-  }
-  .font-bengali {
-    font-family: 'Noto Serif Bengali', serif;
-  }
-  ::selection {
-    @apply bg-leaf-200 text-leaf-900;
-  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+  body { @apply bg-white text-gray-900 font-sans antialiased; }
+  .font-bengali { font-family: 'Noto Serif Bengali', serif; }
+  ::selection { @apply bg-leaf-200 text-leaf-900; }
 }
 
 @layer components {
-  .container-cropiq {
-    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
-  }
+  .container-cropiq { @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8; }
 
-  /* ─── Premium Buttons ─── */
   .btn-primary {
-    @apply relative overflow-hidden bg-gradient-to-r from-leaf-600 to-leaf-700 text-white font-semibold py-3.5 px-7 rounded-xl transition-all duration-300 shadow-lg shadow-leaf-200/50 hover:shadow-xl hover:shadow-leaf-300/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0;
+    @apply bg-leaf-600 hover:bg-leaf-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2;
   }
-  .btn-primary::after {
-    content: '';
-    @apply absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] transition-transform duration-700;
-  }
-  .btn-primary:hover::after {
-    @apply translate-x-[100%];
-  }
-
   .btn-secondary {
-    @apply bg-white hover:bg-gray-50 text-leaf-700 font-semibold py-3.5 px-7 rounded-xl border-2 border-gray-200 hover:border-leaf-300 transition-all duration-300 hover:shadow-md active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply bg-white hover:bg-gray-50 text-leaf-700 font-semibold py-3 px-6 rounded-xl border-2 border-gray-200 hover:border-leaf-300 transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
   }
-
-  .btn-ghost {
-    @apply text-gray-600 hover:text-leaf-700 font-medium py-2.5 px-5 rounded-xl hover:bg-leaf-50 transition-all duration-200;
-  }
-
-  /* ─── Cards ─── */
   .card-cropiq {
-    @apply bg-white rounded-2xl shadow-sm border border-gray-100/80 p-6 transition-all duration-300;
+    @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow duration-200;
   }
-  .card-cropiq:hover {
-    @apply shadow-md border-gray-200/80;
-  }
-
-  .card-glass {
-    @apply bg-white/80 backdrop-blur-xl rounded-2xl border border-white/50 shadow-lg;
-  }
-
-  .card-premium {
-    @apply bg-white rounded-2xl shadow-md border border-gray-100 p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1;
-  }
-
-  /* ─── Inputs ─── */
   .input-field {
-    @apply w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:border-leaf-500 focus:ring-4 focus:ring-leaf-50 outline-none transition-all duration-200 text-gray-900 placeholder:text-gray-400;
-  }
-
-  .input-icon {
-    @apply absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gray-400 pointer-events-none;
-  }
-
-  /* ─── Badges ─── */
-  .badge {
-    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all duration-200;
-  }
-  .badge-success {
-    @apply badge bg-emerald-50 text-emerald-700 border border-emerald-200;
-  }
-  .badge-warning {
-    @apply badge bg-amber-50 text-amber-700 border border-amber-200;
-  }
-  .badge-info {
-    @apply badge bg-blue-50 text-blue-700 border border-blue-200;
-  }
-  .badge-danger {
-    @apply badge bg-red-50 text-red-700 border border-red-200;
-  }
-  .badge-beta {
-    @apply badge bg-gradient-to-r from-amber-400 to-orange-400 text-white text-[10px] px-2 py-0.5 shadow-sm;
-  }
-
-  /* ─── Section Headers ─── */
-  .section-badge {
-    @apply inline-flex items-center gap-2 px-4 py-1.5 bg-leaf-50 text-leaf-700 rounded-full text-xs font-bold uppercase tracking-wider border border-leaf-200/50;
-  }
-  .section-title {
-    @apply text-3xl md:text-4xl lg:text-5xl font-extrabold text-gray-900 leading-tight tracking-tight;
-  }
-  .section-subtitle {
-    @apply text-lg text-gray-500 max-w-2xl mx-auto leading-relaxed;
-  }
-
-  /* ─── Divider ─── */
-  .divider-gradient {
-    @apply h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent;
-  }
-
-  /* ─── Glass Panel ─── */
-  .glass-panel {
-    @apply bg-white/70 backdrop-blur-xl border border-white/80 rounded-2xl shadow-xl;
-  }
-
-  /* ─── Skeleton Loading ─── */
-  .skeleton {
-    @apply bg-gradient-to-r from-gray-100 via-gray-50 to-gray-100 animate-pulse rounded-lg;
-  }
-
-  /* ─── Scrollbar ─── */
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
-  }
-  .custom-scrollbar::-webkit-scrollbar-track {
-    @apply bg-transparent;
-  }
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    @apply bg-gray-300 rounded-full hover:bg-gray-400;
+    @apply w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:border-leaf-500 focus:ring-4 focus:ring-leaf-50 outline-none transition-all duration-200 placeholder:text-gray-400;
   }
 }
 
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-  .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-leaf-600 to-emerald-600;
-  }
-  .text-gradient-warm {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-earth-500 to-amber-600;
-  }
-  .text-gradient-cool {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-sky-500 to-blue-600;
-  }
-  .bg-grid {
-    background-image:
-      linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
-    background-size: 60px 60px;
-  }
-  .bg-dots {
-    background-image: radial-gradient(rgba(0,0,0,0.1) 1px, transparent 1px);
-    background-size: 24px 24px;
-  }
-  .mask-fade-bottom {
-    mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
-  }
+  .text-balance { text-wrap: balance; }
 }
