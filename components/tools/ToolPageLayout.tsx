@@ -71,7 +71,7 @@ export function ToolPageLayout({ title, icon, currentIndex, children }: ToolPage
       </div>
 
       {/* ── Content ── */}
-      <div className="flex-1 overflow-hidden px-4 md:px-6 py-3 md:py-4 max-w-3xl mx-auto w-full">
+      <div className="flex-1 overflow-hidden px-4 md:px-6 py-5 md:py-6 max-w-3xl mx-auto w-full">
         {children}
 
       </div>
