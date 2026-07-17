@@ -8,6 +8,7 @@
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
   body { @apply bg-white text-gray-800 font-sans antialiased; }
+  input, textarea, select, button { font-family: inherit; }
   ::selection { @apply bg-leaf-200 text-leaf-900; }
 }
 
@@ -42,7 +43,7 @@
 
   /* ─── Input ─── */
   .input-field {
-    @apply w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-leaf-500 focus:ring-4 focus:ring-leaf-50 outline-none transition-all text-sm placeholder:text-gray-400;
+    @apply w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-leaf-500 focus:ring-4 focus:ring-leaf-50 outline-none transition-all text-sm placeholder:text-gray-400 font-sans;
   }
 
   /* ─── Typography Scale ─── */

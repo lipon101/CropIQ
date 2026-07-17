@@ -33,7 +33,7 @@ export function Navbar() {
             </div>
             <div className="hidden sm:block">
               <span className="text-xl font-extrabold text-gray-900 tracking-tight">Crop<span className="text-earth-500">IQ</span></span>
-              <p className="text-[9px] text-gray-400 font-bold tracking-[0.2em] uppercase -mt-0.5">কৃষি · এআই · প্রযুক্তি</p>
+              <p className="text-[9px] text-gray-500 font-bold tracking-[0.2em] uppercase -mt-0.5">কৃষি · এআই · প্রযুক্তি</p>
             </div>
           </Link>
 
