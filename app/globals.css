@@ -21,20 +21,20 @@
 
   /* ─── Buttons (3 types × 1 size) ─── */
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2.5 font-bold text-white bg-gradient-to-r from-leaf-600 to-leaf-700 hover:from-leaf-700 hover:to-leaf-800 rounded-2xl shadow-lg shadow-leaf-200/50 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed text-sm py-3 px-7;
+    @apply inline-flex items-center justify-center gap-2 font-extrabold text-white bg-gradient-to-r from-leaf-600 to-leaf-700 hover:from-leaf-700 hover:to-leaf-800 rounded-2xl shadow-lg shadow-leaf-200/40 hover:shadow-xl hover:shadow-leaf-200/50 hover:-translate-y-0.5 transition-all duration-300 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed text-sm py-3.5 px-7;
   }
   .btn-primary-sm { @apply btn-primary text-xs py-2.5 px-5; }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2.5 font-bold text-leaf-700 bg-white hover:bg-leaf-50 border-2 border-gray-200 hover:border-leaf-300 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed text-sm py-3 px-7;
+    @apply inline-flex items-center justify-center gap-2 font-extrabold text-gray-700 bg-white hover:bg-gray-50 border-2 border-gray-200 hover:border-gray-300 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed text-sm py-3.5 px-7;
   }
   .btn-secondary-sm { @apply btn-secondary text-xs py-2.5 px-5; }
 
   .btn-accent {
-    @apply inline-flex items-center justify-center gap-2.5 font-bold text-white bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 rounded-2xl shadow-lg shadow-amber-200/50 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed text-sm py-3 px-7;
+    @apply inline-flex items-center justify-center gap-2 font-extrabold text-white bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 rounded-2xl shadow-lg shadow-amber-200/40 hover:shadow-xl hover:shadow-amber-200/50 hover:-translate-y-0.5 transition-all duration-300 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed text-sm py-3.5 px-7;
   }
 
-  .badge-beta { @apply inline-flex text-[10px] font-extrabold bg-gradient-to-r from-amber-400 to-orange-400 text-white px-2.5 py-1 rounded-full shadow-sm; }
+  .badge-beta { @apply inline-flex text-[10px] font-extrabold bg-white/20 text-white px-2 py-0.5 rounded-full; }
 
   /* ─── Cards ─── */
   .card-default { @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-6 transition-all duration-300 hover:shadow-md; }

@@ -156,11 +156,11 @@ export default function HomePage() {
 
               {/* CTAs */}
               <div className="flex flex-col sm:flex-row gap-3 pt-1">
-                <Link href={user ? "/dashboard" : "/auth/signup"} className="group btn-primary text-base py-2.5 px-6">
-                  <Sprout className="w-5 h-5 group-hover:rotate-12 transition-transform" /> বিনামূল্যে শুরু করুন <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                <Link href={user ? "/dashboard" : "/auth/signup"} className="btn-primary group">
+                  <Sprout className="w-[18px] h-[18px] group-hover:rotate-12 transition-transform" /> বিনামূল্যে শুরু করুন <ArrowRight className="w-[18px] h-[18px] group-hover:translate-x-1 transition-transform" />
                 </Link>
-                <Link href="/tools/disease-detector" className="group btn-accent text-base py-2.5 px-6">
-                  <Microscope className="w-5 h-5 group-hover:scale-110 transition-transform" /> এআই রোগ সনাক্তকরণ <span className="badge-beta">বিটা</span>
+                <Link href="/tools/disease-detector" className="btn-accent group">
+                  <Microscope className="w-[18px] h-[18px] group-hover:scale-110 transition-transform" /> এআই রোগ সনাক্তকরণ <span className="badge-beta">বিটা</span>
                 </Link>
               </div>
             </div>
@@ -377,10 +377,10 @@ export default function HomePage() {
           <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-3">আজই CropIQ ব্যবহার শুরু করুন</h2>
           <p className="text-sm text-gray-400 mb-8 font-medium">বাংলাদেশের প্রতিটি কৃষকের জন্য সম্পূর্ণ বিনামূল্যে। কোন লুকানো খরচ নেই।</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link href={user ? "/dashboard" : "/auth/signup"} className="group btn-primary text-base py-2.5 px-6">
-              <Sprout className="w-5 h-5 group-hover:rotate-12 transition-transform" /> বিনামূল্যে শুরু করুন<ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            <Link href={user ? "/dashboard" : "/auth/signup"} className="btn-primary group">
+              <Sprout className="w-[18px] h-[18px] group-hover:rotate-12 transition-transform" /> বিনামূল্যে শুরু করুন<ArrowRight className="w-[18px] h-[18px] group-hover:translate-x-1 transition-transform" />
             </Link>
-            <Link href="#features" className="btn-secondary text-base py-2.5 px-6">আরও জানুন</Link>
+            <Link href="#features" className="btn-secondary">আরও জানুন</Link>
           </div>
         </div>
       </section>
