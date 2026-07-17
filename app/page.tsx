@@ -120,6 +120,7 @@ export default function HomePage() {
 
               {/* Main heading */}
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[3.5rem] font-black text-gray-800 leading-[1.08] tracking-tight">
+                বাংলাদেশের{" "}
                 <span className="text-emerald-600">
                   স্মার্ট কৃষি
                 </span>
