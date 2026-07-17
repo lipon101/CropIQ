@@ -3,39 +3,72 @@
 import { useState, useEffect } from "react"
 import { useAuth } from "@/lib/auth/AuthContext"
 import { createClient } from "@/lib/supabase/client"
-import { Microscope, MessageCircle, CloudSun, Bookmark, TrendingUp, ChevronRight, Sprout, Zap, Clock, ArrowRight } from "lucide-react"
+import { Microscope, MessageCircle, CloudSun, Bookmark, TrendingUp, ChevronRight, Sprout, Zap, Clock, ArrowRight, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { formatDate } from "@/lib/utils"
 
-interface ScanRecord { id: string; crop_type: string; disease_name: string; confidence: number; created_at: string }
+interface ActivityItem {
+  type: "scan" | "chat" | "advisory"
+  id: string
+  created_at: string
+  // scan fields
+  crop_type?: string; disease_name?: string; confidence?: number
+  // chat fields
+  question?: string
+  // advisory fields
+  district?: string; crop?: string
+}
 
 export default function DashboardPage() {
   const { user } = useAuth()
-  const [scans, setScans] = useState<ScanRecord[]>([])
-  const [loading, setLoading] = useState(true)
   const supabase = createClient()
+  const [stats, setStats] = useState({ scans: 0, chats: 0, advisories: 0, saved: 0 })
+  const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!user) return
-    const f = async () => {
-      try {
-        const { data } = await supabase
-          .from("disease_scans")
-          .select("id,crop_type,disease_name,confidence,created_at")
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false })
-          .limit(50)
-        if (data) setScans(data)
-      } catch { } finally { setLoading(false) }
-    }; f()
+
+    const fetchAll = async () => {
+      // ── Real counts (parallel) ──
+      const [scanR, chatR, advR, savedR] = await Promise.allSettled([
+        supabase.from("disease_scans").select("*", { count: "exact", head: true }).eq("user_id", user.id),
+        supabase.from("chat_sessions").select("*", { count: "exact", head: true }).eq("user_id", user.id),
+        supabase.from("weather_advisories").select("*", { count: "exact", head: true }).eq("user_id", user.id),
+        supabase.from("saved_items").select("*", { count: "exact", head: true }).eq("user_id", user.id),
+      ])
+      setStats({
+        scans: scanR.status === "fulfilled" ? (scanR.value.count ?? 0) : 0,
+        chats: chatR.status === "fulfilled" ? (chatR.value.count ?? 0) : 0,
+        advisories: advR.status === "fulfilled" ? (advR.value.count ?? 0) : 0,
+        saved: savedR.status === "fulfilled" ? (savedR.value.count ?? 0) : 0,
+      })
+
+      // ── Unified recent activity ──
+      const [scans, chats, advisories] = await Promise.allSettled([
+        supabase.from("disease_scans").select("id,crop_type,disease_name,confidence,created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
+        supabase.from("chat_sessions").select("id,question,created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
+        supabase.from("weather_advisories").select("id,district,crop,created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
+      ])
+
+      const items: ActivityItem[] = []
+      if (scans.status === "fulfilled" && scans.value.data) items.push(...scans.value.data.map((s: any) => ({ type: "scan" as const, ...s })))
+      if (chats.status === "fulfilled" && chats.value.data) items.push(...chats.value.data.map((c: any) => ({ type: "chat" as const, ...c })))
+      if (advisories.status === "fulfilled" && advisories.value.data) items.push(...advisories.value.data.map((a: any) => ({ type: "advisory" as const, ...a })))
+
+      items.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      setRecentActivity(items.slice(0, 15))
+      setLoading(false)
+    }
+
+    fetchAll().catch(() => setLoading(false))
   }, [user])
 
-
   const statCards = [
-    { icon: Microscope, iconBg: "bg-red-100 text-red-600", label: "রোগ স্ক্যান", value: scans.length, href: "/tools/disease-detector" },
-    { icon: MessageCircle, iconBg: "bg-blue-100 text-blue-600", label: "চ্যাট সেশন", value: 0, href: "/tools/chatbot" },
-    { icon: CloudSun, iconBg: "bg-sky-100 text-sky-600", label: "আবহাওয়া পরামর্শ", value: 0, href: "/tools/weather-advisory" },
-    { icon: Bookmark, iconBg: "bg-amber-100 text-amber-600", label: "সংরক্ষিত", value: 0, href: "#" },
+    { icon: Microscope, iconBg: "bg-red-100 text-red-600", label: "রোগ স্ক্যান", value: stats.scans, href: "/tools/disease-detector" },
+    { icon: MessageCircle, iconBg: "bg-blue-100 text-blue-600", label: "চ্যাট সেশন", value: stats.chats, href: "/tools/chatbot" },
+    { icon: CloudSun, iconBg: "bg-sky-100 text-sky-600", label: "আবহাওয়া পরামর্শ", value: stats.advisories, href: "/tools/weather-advisory" },
+    { icon: Bookmark, iconBg: "bg-amber-100 text-amber-600", label: "সংরক্ষিত", value: stats.saved, href: "/tools/disease-detector" },
   ]
 
   const quickActions = [
@@ -44,6 +77,18 @@ export default function DashboardPage() {
     { icon: CloudSun, label: "আবহাওয়া দেখুন", href: "/tools/weather-advisory", hover: "hover:bg-sky-50" },
     { icon: TrendingUp, label: "বাজারদর দেখুন", href: "/tools/market-prices", hover: "hover:bg-amber-50" },
   ]
+
+  const activityIcon = (item: ActivityItem) => {
+    if (item.type === "scan") return { icon: Microscope, bg: item.confidence && item.confidence > 0.8 ? "bg-red-100 text-red-500" : "bg-amber-100 text-amber-500" }
+    if (item.type === "chat") return { icon: MessageCircle, bg: "bg-blue-100 text-blue-500" }
+    return { icon: CloudSun, bg: "bg-sky-100 text-sky-500" }
+  }
+
+  const activityText = (item: ActivityItem) => {
+    if (item.type === "scan") return { title: `${item.crop_type || ""} — ${item.disease_name || ""}`, badge: item.confidence ? `${Math.round(item.confidence * 100)}%` : null, badgeClass: item.confidence && item.confidence > 0.8 ? "bg-leaf-50 text-leaf-700 border border-leaf-200" : "bg-amber-50 text-amber-700 border border-amber-200" }
+    if (item.type === "chat") return { title: (item.question || "").slice(0, 60) + ((item.question || "").length > 60 ? "..." : ""), badge: null, badgeClass: "" }
+    return { title: `${item.district || ""} — ${item.crop || ""}`, badge: null, badgeClass: "" }
+  }
 
   return (
     <div>
@@ -65,7 +110,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="container-cropiq py-5 md:py-6">
-        {/* Stat cards */}
+        {/* Stat cards — REAL counts from Supabase */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
           {statCards.map((s, i) => (
             <Link key={i} href={s.href} className="card-hover group p-4">
@@ -77,7 +122,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
-          {/* ── LEFT: Quick Actions ── */}
+          {/* Quick Actions */}
           <div className="lg:col-span-1">
             <div className="card-default h-full flex flex-col">
               <div className="flex items-center gap-2 mb-4">
@@ -102,16 +147,17 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* ── RIGHT: Recent Activity ── */}
+          {/* Recent Activity — FEED from all tools */}
           <div className="lg:col-span-2">
-            <div className="card-default h-full flex flex-col">
+            <div className="card-default h-full flex flex-col min-h-[400px]">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-8 h-8 bg-leaf-100 rounded-xl flex items-center justify-center"><Clock className="w-4 h-4 text-leaf-600" /></div>
                 <h3 className="font-bold text-gray-800 text-sm">সাম্প্রতিক কার্যক্রম</h3>
               </div>
+
               {loading ? (
                 <div className="space-y-3 flex-1">
-                  {[1, 2, 3].map(i => (
+                  {[1, 2, 3, 4].map(i => (
                     <div key={i} className="flex gap-3 p-3">
                       <div className="w-10 h-10 bg-gray-100 rounded-xl animate-pulse" />
                       <div className="flex-1 space-y-2">
@@ -121,7 +167,7 @@ export default function DashboardPage() {
                     </div>
                   ))}
                 </div>
-              ) : scans.length === 0 ? (
+              ) : recentActivity.length === 0 ? (
                 <div className="flex-1 flex items-center justify-center">
                   <div className="text-center py-8">
                     <div className="w-14 h-14 bg-leaf-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
@@ -133,20 +179,24 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 <div className="flex-1 space-y-1.5 overflow-y-auto">
-                  {scans.map(s => (
-                    <div key={s.id} className="flex items-center gap-3 p-3 bg-gray-50/70 rounded-xl hover:bg-gray-100/70 transition-colors group">
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${s.confidence > 0.8 ? "bg-red-100" : "bg-amber-100"}`}>
-                        <Microscope className={`w-4 h-4 ${s.confidence > 0.8 ? "text-red-500" : "text-amber-500"}`} />
+                  {recentActivity.map(item => {
+                    const { icon: Icon, bg } = activityIcon(item)
+                    const { title, badge, badgeClass } = activityText(item)
+                    return (
+                      <div key={item.id} className="flex items-center gap-3 p-3 bg-gray-50/70 rounded-xl hover:bg-gray-100/70 transition-colors group">
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${bg}`}>
+                          <Icon className="w-4 h-4" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-gray-800 truncate">{title}</p>
+                          <p className="text-xs text-gray-400 mt-0.5">{formatDate(item.created_at)}</p>
+                        </div>
+                        {badge && (
+                          <div className={`px-2.5 py-1 rounded-full text-[11px] font-extrabold ${badgeClass}`}>{badge}</div>
+                        )}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-gray-800 truncate">{s.crop_type} — {s.disease_name}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">{formatDate(s.created_at)}</p>
-                      </div>
-                      <div className={`px-2.5 py-1 rounded-full text-[11px] font-extrabold ${s.confidence > 0.8 ? "bg-leaf-50 text-leaf-700 border border-leaf-200" : "bg-amber-50 text-amber-700 border border-amber-200"}`}>
-                        {Math.round(s.confidence * 100)}%
-                      </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               )}
             </div>

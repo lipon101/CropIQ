@@ -3,10 +3,14 @@
 import { useState, useEffect, useRef } from "react"
 import { Send, MessageCircle, Sprout, Loader2, Sparkles } from "lucide-react"
 import { ToolPageLayout, TOOLS } from "@/components/tools/ToolPageLayout"
+import { useAuth } from "@/lib/auth/AuthContext"
+import { createClient } from "@/lib/supabase/client"
 
 interface ChatMessage { role: "user" | "assistant"; content: string }
 
 export default function ChatbotPage() {
+  const { user } = useAuth()
+  const supabase = createClient()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
@@ -49,6 +53,16 @@ export default function ChatbotPage() {
         }),
       })
       const data = await res.json()
+
+      // 💾 Save to Supabase for dashboard analytics
+      if (user && data.reply) {
+        supabase.from("chat_sessions").insert({
+          user_id: user.id,
+          question: msg,
+          answer: data.reply,
+        }).then(() => {}).catch(() => {})
+      }
+
       if (data.error) {
         setMessages([...newMessages, { role: "assistant", content: data.error }])
         if (data.suggestions?.length) {

@@ -5,6 +5,8 @@ import { DISTRICTS } from "@/lib/constants/districts"
 import { CROPS } from "@/lib/constants/crops"
 import { CloudSun, CloudRain, Wind, Droplets, Loader2, MapPin, AlertTriangle, Lightbulb, CheckCircle2, AlertCircle, ChevronDown } from "lucide-react"
 import { ToolPageLayout, TOOLS } from "@/components/tools/ToolPageLayout"
+import { useAuth } from "@/lib/auth/AuthContext"
+import { createClient } from "@/lib/supabase/client"
 
 interface ForecastDay { date: string; temp: number; temp_min: number; temp_max: number; humidity: number; rain_mm: number; wind_kmh: number; description?: string; description_bn?: string; icon: string }
 interface WeatherData { district: string; current: ForecastDay; forecast: ForecastDay[] }
@@ -14,6 +16,8 @@ const WI: Record<string, string> = { "01d": "☀️", "01n": "🌙", "02d": "⛅
 const WDAY: Record<string, string> = { "Sat": "শনি", "Sun": "রবি", "Mon": "সোম", "Tue": "মঙ্গল", "Wed": "বুধ", "Thu": "বৃহঃ", "Fri": "শুক্র" }
 
 export default function WeatherAdvisoryPage() {
+  const { user } = useAuth()
+  const supabase = createClient()
   const [district, setDistrict] = useState("Dhaka")
   const [crop, setCrop] = useState("Rice")
   const [weather, setWeather] = useState<WeatherData | null>(null)
@@ -33,6 +37,14 @@ export default function WeatherAdvisoryPage() {
       const wd = await wr.json(); setWeather(wd)
       const ar = await fetch("/api/advisory", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ district, crop, forecast: wd.forecast }) })
       if (ar.ok) { const ad = await ar.json(); setAdvisory(ad.advisory) }
+
+      if (user) {
+        supabase.from("weather_advisories").insert({
+          user_id: user.id,
+          district,
+          crop,
+        }).then(() => {}).catch(() => {})
+      }
     } catch (e: any) { setError(e.message || "তথ্য পাওয়া যায়নি") }
     finally { setLoading(false) }
   }
