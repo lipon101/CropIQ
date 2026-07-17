@@ -11,9 +11,6 @@ const nextConfig = {
       { protocol: 'https', hostname: 'openrouter.ai' },
     ],
   },
-  experimental: {
-    serverActions: true,
-  },
 }
 
 module.exports = nextConfig
