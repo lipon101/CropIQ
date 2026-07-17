@@ -23,6 +23,75 @@ const CROP_NAMES_BN: Record<string, string> = {
 }
 const toBn = (crop: string | undefined | null) => crop ? (CROP_NAMES_BN[crop.toLowerCase()] || crop) : "ফসল"
 
+// ── Disease name Bengali mapping ──
+const DISEASE_NAMES_BN: Record<string, string> = {
+  "bacterial blight": "ব্যাকটেরিয়াজনিত ব্লাইট",
+  "bacterial leaf blight": "ব্যাকটেরিয়াজনিত পাতা ব্লাইট",
+  "bacterial disease": "ব্যাকটেরিয়াজনিত রোগ",
+  "bacterial leaf streak": "ব্যাকটেরিয়াজনিত পাতার দাগ",
+  "bacterial wilt": "ব্যাকটেরিয়াজনিত ঢলে পড়া",
+  "brown spot": "বাদামী দাগ রোগ",
+  "blast": "ব্লাস্ট রোগ",
+  "rice blast": "ধান ব্লাস্ট",
+  "leaf blast": "পাতা ব্লাস্ট",
+  "sheath blight": "খোল পচা রোগ",
+  "sheath rot": "খোল পচা",
+  "stem rot": "কাণ্ড পচা",
+  "root rot": "শিকড় পচা",
+  "leaf spot": "পাতার দাগ রোগ",
+  "leaf rust": "পাতার মরিচা রোগ",
+  "yellow rust": "হলুদ মরিচা",
+  "powdery mildew": "পাউডারি মিলডিউ",
+  "downy mildew": "ডাউনি মিলডিউ",
+  "early blight": "আর্লি ব্লাইট",
+  "late blight": "লেট ব্লাইট",
+  "anthracnose": "অ্যানথ্রাকনোজ",
+  "black spot": "কালো দাগ রোগ",
+  "rust": "মরিচা রোগ",
+  "smut": "ঝুল রোগ",
+  "wilt": "ঢলে পড়া রোগ",
+  "mosaic virus": "মোজাইক ভাইরাস",
+  "tungro": "টুংরো রোগ",
+  "tungro virus": "টুংরো ভাইরাস",
+  "false smut": "নকল ঝুল রোগ",
+  "foot rot": "গোড়া পচা",
+  "neck blast": "গলার ব্লাস্ট",
+  "bakanae": "বাকানা রোগ",
+  "bakanae disease": "বাকানা রোগ",
+  "grassy stunt": "ঘাসযুক্ত খর্বতা",
+  "ragged stunt": "খসখসে খর্বতা",
+  "brown planthopper": "বাদামী গাছফড়িং",
+  "stem borer": "কাণ্ড ছিদ্রকারী",
+  "leaf folder": "পাতা মোড়ানো পোকা",
+  "gall midge": "গল মিজ",
+  "hispa": "হিসপা পোকা",
+  "whitefly": "সাদা মাছি",
+  "aphid": "জাব পোকা",
+  "thrips": "থ্রিপস",
+}
+const toBnDisease = (disease: string | undefined | null) => disease ? (DISEASE_NAMES_BN[disease.toLowerCase()] || disease) : "রোগ"
+
+// ── Cause Bengali mapping ──
+const CAUSE_BN: Record<string, string> = {
+  "bacteria": "ব্যাকটেরিয়া",
+  "bacterial": "ব্যাকটেরিয়াজনিত",
+  "fungus": "ছত্রাক",
+  "fungal": "ছত্রাকজনিত",
+  "virus": "ভাইরাস",
+  "viral": "ভাইরাসজনিত",
+  "pest": "পোকামাকড়",
+  "insect": "পোকামাকড়",
+  "nematode": "নেমাটোড",
+  "nutrient deficiency": "পুষ্টির অভাব",
+  "environmental": "পরিবেশগত",
+  "waterlogging": "জলাবদ্ধতা",
+  "drought": "খরা",
+  "high humidity": "অতিরিক্ত আর্দ্রতা",
+  "low temperature": "নিম্ন তাপমাত্রা",
+  "high temperature": "উচ্চ তাপমাত্রা",
+}
+const toBnCause = (cause: string | undefined | null) => cause ? (CAUSE_BN[cause.toLowerCase()] || cause) : 
+
 export default function DiseaseDetectorPage() {
   const { user } = useAuth()
   const supabase = createClient()
@@ -336,7 +405,7 @@ export default function DiseaseDetectorPage() {
                     <ShieldAlert className="w-5 h-5 text-red-500" />
                   </div>
                   <div>
-                    <h3 className="font-extrabold text-gray-900">{result.disease_name}</h3>
+                    <h3 className="font-extrabold text-gray-900">{toBnDisease(result.disease_name)}</h3>
                     <p className="text-xs text-gray-500">{toBn(result.crop_type)}</p>
                   </div>
                   <div className="ml-auto">
@@ -357,7 +426,7 @@ export default function DiseaseDetectorPage() {
                     </div>
                     <div className="bg-red-50 rounded-lg p-2 text-center">
                       <p className="text-[11px] font-bold text-red-400 uppercase tracking-wide mb-1">কারণ</p>
-                      <p className="text-xs font-extrabold text-red-600">{result.cause || "—"}</p>
+                      <p className="text-xs font-extrabold text-red-600">{toBnCause(result.cause)}</p>
                     </div>
                   </div>
                   <div className="bg-emerald-50/60 rounded-xl p-3 border border-emerald-100">
@@ -444,7 +513,7 @@ export default function DiseaseDetectorPage() {
                         <ShieldAlert className="w-3.5 h-3.5 text-red-400" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-semibold text-gray-800 truncate">{scan.disease_name}</p>
+                        <p className="text-[13px] font-semibold text-gray-800 truncate">{toBnDisease(scan.disease_name)}</p>
                         <p className="text-[11px] text-gray-400">{toBn(scan.crop_type)} · {timeAgo}</p>
                       </div>
                       <div className="shrink-0 flex items-center gap-2">
