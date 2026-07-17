@@ -85,13 +85,16 @@ export function Footer() {
           {/* Contact/Info */}
           <div>
             <h4 className="font-bold text-gray-400 mb-4 text-[10px] tracking-[0.25em] uppercase relative inline-block">
-              যোগাযোগ
+              গ্রুপ ৫ · সিএসই ৪০০
               <span className="absolute -bottom-1 left-0 w-5 h-px bg-gray-300" />
             </h4>
             <ul className="space-y-2 text-xs text-gray-400">
-              <li>গ্রুপ ৫ · সিএসই ৪০০</li>
-              <li>বিইউবিটি · ইনটেক ৫১</li>
-              <li>বাংলাদেশ</li>
+              <li>Md. Torikul Islam Lipon</li>
+              <li>Al-Amin Oyon</li>
+              <li>Samia Homayara</li>
+              <li>Md Jobair Hossan</li>
+              <li>Md. Aslam Hossain</li>
+              <li>Sree Partho Chondro Mohanto</li>
             </ul>
           </div>
         </div>
