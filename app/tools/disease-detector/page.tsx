@@ -35,8 +35,8 @@ export default function DiseaseDetectorPage() {
   const reset = () => { setImage(null); setImageFile(null); setDescription(""); setResult(null); setError("") }
 
   return (
-    <div className="h-[calc(100vh-64px)] flex flex-col bg-gray-50">
-      <div className="bg-white border-b border-gray-200 px-4 py-2.5 flex items-center gap-3 shrink-0">
+    <div className="h-[calc(100vh-64px)] flex flex-col bg-transparent">
+      <div className="bg-white/90 backdrop-blur-sm border-b border-gray-100 px-4 py-2 flex items-center gap-3 shrink-0">
         <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-rose-600 rounded-lg flex items-center justify-center shadow-sm"><Microscope className="w-4 h-4 text-white" /></div>
         <h1 className="font-bold text-gray-900 text-sm">ফসল রোগ সনাক্তকারী</h1>
         <div className="ml-auto flex bg-gray-100 rounded-lg p-0.5">

@@ -25,14 +25,14 @@ export default function MarketPricesPage() {
   const trend = (px: PriceRecord[], c: string) => { const cp = px.filter(x => x.commodity === c).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()); if (cp.length < 2) return null; return cp[0].price_per_kg > cp[1].price_per_kg ? "up" : cp[0].price_per_kg < cp[1].price_per_kg ? "down" : "stable" }
 
   return (
-    <div className="h-[calc(100vh-64px)] flex flex-col bg-gray-50">
-      <div className="bg-white border-b border-gray-200 px-4 py-2.5 flex items-center gap-3 shrink-0">
+    <div className="h-[calc(100vh-64px)] flex flex-col bg-transparent">
+      <div className="bg-white/90 backdrop-blur-sm border-b border-gray-100 px-4 py-2 flex items-center gap-3 shrink-0">
         <div className="w-8 h-8 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg flex items-center justify-center shadow-sm"><DollarSign className="w-4 h-4 text-white" /></div>
         <h1 className="font-bold text-gray-900 text-sm flex-1">বাজার মূল্য বোর্ড</h1>
         <button onClick={fetchPrices} className="text-xs font-medium text-gray-400 hover:text-leaf-600 px-3 py-1.5 rounded-lg hover:bg-leaf-50 flex items-center gap-1"><RefreshCw className={`w-3 h-3 ${loading ? "animate-spin" : ""}`} />রিফ্রেশ</button>
       </div>
 
-      <div className="bg-white border-b border-gray-100 px-4 py-2 shrink-0">
+      <div className="bg-white/90 backdrop-blur-sm border-b border-gray-100 px-4 py-1.5 shrink-0">
         <div className="flex gap-2">
           <select value={district} onChange={e => setDistrict(e.target.value)} className="flex-1 px-2.5 py-1.5 rounded-lg border border-gray-200 text-xs font-medium focus:border-leaf-500 outline-none bg-gray-50">{DISTRICTS.map(d => <option key={d.name_en} value={d.name_en}>{d.name_bn}</option>)}</select>
           <select value={commodity} onChange={e => setCommodity(e.target.value)} className="flex-1 px-2.5 py-1.5 rounded-lg border border-gray-200 text-xs font-medium focus:border-leaf-500 outline-none bg-gray-50"><option value="">সব পণ্য</option>{COMMODITIES.map(c => <option key={c.name_en} value={c.name_en}>{c.name_bn}</option>)}</select>

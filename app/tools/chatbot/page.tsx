@@ -41,8 +41,8 @@ export default function ChatbotPage() {
   const starters = ["ধান গাছে ব্লাস্ট রোগের চিকিৎসা?", "আলু চাষের সঠিক সময়?", "টমেটো পাতা কুঁকড়ে যায় কেন?", "জৈব সার তৈরির পদ্ধতি?"]
 
   return (
-    <div className="h-[calc(100vh-64px)] flex flex-col bg-gray-50">
-      <div className="bg-white border-b border-gray-200 px-4 py-2.5 flex items-center gap-3 shrink-0">
+    <div className="h-[calc(100vh-64px)] flex flex-col bg-transparent">
+      <div className="bg-white/90 backdrop-blur-sm border-b border-gray-100 px-4 py-2 flex items-center gap-3 shrink-0">
         <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center shadow-sm"><Bot className="w-4 h-4 text-white" /></div>
         <h1 className="font-bold text-gray-900 text-sm">এআই কৃষি চ্যাটবট</h1>
         {messages.length > 0 && <button onClick={newChat} className="ml-auto text-xs font-medium text-gray-400 hover:text-red-500 px-3 py-1.5 rounded-lg hover:bg-red-50">নতুন</button>}

@@ -39,13 +39,13 @@ export default function WeatherAdvisoryPage() {
   const desc = weather?.current?.description_bn || weather?.current?.description || ""
 
   return (
-    <div className="h-[calc(100vh-64px)] flex flex-col bg-gradient-to-b from-sky-50/40 to-gray-50">
-      <div className="bg-white/80 backdrop-blur border-b border-gray-200 px-4 py-2.5 flex items-center gap-3 shrink-0">
+    <div className="h-[calc(100vh-64px)] flex flex-col bg-transparent">
+      <div className="bg-white/90 backdrop-blur-sm border-b border-gray-100 px-4 py-2 flex items-center gap-3 shrink-0">
         <div className="w-8 h-8 bg-gradient-to-br from-sky-500 to-blue-600 rounded-lg flex items-center justify-center shadow-md"><CloudSun className="w-4 h-4 text-white" /></div>
         <h1 className="font-bold text-gray-900 text-sm">আবহাওয়া পরামর্শ</h1>
       </div>
 
-      <div className="bg-white/60 backdrop-blur border-b border-gray-100 px-4 py-2 shrink-0">
+      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-100 px-4 py-1.5 shrink-0">
         <div className="flex gap-2 max-w-lg">
           <div className="relative flex-1 min-w-[100px]">
             <select value={district} onChange={e => setDistrict(e.target.value)} className="w-full pl-2.5 pr-7 py-2 rounded-lg border border-gray-200 text-xs font-semibold text-gray-700 focus:border-sky-400 outline-none bg-white appearance-none cursor-pointer">{DISTRICTS.map(d => <option key={d.name_en} value={d.name_en}>{d.name_bn}</option>)}</select>
