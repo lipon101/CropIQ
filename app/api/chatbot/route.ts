@@ -41,10 +41,107 @@ const CHATBOT_SYSTEM_PROMPT = `তুমি কৃষি বন্ধু — ব
 - প্রশ্ন ২?
 - প্রশ্ন ৩?`
 
+// ─── HUGE POOL of unique farming questions ───
+const SUGGESTIONS_POOL = [
+  // Rice/Paddy
+  "ধান গাছে ব্লাস্ট রোগের চিকিৎসা?",
+  "ধান গাছে পাতা পোড়া রোগ কেন হয়?",
+  "ধান চাষে ইউরিয়া সারের সঠিক মাত্রা কত?",
+  "ধানের জমিতে পোকা দমনের জৈব উপায় কী?",
+  "বোরো ধান চাষের সঠিক সময় কখন?",
+  "ধান গাছে শীষ বের না হলে করণীয় কী?",
+  "আমন ধানের জন্য সেরা জাত কোনটি?",
+  "ধান গাছে মাজরা পোকা দমনের উপায়?",
+  // Vegetables
+  "আলু চাষের সঠিক সময় ও পদ্ধতি?",
+  "টমেটো পাতা কুঁকড়ে যায় কেন?",
+  "বেগুন গাছে ফল ছিদ্রকারী পোকা দমন?",
+  "পটল চাষে ফলন বাড়ানোর উপায়?",
+  "লাউ গাছে পাউডারি মিলডিউ রোগের চিকিৎসা?",
+  "মরিচ গাছে ফুল ঝরে যায় কেন?",
+  "ঢেঁড়স চাষে সার প্রয়োগের নিয়ম?",
+  "কুমড়া গাছে পোকামাকড় দমনের ঘরোয়া উপায়?",
+  "বাঁধাকপি ও ফুলকপি চাষের পার্থক্য?",
+  "শসা চাষে রোগবালাই ও প্রতিকার?",
+  "পেঁয়াজ চাষে সেচ ব্যবস্থাপনা কেমন হবে?",
+  // Fertilizer & Soil
+  "জৈব সার তৈরির পদ্ধতি?",
+  "ভার্মি কম্পোস্ট কীভাবে বানাবেন?",
+  "মাটির অম্লতা কমানোর ঘরোয়া উপায়?",
+  "সবুজ সার হিসেবে কোন ফসল ভালো?",
+  "টিএসপি সারের কাজ কী ও কখন দিতে হয়?",
+  "পটাশ সার ব্যবহারের নিয়ম কী?",
+  "জমির উর্বরতা বাড়ানোর প্রাকৃতিক উপায়?",
+  // Pest & Disease
+  "পোকা দমনে নিম তেল কীভাবে ব্যবহার করবেন?",
+  "ফসলে কাটুই পোকার আক্রমণ ও প্রতিকার?",
+  "ছত্রাকনাশক স্প্রে করার সঠিক নিয়ম?",
+  "জাব পোকা দমনের সহজ উপায়?",
+  "শুয়োপোকা দমনে জৈব কীটনাশক?",
+  "পাতামোড়ানো পোকার আক্রমণ ও দমন?",
+  "থ্রিপস পোকা চেনার উপায় ও দমন?",
+  // Fruits
+  "আম গাছে মুকুল আসার পর করণীয়?",
+  "কলা গাছে সিগাটোকা রোগের চিকিৎসা?",
+  "পেঁপে গাছে পচন রোগ প্রতিরোধ?",
+  "লিচু গাছে ফল না ধরার কারণ কী?",
+  "কমলা-মাল্টা চাষে সার ব্যবস্থাপনা?",
+  "আনারস চাষের উপযুক্ত মাটি কেমন?",
+  // Irrigation & Weather
+  "বৃষ্টির সময় ফসলের যত্ন কিভাবে নেবেন?",
+  "সেচের অভাবে ফসল বাঁচানোর উপায়?",
+  "খরায় ধান গাছ বাঁচানোর পদ্ধতি?",
+  "সেচের জন্য সোলার পাম্প কেমন?",
+  "ড্রিপ সেচ পদ্ধতির সুবিধা কী?",
+  "জলাবদ্ধ জমিতে কোন ফসল চাষ করবেন?",
+  // General farming
+  "শীতকালীন সবজি চাষের তালিকা ও পদ্ধতি?",
+  "গ্রীষ্মকালীন ফসলের তালিকা কী কী?",
+  "আন্তঃফসল চাষ পদ্ধতির সুবিধা?",
+  "ফসল সংগ্রহোত্তর সংরক্ষণের নিয়ম?",
+  "বাজারদর বুঝে কোন ফসল চাষ করবেন?",
+  "কৃষি ঋণ পাওয়ার নিয়ম কী কী?",
+  "বালাইনাশক ছাড়া ফসল ফলানো সম্ভব?",
+  "ছাদে বা টবে সবজি চাষের পদ্ধতি?",
+]
+
+function shuffleArray<T>(arr: T[], seed: number): T[] {
+  const shuffled = [...arr]
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor((seed * (i + 1) * 2654435761) % (i + 1))
+    ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+  }
+  return shuffled
+}
+
+function getFreshSuggestions(message?: string): string[] {
+  const now = Date.now()
+  const hourSeed = Math.floor(now / (1000 * 60 * 30)) // changes every 30 minutes
+  const msgSeed = message ? message.length + message.charCodeAt(0) : 0
+  const seed = hourSeed + msgSeed
+
+  const shuffled = shuffleArray(SUGGESTIONS_POOL, seed)
+
+  // If user typed a message, try to pick related topics
+  if (message) {
+    const lower = message.toLowerCase()
+    const related = shuffled.filter(q =>
+      q.split(/\s+/).some(word => lower.includes(word.substring(0, 3)))
+    )
+    if (related.length >= 3) {
+      // Mix: 2 related + 1 random fresh
+      return [related[0], related[1], shuffled.find(q => q !== related[0] && q !== related[1]) || shuffled[0]]
+    }
+  }
+
+  // No message or not enough related → pick first 3 from shuffled
+  return shuffled.slice(0, 3)
+}
+
 // ─── HARDCODED SAFE RESPONSE ───
 const SAFE_DEFLECT = "ভাই, আমি তো শুধু কৃষি নিয়ে কথা বলি। ফসল, জমি বা রোগ-পোকা নিয়ে কিছু জানতে চান?"
 
-// ─── INPUT GUARD: block only real jailbreak/phishing, never false-positive Bengali farming questions ───
+// ─── INPUT GUARD ───
 const JAILBREAK_PATTERNS = [
   /system\s*prompt/i,              /^\s*instructions?\s*$/i,
   /repeat\s.*(words|above|everything)/i,  /word\s*for\s*word/i,
@@ -65,7 +162,6 @@ const JAILBREAK_PATTERNS = [
   /output\s*(your|the)\s*(system|instructions?|prompt)/i,
 ]
 
-// Farming keywords — if a message contains these, it's a genuine farming question, NEVER block
 const FARMING_KEYWORDS = [
   /জৈব/, /সার/, /ফসল/, /ধান/, /গম/, /আলু/, /চাষ/, /রোগ/, /পোকা/, /কীট/,
   /সেচ/, /জমি/, /বীজ/, /ফল/, /সবজি/, /মাটি/, /আবহাওয়া/, /বাজার/, /দাম/,
@@ -76,13 +172,10 @@ const FARMING_KEYWORDS = [
 ]
 
 function isJailbreakAttempt(text: string): boolean {
-  // 🔑 NEVER block Bengali farming questions
   const hasBengali = /[\u0980-\u09FF]/.test(text)
   const hasFarmingKeyword = FARMING_KEYWORDS.some(p => p.test(text))
 
-  // If the message contains Bengali script → it's a farmer asking in Bengali → NEVER block
   if (hasBengali) {
-    // Only check for explicit English jailbreak embedded in Bengali text
     const lower = text.toLowerCase()
     for (const pattern of JAILBREAK_PATTERNS) {
       if (pattern.test(lower)) return true
@@ -90,13 +183,9 @@ function isJailbreakAttempt(text: string): boolean {
     return false
   }
 
-  // If the message contains farming keywords in English → it's a genuine farming question → NEVER block
   if (hasFarmingKeyword) return false
 
-  // Pure English/ASCII message without farming keywords → apply jailbreak filter
   const lower = text.toLowerCase()
-
-  // Short English-only messages without farming context → likely jailbreak
   const isPureAscii = /^[\x00-\x7F\s!?.,'":;()\-]+$/.test(text.trim())
   if (isPureAscii && text.trim().length < 60) return true
 
@@ -130,11 +219,11 @@ export async function POST(req: NextRequest) {
     const { message, language, history } = await req.json()
     if (!message?.trim()) return NextResponse.json({ error: "কোন বার্তা প্রদান করা হয়নি" }, { status: 400 })
 
-    // 🔒 INPUT FILTER: block real jailbreak, never block Bengali farming questions
+    // 🔒 INPUT FILTER
     if (isJailbreakAttempt(message)) {
       return NextResponse.json({
         reply: SAFE_DEFLECT,
-        suggestions: ["ধান গাছে ব্লাস্ট রোগের চিকিৎসা?", "আলু চাষের সঠিক সময়?", "পোকা দমনে নিম তেল কীভাবে ব্যবহার করবেন?"],
+        suggestions: getFreshSuggestions(message),
       })
     }
 
@@ -147,7 +236,7 @@ export async function POST(req: NextRequest) {
       { role: "user", content: message.trim() },
     ]
 
-    // 🔄 Use key rotation to avoid rate limits
+    // 🔄 Key rotation
     const data = await fetchOpenRouterWithRetry({ model: "openrouter/free", messages, max_tokens: 800, temperature: 0.7 })
 
     let reply = data.choices?.[0]?.message?.content || "দুঃখিত, এখন উত্তর দিতে পারছি না। আবার চেষ্টা করুন।"
@@ -156,11 +245,11 @@ export async function POST(req: NextRequest) {
     if (isSystemPromptLeak(reply)) {
       return NextResponse.json({
         reply: SAFE_DEFLECT,
-        suggestions: ["ধান গাছে ব্লাস্ট রোগের চিকিৎসা?", "আলু চাষের সঠিক সময়?", "পোকা দমনে নিম তেল কীভাবে ব্যবহার করবেন?"],
+        suggestions: getFreshSuggestions(message),
       })
     }
 
-    // Parse suggestions from reply
+    // Parse AI-generated suggestions OR fallback to dynamic pool
     let suggestions: string[] = []
     const sugMatch = reply.match(/---\s*\n\*\*(.+?)\*\*\s*\n((?:-\s*.+\n?)+)/)
     if (sugMatch) {
@@ -171,9 +260,24 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // If AI didn't generate suggestions (or generated empty), use dynamic pool
+    if (suggestions.length === 0) {
+      suggestions = getFreshSuggestions(message)
+    }
+
     return NextResponse.json({ reply, suggestions })
   } catch (error: any) {
-    console.error("চ্যাটবট ত্রুটি:", error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    console.error("Chatbot error:", error)
+    return NextResponse.json({
+      error: "চ্যাটবট সমস্যা — আবার চেষ্টা করুন",
+      suggestions: getFreshSuggestions(),
+    })
   }
+}
+
+// GET: return initial suggestions for empty chat
+export async function GET() {
+  return NextResponse.json({
+    suggestions: getFreshSuggestions(),
+  })
 }
