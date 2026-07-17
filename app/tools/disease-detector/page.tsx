@@ -174,15 +174,20 @@ export default function DiseaseDetectorPage() {
         setResult(d.result)
         // 💾 Save to Supabase for dashboard
         if (user) {
-          supabase.from("disease_scans").insert({
+          const { error: saveErr } = await supabase.from("disease_scans").insert({
             user_id: user.id,
-            crop_type: d.result.crop_type,
-            disease_name: d.result.disease_name,
-            confidence: d.result.confidence,
-            cause: d.result.cause,
-            remedy_bn: d.result.remedy_bn,
-            prevention_bn: d.result.prevention_bn,
-          }).then(() => { fetchHistory() })
+            crop_type: d.result.crop_type || null,
+            disease_name: d.result.disease_name || null,
+            confidence: d.result.confidence || null,
+            cause: d.result.cause || null,
+            remedy_bn: d.result.remedy_bn || null,
+            prevention_bn: d.result.prevention_bn || null,
+          })
+          if (saveErr) {
+            console.error("Save scan failed:", saveErr)
+          } else {
+            await fetchHistory()
+          }
         }
       } else {
         setError("বিশ্লেষণ ব্যর্থ হয়েছে")
@@ -407,10 +412,13 @@ export default function DiseaseDetectorPage() {
                   const date = new Date(scan.created_at)
                   const timeAgo = getTimeAgo(date)
                   return (
-                    <button
+                    <div
                       key={scan.id}
+                      role="button"
+                      tabIndex={0}
                       onClick={() => viewHistoryResult(scan)}
-                      className={`w-full text-left px-3.5 py-2.5 bg-white border border-gray-100 hover:border-leaf-200 hover:bg-leaf-50/50 rounded-xl flex items-center gap-3 transition-all duration-300 group ${
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); viewHistoryResult(scan) } }}
+                      className={`w-full text-left px-3.5 py-2.5 bg-white border border-gray-100 hover:border-leaf-200 hover:bg-leaf-50/50 rounded-xl flex items-center gap-3 transition-all duration-300 group cursor-pointer ${
                         deletingIds.has(scan.id) ? 'opacity-0 scale-95 pointer-events-none' : ''
                       }`}
                     >
@@ -430,12 +438,12 @@ export default function DiseaseDetectorPage() {
                           e.stopPropagation()
                           deleteScan(scan.id)
                         }}
-                        className="shrink-0 p-1.5 rounded-lg hover:bg-red-50 text-gray-300 hover:text-red-400 transition-all opacity-0 group-hover:opacity-100"
+                        className="shrink-0 p-1.5 rounded-lg hover:bg-red-50 text-gray-300 hover:text-red-500 transition-all"
                         title="ডিলিট"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
-                    </button>
+                    </div>
                   )
                 })}
               </div>

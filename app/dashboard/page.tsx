@@ -74,12 +74,14 @@ export default function DashboardPage() {
     setRecentActivity(prev => prev.filter(a => !(a.type === item.type && a.id === item.id)))
 
     try {
-      let table = ""
-      if (item.type === "scan") table = "disease_scans"
-      else if (item.type === "chat") table = "chat_sessions"
-      else table = "weather_advisories"
-
-      const { error } = await supabase.from(table).delete().eq("id", item.id)
+      let error: any = null
+      if (item.type === "scan") {
+        ;({ error } = await supabase.from("disease_scans").delete().eq("id", item.id))
+      } else if (item.type === "chat") {
+        ;({ error } = await supabase.from("chat_sessions").delete().eq("id", item.id))
+      } else {
+        ;({ error } = await supabase.from("weather_advisories").delete().eq("id", item.id))
+      }
 
       if (error) {
         console.error("Dashboard delete failed:", error)
