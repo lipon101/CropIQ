@@ -20,6 +20,7 @@ export default function DiseaseDetectorPage() {
   const [mode, setMode] = useState<"image" | "text">("image")
   const [scanHistory, setScanHistory] = useState<any[]>([])
   const [historyLoading, setHistoryLoading] = useState(false)
+  const [deletingIds, setDeletingIds] = useState<Set<number>>(new Set())
 
   const fetchHistory = async () => {
     if (!user) return
@@ -39,19 +40,43 @@ export default function DiseaseDetectorPage() {
 
   const deleteScan = async (id: number) => {
     if (!confirm("এই স্ক্যান রেকর্ড ডিলিট করতে চান?")) return
+    // Start fade-out animation
+    setDeletingIds(prev => new Set(prev).add(id))
     try {
       await supabase.from("disease_scans").delete().eq("id", id)
-      setScanHistory(prev => prev.filter(s => s.id !== id))
-    } catch {}
+      // Remove from list after animation completes
+      setTimeout(() => {
+        setScanHistory(prev => prev.filter(s => s.id !== id))
+        setDeletingIds(prev => {
+          const next = new Set(prev)
+          next.delete(id)
+          return next
+        })
+      }, 300)
+    } catch {
+      setDeletingIds(prev => {
+        const next = new Set(prev)
+        next.delete(id)
+        return next
+      })
+    }
   }
 
   const deleteAllScans = async () => {
     if (!user || scanHistory.length === 0) return
     if (!confirm(`সব ${scanHistory.length}টি স্ক্যান রেকর্ড ডিলিট করতে চান?`)) return
+    // Fade out all items
+    const allIds = new Set(scanHistory.map(s => s.id))
+    setDeletingIds(allIds)
     try {
       await supabase.from("disease_scans").delete().eq("user_id", user.id)
-      setScanHistory([])
-    } catch {}
+      setTimeout(() => {
+        setScanHistory([])
+        setDeletingIds(new Set())
+      }, 300)
+    } catch {
+      setDeletingIds(new Set())
+    }
   }
 
   const handleFile = useCallback((file: File) => {
@@ -282,6 +307,9 @@ export default function DiseaseDetectorPage() {
                 )}
               </div>
               <div className="space-y-1.5">
+                {scanHistory.length === 0 && deletingIds.size === 0 && (
+                  <p className="text-center text-xs text-gray-400 py-4">কোন স্ক্যান রেকর্ড নেই</p>
+                )}
                 {scanHistory.map((scan: any) => {
                   const date = new Date(scan.created_at)
                   const timeAgo = getTimeAgo(date)
@@ -289,7 +317,9 @@ export default function DiseaseDetectorPage() {
                     <button
                       key={scan.id}
                       onClick={() => viewHistoryResult(scan)}
-                      className="w-full text-left px-3.5 py-2.5 bg-white border border-gray-100 hover:border-leaf-200 hover:bg-leaf-50/50 rounded-xl flex items-center gap-3 transition-all group"
+                      className={`w-full text-left px-3.5 py-2.5 bg-white border border-gray-100 hover:border-leaf-200 hover:bg-leaf-50/50 rounded-xl flex items-center gap-3 transition-all duration-300 group ${
+                        deletingIds.has(scan.id) ? 'opacity-0 scale-95 pointer-events-none' : ''
+                      }`}
                     >
                       <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center shrink-0">
                         <ShieldAlert className="w-3.5 h-3.5 text-red-400" />
