@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Sprout, Heart } from "lucide-react"
+import { Sprout } from "lucide-react"
 
 export function Footer() {
   return (
@@ -11,14 +11,13 @@ export function Footer() {
       </div>
 
       <div className="relative container-cropiq py-8 md:py-10">
-        <div className="grid sm:grid-cols-3 gap-8">
+        <div className="grid sm:grid-cols-[1.2fr_0.9fr_1fr] gap-3 lg:gap-4 lg:ml-auto lg:max-w-2xl">
           <div>
             <Link href="/" className="flex items-center gap-2.5 mb-3 group">
               <div className="w-8 h-8 bg-gradient-to-br from-leaf-500 to-leaf-700 rounded-lg flex items-center justify-center shadow-lg"><Sprout className="w-4 h-4 text-white" /></div>
               <span className="text-lg font-extrabold">Crop<span className="text-earth-400">IQ</span></span>
             </Link>
-            <p className="text-gray-400 text-xs leading-relaxed mb-3">বাংলাদেশের জন্য এআই-চালিত স্মার্ট কৃষি প্ল্যাটফর্ম।</p>
-            
+            <p className="text-gray-400 text-xs leading-relaxed">বাংলাদেশের জন্য এআই-চালিত স্মার্ট কৃষি প্ল্যাটফর্ম।</p>
           </div>
 
           <div>
@@ -45,9 +44,8 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-gray-800 mt-7 pt-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+        <div className="border-t border-gray-800 mt-7 pt-4 flex justify-between items-center gap-2 lg:ml-auto lg:max-w-2xl">
           <p className="text-[11px] text-gray-500">&copy; {new Date().getFullYear()} CropIQ — গ্রুপ ৫ · সিএসই ৪০০ · বিইউবিটি · ইনটেক ৫১</p>
-          
         </div>
       </div>
     </footer>
