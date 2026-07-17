@@ -97,7 +97,7 @@ function extractSuggestions(reply: string): { cleanedReply: string; suggestions:
 const WARM_GREETING = "আসসালামু আলাইকুম চাষী ভাই! আমি কৃষি বন্ধু — আপনের ফসল, জমি আর রোগ-পোকা নিয়া কথা বলতে আমি আছি। কী জাননের ইচ্ছা আপনের?"
 
 // ─── FRIENDLY redirect for security blocks ───
-const FRIENDLY_REDIRECT = "চাষী ভাই, আমি খালি কৃষি নিয়া কথা কইতে পারি। আপনের ফসল, জমি বা চাষাবাদ নিয়া কিছু জাননের থাকলে কন, আমি যথাসাধ্য হেল্প করমু।"
+const FRIENDLY_REDIRECT = "চাষী ভাই, আমি খালি কৃষি নিয়া কথা কইতে পারি। আপনের ফসল, জমি বা চাষাবাদ নিয়া কিছু জাননের থাকলে কন, আমি যথাসাধ্য হেল্প করমু ইনশাআল্লাহ।"
 
 // ─── INPUT GUARD ───
 const JAILBREAK_PATTERNS = [
