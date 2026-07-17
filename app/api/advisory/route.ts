@@ -44,11 +44,7 @@ function isGarbageResponse(parsed: any): boolean {
   // Mixed script broken text (Bengali + Latin in same word, like "ডrainaেজ")
   for (const field of [summary, ...actions, irrigation, warning]) {
     if (!field) continue
-    // Arabic/Persian/Urdu script leak — absolute reject
-    if (/[\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF]/.test(field)) return true
-    // Mixed Bengali+Latin in same word
     if (/[\u0980-\u09FF][a-zA-Z][\u0980-\u09FF]/.test(field)) return true
-    // 3+ consecutive Latin chars
     if (/[a-zA-Z]{3,}/.test(field)) return true
   }
 
@@ -150,8 +146,12 @@ export async function POST(req: NextRequest) {
     // Try AI with key rotation — ONLY accept if output is clean
     for (let i = 0; i < keys.length; i++) {
       try {
+        const controller = new AbortController()
+        const timeout = setTimeout(() => controller.abort(), 8000)
+
         const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
           method: "POST",
+          signal: controller.signal,
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${keys[i]}`,
@@ -159,7 +159,7 @@ export async function POST(req: NextRequest) {
             "X-Title": "CropIQ",
           },
           body: JSON.stringify({
-            model: "google/gemini-2.0-flash-001",
+            model: "openrouter/free",
             messages: [
               { role: "system", content: ADVISORY_PROMPT },
               { role: "user", content: `জেলা: ${district}\nফসল: ${cropBn}\nআগামী ৭ দিনের আবহাওয়া:\n${forecastText}\n\nউপরে দেয়া তথ্যের ভিত্তিতে কৃষককে করণীয় পরামর্শ দাও। শুধু JSON দাও।` },
@@ -169,7 +169,7 @@ export async function POST(req: NextRequest) {
           }),
         })
 
-        if (response.status === 429) { console.warn(`Advisory key #${i + 1} rate limited`); continue }
+        if (response.status === 429) { clearTimeout(timeout); console.warn(`Advisory key #${i + 1} rate limited`); continue }
         if (!response.ok) continue
 
         clearTimeout(timeout)
