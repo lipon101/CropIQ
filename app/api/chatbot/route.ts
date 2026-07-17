@@ -1,49 +1,37 @@
 import { NextRequest, NextResponse } from "next/server"
 
-const CHATBOT_SYSTEM_PROMPT = `You are CropIQ কৃষি সহায়ক, an AI farming assistant for Bangladeshi farmers. You help with:
-- Crop disease identification and treatment
-- Planting and harvesting advice based on seasons
-- Fertilizer and pesticide recommendations
-- Irrigation and water management
-- Market information and crop selection
-- Organic farming practices
+const CHATBOT_SYSTEM_PROMPT = `You are CropIQ কৃষি সহায়ক, an AI farming assistant for Bangladeshi farmers.
 
 Rules:
-1. Always respond in the SAME language the user writes in (Bangla or English)
-2. If the user writes in Bangla, reply in Bangla with occasional English technical terms in parentheses
-3. Be practical — suggest locally available solutions in Bangladesh
-4. Be encouraging and respectful to farmers
-5. If you don't know something, say so honestly
-6. Keep responses concise (under 400 words unless detailed explanation is needed)
-7. For disease questions, ask about specific symptoms before diagnosing
-8. Suggest both organic (জৈব) and chemical (রাসায়নিক) options when relevant
-9. Format responses with clear sections using bullet points or numbered lists when helpful
+1. Always respond in the SAME language the user writes in
+2. Be practical — suggest locally available solutions in Bangladesh
+3. Be encouraging and respectful. Use simple language farmers understand.
+4. Keep responses clear, well-structured but under 350 words.
+5. Use **bold** for key terms, simple tables when comparing options, bullet points for lists.
+6. Never use markdown h1/h2/h3 headers (##, ###) — just use bold text for section titles.
+7. Suggest both organic (জৈব) and chemical (রাসায়নিক) options when relevant.
 
-You have knowledge about:
-- Rice (ধান): blast, bacterial blight, tungro, stem borer, brown planthopper
-- Wheat (গম): rust, leaf blight, aphids
-- Potato (আলু): late blight, scab, cutworm
-- Vegetables (সবজি): various pests and diseases
-- Jute (পাট): stem rot, anthracnose
-- Fruits (ফল): mango hopper, banana wilt, papaya ringspot virus`
+IMPORTANT — At the END of every response, append exactly 3 relevant follow-up questions the farmer might want to ask next. Format them EXACTLY like this:
+
+---
+**আরও জানতে চান?**
+- First follow-up question?
+- Second follow-up question?
+- Third follow-up question?
+
+The questions must be in the same language as the response and directly related to the topic.`
 
 export async function POST(req: NextRequest) {
   try {
     const { message, language, history } = await req.json()
-
-    if (!message?.trim()) {
-      return NextResponse.json({ error: "No message provided" }, { status: 400 })
-    }
+    if (!message?.trim()) return NextResponse.json({ error: "No message provided" }, { status: 400 })
 
     const apiKey = process.env.OPENROUTER_API_KEY
-    if (!apiKey) {
-      return NextResponse.json({ error: "AI service not configured" }, { status: 500 })
-    }
+    if (!apiKey) return NextResponse.json({ error: "AI service not configured" }, { status: 500 })
 
-    const langInstruction =
-      language === "bn"
-        ? "User prefers Bengali. Reply in Bengali (বাংলা)."
-        : "User prefers English. Reply in English."
+    const langInstruction = language === "bn"
+      ? "User prefers Bengali. Reply entirely in Bengali (বাংলা). The follow-up questions must also be in Bengali."
+      : "User prefers English. Reply in English."
 
     const messages = [
       { role: "system", content: `${CHATBOT_SYSTEM_PROMPT}\n\n${langInstruction}` },
@@ -59,28 +47,33 @@ export async function POST(req: NextRequest) {
         "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
         "X-Title": "CropIQ Chatbot",
       },
-      body: JSON.stringify({
-        model: "openrouter/free",
-        messages,
-        max_tokens: 800,
-        temperature: 0.7,
-      }),
+      body: JSON.stringify({ model: "openrouter/free", messages, max_tokens: 800, temperature: 0.7 }),
     })
 
     if (!response.ok) {
-      const errText = await response.text()
-      console.error("OpenRouter chatbot error:", response.status, errText)
+      console.error("OpenRouter error:", response.status)
       return NextResponse.json({ error: "Chatbot error" }, { status: 502 })
     }
 
     const data = await response.json()
-    const reply = data.choices?.[0]?.message?.content || (
-      language === "bn"
-        ? "দুঃখিত, আমি এখন উত্তর দিতে পারছি না। আবার চেষ্টা করুন।"
-        : "Sorry, I couldn't process that. Please try again."
+    let reply = data.choices?.[0]?.message?.content || (
+      language === "bn" ? "দুঃখিত, আমি এখন উত্তর দিতে পারছি না।" : "Sorry, I couldn't process that."
     )
 
-    return NextResponse.json({ reply })
+    // Parse out suggestions from the reply
+    let suggestions: string[] = []
+    const sugMatch = reply.match(/---\s*\n\*\*(.+?)\*\*\s*\n((?:-\s*.+\n?)+)/)
+    if (sugMatch) {
+      // Remove suggestions section from main reply
+      reply = reply.replace(/---\s*\n\*\*(.+?)\*\*\s*\n((?:-\s*.+\n?)+)\s*$/, "").trim()
+      // Extract individual suggestions
+      const sugLines = sugMatch[2].match(/-\s*(.+)/g)
+      if (sugLines) {
+        suggestions = sugLines.map(s => s.replace(/^-\s*/, "").trim()).filter(Boolean).slice(0, 3)
+      }
+    }
+
+    return NextResponse.json({ reply, suggestions })
   } catch (error: any) {
     console.error("Chatbot error:", error)
     return NextResponse.json({ error: error.message }, { status: 500 })
