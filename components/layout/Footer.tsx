@@ -99,7 +99,7 @@ export function Footer() {
         {/* Divider */}
         <div className="border-t border-gray-100 mt-10 pt-5 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-[11px] text-gray-400 font-medium">
-            &copy; {new Date().getFullYear()} CropIQ. সর্বস্বত্ব সংরক্ষিত।
+            &copy; Made CropIQ ❤️ Lipon
           </p>
         </div>
       </div>
