@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Send, MessageCircle, Sprout, Loader2, Sparkles } from "lucide-react"
+import { Send, MessageCircle, Sprout, Loader2, Sparkles, ChevronLeft, ChevronRight } from "lucide-react"
 import { ToolPageLayout, TOOLS } from "@/components/tools/ToolPageLayout"
 import { useAuth } from "@/lib/auth/AuthContext"
 import { createClient } from "@/lib/supabase/client"
@@ -16,7 +16,9 @@ export default function ChatbotPage() {
   const [loading, setLoading] = useState(false)
   const [suggestions, setSuggestions] = useState<string[]>([])
   const [shownSuggestions, setShownSuggestions] = useState<string[]>([])
+  const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(0)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const carouselRef = useRef<HTMLDivElement>(null)
 
   // Fetch fresh suggestions on every mount (page refresh = new questions)
   useEffect(() => {
@@ -32,6 +34,20 @@ export default function ChatbotPage() {
   }, [])
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }) }, [messages])
+
+  const handleCarouselScroll = () => {
+    const el = carouselRef.current
+    if (!el) return
+    const idx = Math.round(el.scrollLeft / el.offsetWidth)
+    setActiveSuggestionIndex(idx)
+  }
+
+  const scrollCarousel = (dir: -1 | 1) => {
+    const el = carouselRef.current
+    if (!el) return
+    const w = el.offsetWidth
+    el.scrollBy({ left: dir * w, behavior: 'smooth' })
+  }
 
   const send = async (text: string) => {
     const msg = text.trim()
@@ -127,23 +143,66 @@ export default function ChatbotPage() {
           <div ref={bottomRef} />
         </div>
 
-        {/* ── Suggestions as clickable chips ── */}
+        {/* ── Suggestions Carousel ── */}
         {showSuggestions && (
           <div className="shrink-0 pb-2">
-            <div className="flex items-center gap-1.5 mb-2 px-1">
-              <Sparkles className="w-3 h-3 text-amber-400" />
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">আরও জানতে চান?</span>
+            <div className="flex items-center justify-between mb-2 px-1">
+              <div className="flex items-center gap-1.5">
+                <Sparkles className="w-3 h-3 text-amber-400" />
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">আরও জানতে চান?</span>
+              </div>
+              <div className="flex items-center gap-0.5">
+                <button
+                  onClick={() => scrollCarousel(-1)}
+                  disabled={activeSuggestionIndex === 0}
+                  className="p-1 rounded-full hover:bg-gray-100 disabled:opacity-30 disabled:cursor-default transition-all"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5 text-gray-500" />
+                </button>
+                <button
+                  onClick={() => scrollCarousel(1)}
+                  disabled={activeSuggestionIndex >= suggestions.length - 1}
+                  className="p-1 rounded-full hover:bg-gray-100 disabled:opacity-30 disabled:cursor-default transition-all"
+                >
+                  <ChevronRight className="w-3.5 h-3.5 text-gray-500" />
+                </button>
+              </div>
             </div>
-            <div className="flex flex-wrap gap-1.5">
+
+            {/* Scrollable carousel */}
+            <div
+              ref={carouselRef}
+              onScroll={handleCarouselScroll}
+              className="flex gap-2 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-1"
+             
+            >
               {suggestions.map((s, i) => (
                 <button
                   key={i}
                   onClick={() => send(s)}
                   disabled={loading}
-                  className="px-3 py-1.5 bg-white border border-gray-200 hover:border-leaf-300 hover:bg-leaf-50 rounded-full text-[11px] font-semibold text-gray-600 hover:text-leaf-700 transition-all disabled:opacity-50 shadow-sm"
+                  className="shrink-0 w-[85%] sm:w-[60%] snap-center text-left px-4 py-3 bg-white border border-gray-200 hover:border-leaf-300 hover:bg-leaf-50 rounded-2xl text-[12px] font-semibold text-gray-700 hover:text-leaf-700 transition-all disabled:opacity-50 shadow-sm leading-relaxed"
                 >
                   {s}
                 </button>
+              ))}
+            </div>
+
+            {/* Dots indicator */}
+            <div className="flex items-center justify-center gap-1.5 mt-2">
+              {suggestions.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    const el = carouselRef.current
+                    if (el) el.scrollTo({ left: i * el.offsetWidth, behavior: 'smooth' })
+                  }}
+                  className={`rounded-full transition-all ${
+                    i === activeSuggestionIndex
+                      ? 'w-5 h-1.5 bg-leaf-500'
+                      : 'w-1.5 h-1.5 bg-gray-300 hover:bg-gray-400'
+                  }`}
+                />
               ))}
             </div>
           </div>
