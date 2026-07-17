@@ -61,7 +61,7 @@ Return ONLY a valid JSON object (no markdown, no extra text):
     const data = await response.json()
     const content = data.choices?.[0]?.message?.content || ""
 
-    let result
+    let result: any
     const jsonMatch = content.match(/\{[\s\S]*\}/)
     if (jsonMatch) {
       try { result = JSON.parse(jsonMatch[0]) } catch { result = { disease_name: "Analysis Incomplete", remedy_bn: content, remedy_en: content } }

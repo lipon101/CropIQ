@@ -76,7 +76,7 @@ Be accurate and specific to Bangladesh crops. Local disease names in Bengali are
     const content = data.choices?.[0]?.message?.content || ""
 
     // Extract JSON from response
-    let result
+    let result: any
     const jsonMatch = content.match(/\{[\s\S]*\}/)
     if (jsonMatch) {
       try {

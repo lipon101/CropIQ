@@ -112,9 +112,9 @@ async function callOpenRouter(
     stream: options.stream ?? false,
   }
 
-  let response: Response
   let retries = 0
   const maxRetries = 3
+  let response: Response | null = null
 
   while (retries <= maxRetries) {
     response = await fetch(`${OPENROUTER_BASE}/chat/completions`, {
@@ -137,9 +137,9 @@ async function callOpenRouter(
     break
   }
 
-  if (!response.ok) {
-    const err = await response.text()
-    throw new Error(`OpenRouter API error (${response.status}): ${err}`)
+  if (!response?.ok) {
+    const err = response ? await response.text() : "No response"
+    throw new Error(`OpenRouter API error (${response?.status || "unknown"}): ${err}`)
   }
 
   const data: OpenRouterResponse = await response.json()
