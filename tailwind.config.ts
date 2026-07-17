@@ -39,10 +39,8 @@ const config: Config = {
           500: "#0ea5e9",
           600: "#0284c7",
         },
-        rice: {
-          50: "#fef7ed",
-          100: "#ffedd5",
-          500: "#f97316",
+        amber: {
+          400: "#fbbf24",
         },
       },
       fontFamily: {
