@@ -66,7 +66,7 @@ export default function WeatherAdvisoryPage() {
 
             <div className="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm">
               <h3 className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2"><Calendar className="w-4 h-4 text-sky-500" />৭ দিনের পূর্বাভাস</h3>
-              <div className="grid grid-cols-4 md:grid-cols-7 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2">
                 {weather.forecast.map((day, i) => (
                   <div key={i} className={`text-center p-2 rounded-xl ${i === 0 ? "bg-sky-50" : "hover:bg-gray-50"}`}>
                     <p className={`text-[11px] font-bold ${i === 0 ? "text-sky-600" : "text-gray-400"}`}>{i === 0 ? "আজ" : new Date(day.date).toLocaleDateString("en", { weekday: "short" })}</p>

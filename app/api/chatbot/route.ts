@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
       // Extract individual suggestions
       const sugLines = sugMatch[2].match(/-\s*(.+)/g)
       if (sugLines) {
-        suggestions = sugLines.map(s => s.replace(/^-\s*/, "").trim()).filter(Boolean).slice(0, 3)
+        suggestions = sugLines.map((s: string) => s.replace(/^-\s*/, "").trim()).filter(Boolean).slice(0, 3)
       }
     }
 
