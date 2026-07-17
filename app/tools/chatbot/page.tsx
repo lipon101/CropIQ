@@ -47,7 +47,7 @@ export default function ChatbotPage() {
       icon={<MessageCircle className="w-4 h-4 text-white" />}
       currentIndex={0}
     >
-      <div className="flex flex-col h-[calc(100vh-140px)] max-w-2xl mx-auto w-full bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="flex flex-col h-full max-w-2xl mx-auto w-full bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
         <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
           {messages.length === 0 ? (
             <div className="flex items-center justify-center h-full"><div className="text-center max-w-sm">

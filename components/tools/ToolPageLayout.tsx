@@ -2,7 +2,6 @@
 
 import Link from "next/link"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { ToolsWidget } from "./ToolsWidget"
 
 export interface Tool {
   href: string
@@ -29,7 +28,7 @@ export function ToolPageLayout({ title, icon, currentIndex, children }: ToolPage
   const next = currentIndex < TOOLS.length - 1 ? TOOLS[currentIndex + 1] : null
 
   return (
-    <div className="min-h-[calc(100vh-64px)] flex flex-col">
+    <div className="h-[calc(100vh-64px)] flex flex-col overflow-hidden">
       {/* ── Premium Navigation Header ── */}
       <div className="bg-white/90 backdrop-blur-xl border-b border-gray-100 px-4 md:px-8 py-2.5 flex items-center justify-between shrink-0 shadow-sm">
         <div className="w-[100px] flex justify-start">
@@ -69,11 +68,9 @@ export function ToolPageLayout({ title, icon, currentIndex, children }: ToolPage
       </div>
 
       {/* ── Content ── */}
-      <div className="flex-1 px-4 sm:px-6 md:px-10 lg:px-14 py-6 md:py-8 max-w-3xl mx-auto w-full">
+      <div className="flex-1 overflow-hidden px-4 sm:px-6 md:px-10 lg:px-14 py-4 max-w-3xl mx-auto w-full">
         {children}
 
-        {/* ── Quick Tools Navigation Widget ── */}
-        <ToolsWidget currentIndex={currentIndex} />
       </div>
     </div>
   )

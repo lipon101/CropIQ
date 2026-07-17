@@ -39,7 +39,7 @@ export default function DiseaseDetectorPage() {
 
   return (
     <ToolPageLayout title="ফসল রোগ সনাক্তকারী" icon={<Microscope className="w-4 h-4 text-white" />} currentIndex={1}>
-      <div className="space-y-4">
+      <div className="space-y-4 overflow-y-auto h-full">
         {/* Mode Switch — icon only */}
         <div className="flex justify-center">
           <div className="inline-flex bg-white rounded-2xl border border-gray-200 p-1.5 shadow-sm">
@@ -92,7 +92,7 @@ export default function DiseaseDetectorPage() {
 
         {/* Results */}
         {result && !loading && (
-          <div className="space-y-4">
+          <div className="space-y-4 overflow-y-auto h-full">
             <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
               <div className="px-5 py-4 bg-gradient-to-r from-red-50 to-rose-50 border-b border-red-100 flex items-center gap-3">
                 <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm"><ShieldAlert className="w-5 h-5 text-red-500" /></div>
