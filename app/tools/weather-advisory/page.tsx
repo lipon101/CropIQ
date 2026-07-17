@@ -20,7 +20,7 @@ export default function WeatherAdvisoryPage() {
   const [advisory, setAdvisory] = useState<Advisory | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
-  const [showForecast, setShowForecast] = useState(true)
+  const [showForecast, setShowForecast] = useState(false)
 
   const districtBn = DISTRICTS.find(d => d.name_en === district)?.name_bn || district
   const cropBn = CROPS.find(c => c.name_en === crop)?.name_bn || crop
