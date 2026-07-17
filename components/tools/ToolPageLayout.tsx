@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { ChevronLeft, ChevronRight } from "lucide-react"
+import { ToolsWidget } from "./ToolsWidget"
 
 export interface Tool {
   href: string
@@ -70,6 +71,9 @@ export function ToolPageLayout({ title, icon, currentIndex, children }: ToolPage
       {/* ── Content ── */}
       <div className="flex-1 px-4 sm:px-6 md:px-10 lg:px-14 py-6 md:py-8 max-w-3xl mx-auto w-full">
         {children}
+
+        {/* ── Quick Tools Navigation Widget ── */}
+        <ToolsWidget currentIndex={currentIndex} />
       </div>
     </div>
   )
