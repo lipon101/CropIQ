@@ -88,7 +88,7 @@ export default function DashboardPage() {
               {loading ? (
                 <div className="space-y-3">{[1, 2, 3].map(i => <div key={i} className="flex gap-3 p-3"><div className="w-10 h-10 bg-gray-100 rounded-xl animate-pulse" /><div className="flex-1 space-y-2"><div className="h-4 bg-gray-100 rounded-lg animate-pulse w-3/4" /><div className="h-3 bg-gray-50 rounded-lg animate-pulse w-1/2" /></div></div>)}</div>
               ) : scans.length === 0 ? (
-                <div className="text-center py-8"><div className="w-14 h-14 bg-leaf-50 rounded-2xl flex items-center justify-center mx-auto mb-3"><Sprout className="w-7 h-7 text-leaf-300" /></div><p className="text-sm text-gray-500 font-medium mb-3">এখনও কোন তথ্য নেই। CropIQ টুল ব্যবহার শুরু করুন!</p><Link href="/tools/disease-detector" className="btn-primary-sm inline-flex"><Microscope className="w-4 h-4" />রোগ সনাক্তকরণ শুরু করুন</Link></div>
+                <div className="text-center py-8"><div className="w-14 h-14 bg-leaf-50 rounded-2xl flex items-center justify-center mx-auto mb-3"><Sprout className="w-7 h-7 text-leaf-300" /></div><p className="text-sm text-gray-500 font-medium mb-3">এখনও কোন তথ্য নেই। CropIQ টুল ব্যবহার শুরু করুন!</p><Link href="/tools/chatbot" className="btn-primary-sm inline-flex"><MessageCircle className="w-4 h-4" />চ্যাটবট ব্যবহার করুন</Link></div>
               ) : (
                 <div className="space-y-1.5">
                   {scans.map(s => (
