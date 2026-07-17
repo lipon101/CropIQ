@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useAuth } from "@/lib/auth/AuthContext"
 import { createClient } from "@/lib/supabase/client"
-import { Microscope, MessageCircle, CloudSun, Bookmark, TrendingUp, ChevronRight, Sprout, Zap, Clock, ArrowRight, Loader2 } from "lucide-react"
+import { Microscope, MessageCircle, CloudSun, Bookmark, TrendingUp, ChevronRight, Sprout, Zap, Clock, ArrowRight, Loader2, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { formatDate } from "@/lib/utils"
 
@@ -26,43 +26,81 @@ export default function DashboardPage() {
   const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([])
   const [loading, setLoading] = useState(true)
 
+  const fetchAll = async () => {
+    if (!user) return
+    // ── Real counts (parallel) ──
+    const [scanR, chatR, advR, savedR] = await Promise.allSettled([
+      supabase.from("disease_scans").select("*", { count: "exact", head: true }).eq("user_id", user.id),
+      supabase.from("chat_sessions").select("*", { count: "exact", head: true }).eq("user_id", user.id),
+      supabase.from("weather_advisories").select("*", { count: "exact", head: true }).eq("user_id", user.id),
+      supabase.from("saved_items").select("*", { count: "exact", head: true }).eq("user_id", user.id),
+    ])
+    setStats({
+      scans: scanR.status === "fulfilled" ? (scanR.value.count ?? 0) : 0,
+      chats: chatR.status === "fulfilled" ? (chatR.value.count ?? 0) : 0,
+      advisories: advR.status === "fulfilled" ? (advR.value.count ?? 0) : 0,
+      saved: savedR.status === "fulfilled" ? (savedR.value.count ?? 0) : 0,
+    })
+
+    // ── Unified recent activity ──
+    const [scans, chats, advisories] = await Promise.allSettled([
+      supabase.from("disease_scans").select("id,crop_type,disease_name,confidence,created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
+      supabase.from("chat_sessions").select("id,question,created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
+      supabase.from("weather_advisories").select("id,district,crop,created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
+    ])
+
+    const items: ActivityItem[] = []
+    if (scans.status === "fulfilled" && scans.value.data) items.push(...scans.value.data.map((s: any) => ({ type: "scan" as const, ...s })))
+    if (chats.status === "fulfilled" && chats.value.data) items.push(...chats.value.data.map((c: any) => ({ type: "chat" as const, ...c })))
+    if (advisories.status === "fulfilled" && advisories.value.data) items.push(...advisories.value.data.map((a: any) => ({ type: "advisory" as const, ...a })))
+
+    items.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    setRecentActivity(items.slice(0, 15))
+    setLoading(false)
+  }
+
   useEffect(() => {
     if (!user) return
-
-    const fetchAll = async () => {
-      // ── Real counts (parallel) ──
-      const [scanR, chatR, advR, savedR] = await Promise.allSettled([
-        supabase.from("disease_scans").select("*", { count: "exact", head: true }).eq("user_id", user.id),
-        supabase.from("chat_sessions").select("*", { count: "exact", head: true }).eq("user_id", user.id),
-        supabase.from("weather_advisories").select("*", { count: "exact", head: true }).eq("user_id", user.id),
-        supabase.from("saved_items").select("*", { count: "exact", head: true }).eq("user_id", user.id),
-      ])
-      setStats({
-        scans: scanR.status === "fulfilled" ? (scanR.value.count ?? 0) : 0,
-        chats: chatR.status === "fulfilled" ? (chatR.value.count ?? 0) : 0,
-        advisories: advR.status === "fulfilled" ? (advR.value.count ?? 0) : 0,
-        saved: savedR.status === "fulfilled" ? (savedR.value.count ?? 0) : 0,
-      })
-
-      // ── Unified recent activity ──
-      const [scans, chats, advisories] = await Promise.allSettled([
-        supabase.from("disease_scans").select("id,crop_type,disease_name,confidence,created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
-        supabase.from("chat_sessions").select("id,question,created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
-        supabase.from("weather_advisories").select("id,district,crop,created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
-      ])
-
-      const items: ActivityItem[] = []
-      if (scans.status === "fulfilled" && scans.value.data) items.push(...scans.value.data.map((s: any) => ({ type: "scan" as const, ...s })))
-      if (chats.status === "fulfilled" && chats.value.data) items.push(...chats.value.data.map((c: any) => ({ type: "chat" as const, ...c })))
-      if (advisories.status === "fulfilled" && advisories.value.data) items.push(...advisories.value.data.map((a: any) => ({ type: "advisory" as const, ...a })))
-
-      items.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-      setRecentActivity(items.slice(0, 15))
-      setLoading(false)
-    }
-
     fetchAll().catch(() => setLoading(false))
   }, [user])
+
+  // ── Delete activity item ──
+  const deleteActivity = async (item: ActivityItem) => {
+    if (!user) return
+    const label = item.type === "scan" ? "স্ক্যান" : item.type === "chat" ? "চ্যাট" : "পরামর্শ"
+    if (!confirm(`এই ${label} রেকর্ড ডিলিট করতে চান?`)) return
+
+    // Animate out
+    setRecentActivity(prev => prev.filter(a => !(a.type === item.type && a.id === item.id)))
+
+    try {
+      let table = ""
+      if (item.type === "scan") table = "disease_scans"
+      else if (item.type === "chat") table = "chat_sessions"
+      else table = "weather_advisories"
+
+      const { error } = await supabase.from(table).delete().eq("id", item.id)
+
+      if (error) {
+        console.error("Dashboard delete failed:", error)
+        // Revert — re-fetch all
+        setLoading(true)
+        fetchAll()
+        return
+      }
+
+      // Update stats
+      setStats(prev => ({
+        ...prev,
+        scans: item.type === "scan" ? prev.scans - 1 : prev.scans,
+        chats: item.type === "chat" ? prev.chats - 1 : prev.chats,
+        advisories: item.type === "advisory" ? prev.advisories - 1 : prev.advisories,
+      }))
+    } catch {
+      // Re-fetch on unexpected error
+      fetchAll()
+    }
+  }
 
   const statCards = [
     { icon: Microscope, iconBg: "bg-red-100 text-red-600", label: "রোগ স্ক্যান", value: stats.scans, href: "/tools/disease-detector" },
@@ -182,18 +220,32 @@ export default function DashboardPage() {
                   {recentActivity.map(item => {
                     const { icon: Icon, bg } = activityIcon(item)
                     const { title, badge, badgeClass } = activityText(item)
+                    const linkHref = item.type === "scan" 
+                      ? "/tools/disease-detector" 
+                      : item.type === "chat" 
+                        ? "/tools/chatbot" 
+                        : "/tools/weather-advisory"
                     return (
-                      <div key={item.id} className="flex items-center gap-3 p-3 bg-gray-50/70 rounded-xl hover:bg-gray-100/70 transition-colors group">
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${bg}`}>
-                          <Icon className="w-4 h-4" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-gray-800 truncate">{title}</p>
-                          <p className="text-xs text-gray-400 mt-0.5">{formatDate(item.created_at)}</p>
-                        </div>
-                        {badge && (
-                          <div className={`px-2.5 py-1 rounded-full text-[11px] font-extrabold ${badgeClass}`}>{badge}</div>
-                        )}
+                      <div key={`${item.type}_${item.id}`} className="flex items-center gap-3 p-3 bg-gray-50/70 rounded-xl hover:bg-gray-100/70 transition-colors group">
+                        <Link href={linkHref} className="flex items-center gap-3 flex-1 min-w-0">
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${bg}`}>
+                            <Icon className="w-4 h-4" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-gray-800 truncate">{title}</p>
+                            <p className="text-xs text-gray-400 mt-0.5">{formatDate(item.created_at)}</p>
+                          </div>
+                          {badge && (
+                            <div className={`px-2.5 py-1 rounded-full text-[11px] font-extrabold ${badgeClass}`}>{badge}</div>
+                          )}
+                        </Link>
+                        <button
+                          onClick={(e) => { e.preventDefault(); deleteActivity(item) }}
+                          className="shrink-0 p-1.5 rounded-lg hover:bg-red-50 text-gray-300 hover:text-red-400 transition-all opacity-0 group-hover:opacity-100"
+                          title="ডিলিট"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     )
                   })}
