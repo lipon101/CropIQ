@@ -42,24 +42,30 @@ export default function DiseaseDetectorPage() {
     if (!confirm("এই স্ক্যান রেকর্ড ডিলিট করতে চান?")) return
     // Start fade-out animation
     setDeletingIds(prev => new Set(prev).add(id))
-    try {
-      await supabase.from("disease_scans").delete().eq("id", id)
-      // Remove from list after animation completes
-      setTimeout(() => {
-        setScanHistory(prev => prev.filter(s => s.id !== id))
-        setDeletingIds(prev => {
-          const next = new Set(prev)
-          next.delete(id)
-          return next
-        })
-      }, 300)
-    } catch {
+    
+    const { error: deleteError } = await supabase.from("disease_scans").delete().eq("id", id)
+    
+    if (deleteError) {
+      // Supabase delete failed — revert animation, show error
+      console.error("Delete failed:", deleteError)
       setDeletingIds(prev => {
         const next = new Set(prev)
         next.delete(id)
         return next
       })
+      setError("ডিলিট করতে সমস্যা হয়েছে — আবার চেষ্টা করুন")
+      return
     }
+    
+    // Supabase confirmed deletion — animate out then remove from UI
+    setTimeout(() => {
+      setScanHistory(prev => prev.filter(s => s.id !== id))
+      setDeletingIds(prev => {
+        const next = new Set(prev)
+        next.delete(id)
+        return next
+      })
+    }, 300)
   }
 
   const deleteAllScans = async () => {
@@ -68,15 +74,21 @@ export default function DiseaseDetectorPage() {
     // Fade out all items
     const allIds = new Set(scanHistory.map(s => s.id))
     setDeletingIds(allIds)
-    try {
-      await supabase.from("disease_scans").delete().eq("user_id", user.id)
-      setTimeout(() => {
-        setScanHistory([])
-        setDeletingIds(new Set())
-      }, 300)
-    } catch {
+    
+    const { error: deleteError } = await supabase.from("disease_scans").delete().eq("user_id", user.id)
+    
+    if (deleteError) {
+      console.error("Delete all failed:", deleteError)
       setDeletingIds(new Set())
+      setError("সব ডিলিট করতে সমস্যা হয়েছে — আবার চেষ্টা করুন")
+      return
     }
+    
+    // Supabase confirmed — remove after animation
+    setTimeout(() => {
+      setScanHistory([])
+      setDeletingIds(new Set())
+    }, 300)
   }
 
   const handleFile = useCallback((file: File) => {
