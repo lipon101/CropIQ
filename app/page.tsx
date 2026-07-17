@@ -56,10 +56,10 @@ export default function HomePage() {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3 pt-1">
-                <Link href={user ? "/dashboard" : "/auth/signup"} className="btn-primary text-base py-4 px-9">
+                <Link href={user ? "/dashboard" : "/auth/signup"} className="btn-primary text-base py-2.5 px-6">
                   <Sprout className="w-5 h-5" /> বিনামূল্যে শুরু করুন <ArrowRight className="w-5 h-5" />
                 </Link>
-                <Link href="/tools/disease-detector" className="btn-accent text-base py-4 px-9">
+                <Link href="/tools/disease-detector" className="btn-accent text-base py-2.5 px-6">
                   <Microscope className="w-5 h-5" /> এআই রোগ সনাক্তকরণ <span className="badge-beta">বিটা</span>
                 </Link>
               </div>
@@ -185,8 +185,8 @@ export default function HomePage() {
           <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-3">আজই CropIQ ব্যবহার শুরু করুন</h2>
           <p className="text-sm text-gray-500 mb-8">বাংলাদেশের প্রতিটি কৃষকের জন্য সম্পূর্ণ বিনামূল্যে। কোন লুকানো খরচ নেই।</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link href={user ? "/dashboard" : "/auth/signup"} className="btn-primary text-base py-4 px-9"><Sprout className="w-5 h-5" />বিনামূল্যে শুরু করুন<ArrowRight className="w-5 h-5" /></Link>
-            <Link href="#features" className="btn-secondary text-base py-4 px-9">আরও জানুন</Link>
+            <Link href={user ? "/dashboard" : "/auth/signup"} className="btn-primary text-base py-2.5 px-6"><Sprout className="w-5 h-5" />বিনামূল্যে শুরু করুন<ArrowRight className="w-5 h-5" /></Link>
+            <Link href="#features" className="btn-secondary text-base py-2.5 px-6">আরও জানুন</Link>
           </div>
         </div>
       </section>
