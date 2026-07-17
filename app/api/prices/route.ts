@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from "next/server"
 export const dynamic = "force-dynamic"
+
+import { NextRequest, NextResponse } from "next/server"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 
 // Sample seed data for demo — used when Supabase table is empty

@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server"
 export const dynamic = "force-dynamic"
+
+import { NextRequest, NextResponse } from "next/server"
 import { DISTRICTS } from "@/lib/constants/districts"
 
-// English → Bengali weather description mapping
 const weatherDescBn: Record<string, string> = {
   "light rain": "হালকা বৃষ্টি", "moderate rain": "মাঝারি বৃষ্টি", "heavy intensity rain": "ভারী বৃষ্টি",
   "very heavy rain": "অতি ভারী বৃষ্টি", "overcast clouds": "মেঘলা", "scattered clouds": "আংশিক মেঘলা",
