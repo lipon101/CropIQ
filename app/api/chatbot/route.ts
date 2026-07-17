@@ -103,8 +103,8 @@ const FRIENDLY_REDIRECT = "চাষী ভাই, আমি খালি কৃ
 const JAILBREAK_PATTERNS = [
   /system\s*prompt/i, /^\s*instructions?\s*$/i, /repeat\s.*(words|above|everything)/i, /word\s*for\s*word/i,
   /developer\s*mode/i, /jailbreak/i, /show\s*me\s*your\s*(system|prompt|instructions?)/i, /previous\s.*instructions?/i,
-  /internal\s*(prompt|instruction)/i, /print\s.*(prompt|instruction)/i, /ignore\s*(above|previous|all)\s*(instructions?|prompt)/i,
-  /disregard\s*(above|previous)/i, /forget\s*(above|previous|all)/i, /pretend\s*(you|to\s*be)\s*(are|a|an)/i,
+  /internal\s*(prompt|instruction)/i, /print\s.*(prompt|instruction|system|message)/i, /ignore\s.*(instructions?|prompt|above|previous)/i,
+  /disregard\s.*(above|previous|all|prompt)/i, /forget\s.*(above|previous|all|everything)/i, /pretend\s*(you|to\s*be)\s*(are|a|an)/i,
   /dan\s*mode/i, /how\s*were\s*you\s*(made|built|created|trained)/i, /reveal\s*your\s*(system|prompt|instructions?)/i,
   /what\s*(is|are)\s*your\s*(system\s*)?(prompt|instructions?|rules)/i, /translate\s*(the|your)\s*(above|previous|instructions?|prompt)/i,
   /output\s*(your|the)\s*(system|instructions?|prompt)/i, /write\s*out\s*your\s*(system|prompt)/i,
