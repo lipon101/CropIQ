@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
 }`
 
     const body = {
-      model: "openrouter/free",
+      model: "google/gemini-2.0-flash-001",
       messages: [
         { role: "system", content: prompt },
         { role: "user", content: `লক্ষণ: ${description}\n\nরোগ সনাক্ত করো। সহজ বাংলায় চিকিৎসা বলো। শুধু JSON দাও।` },
@@ -53,12 +53,18 @@ export async function POST(req: NextRequest) {
       if (response.ok) {
         const data = await response.json()
         const content = data.choices?.[0]?.message?.content || ""
+        // 🔒 Safety block detection
+        const isSafetyBlocked = /(safety|unauthorized|harmful|dangerous|medical advice)/i.test(content) && !content.includes("{")
+        if (isSafetyBlocked) {
+          return NextResponse.json({ error: "লক্ষণ বিশ্লেষণ করা যায়নি। দয়া করে ফসলের রোগের লক্ষণগুলো বিস্তারিত বর্ণনা করুন।" }, { status: 422 })
+        }
+
         let result: any
         const jsonMatch = content.match(/\{[\s\S]*\}/)
         if (jsonMatch) {
-          try { result = JSON.parse(jsonMatch[0]) } catch { result = { disease_name: "বিশ্লেষণ অসম্পূর্ণ", remedy_bn: content } }
+          try { result = JSON.parse(jsonMatch[0]) } catch { result = { disease_name: "বিশ্লেষণ অসম্পূর্ণ", remedy_bn: "বিশ্লেষণ ব্যর্থ — আবার চেষ্টা করুন" } }
         } else {
-          result = { disease_name: "নির্ণয় করা যায়নি", remedy_bn: content }
+          result = { disease_name: "নির্ণয় করা যায়নি", remedy_bn: "আরও বিস্তারিত লক্ষণ দিয়ে আবার চেষ্টা করুন" }
         }
         return NextResponse.json({ result })
       }
