@@ -6,9 +6,9 @@ import { DISTRICTS } from "@/lib/constants/districts"
 import { CROPS } from "@/lib/constants/crops"
 import { CloudSun, CloudRain, Wind, Droplets, Loader2, MapPin, AlertTriangle, Calendar, Lightbulb } from "lucide-react"
 
-interface ForecastDay { date: string; temp_min: number; temp_max: number; humidity: number; rain_mm: number; wind_kmh: number; description: string; icon: string }
-interface WeatherData { district: string; current: { temp: number; humidity: number; description: string; icon: string; wind_kmh: number }; forecast: ForecastDay[] }
-const WI: Record<string,string>={"01d":"☀️","01n":"🌙","02d":"⛅","02n":"☁️","03d":"☁️","03n":"☁️","04d":"☁️","04n":"☁️","09d":"🌧️","09n":"🌧️","10d":"🌦️","10n":"🌧️","11d":"⛈️","11n":"⛈️","13d":"🌨️","13n":"🌨️","50d":"🌫️","50n":"🌫️"}
+interface ForecastDay { date:string; temp_min:number; temp_max:number; humidity:number; rain_mm:number; wind_kmh:number; description:string; icon:string }
+interface WeatherData { district:string; current:{temp:number;humidity:number;description:string;icon:string;wind_kmh:number}; forecast:ForecastDay[] }
+const WI:Record<string,string>={"01d":"☀️","01n":"🌙","02d":"⛅","02n":"☁️","03d":"☁️","03n":"☁️","04d":"☁️","04n":"☁️","09d":"🌧️","09n":"🌧️","10d":"🌦️","10n":"🌧️","11d":"⛈️","11n":"⛈️","13d":"🌨️","13n":"🌨️","50d":"🌫️","50n":"🌫️"}
 
 export default function WeatherAdvisoryPage() {
   const { t, language } = useLanguage()
@@ -23,12 +23,12 @@ export default function WeatherAdvisoryPage() {
     setLoading(true); setError(""); setAdvisory("")
     try {
       const wr = await fetch(`/api/weather?district=${encodeURIComponent(district)}`)
-      if (!wr.ok) throw new Error("Weather fetch failed")
+      if(!wr.ok) throw new Error("failed")
       const wd = await wr.json(); setWeather(wd)
-      const ar = await fetch("/api/advisory", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ district, crop, forecast:wd.forecast, language }) })
-      if (ar.ok) { const ad = await ar.json(); setAdvisory(ad.advisory) }
-    } catch(e: any) { setError(e.message||(language==="bn"?"তথ্য পাওয়া যায়নি":"Could not fetch")) }
-    finally { setLoading(false) }
+      const ar = await fetch("/api/advisory",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({district,crop,forecast:wd.forecast,language})})
+      if(ar.ok){const ad=await ar.json();setAdvisory(ad.advisory)}
+    } catch(e:any){setError(e.message||"Error")}
+    finally{setLoading(false)}
   }
 
   return (
@@ -42,7 +42,7 @@ export default function WeatherAdvisoryPage() {
         <div className="flex gap-2 max-w-lg">
           <select value={district} onChange={e=>setDistrict(e.target.value)} className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-xs font-medium focus:border-leaf-500 outline-none bg-gray-50">{DISTRICTS.map(d=><option key={d.name_en} value={d.name_en}>{language==="bn"?d.name_bn:d.name_en}</option>)}</select>
           <select value={crop} onChange={e=>setCrop(e.target.value)} className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-xs font-medium focus:border-leaf-500 outline-none bg-gray-50">{CROPS.map(c=><option key={c.name_en} value={c.name_en}>{language==="bn"?c.name_bn:c.name_en}</option>)}</select>
-          <button onClick={fetchAll} disabled={loading} className="btn-primary text-xs py-2 px-4">{loading?<Loader2 className="w-4 h-4 animate-spin"/>:language==="bn"?"দেখুন":"Check"}</button>
+          <button onClick={fetchAll} disabled={loading} className="btn-primary-sm !py-2 !px-5">{loading?<Loader2 className="w-4 h-4 animate-spin"/>:language==="bn"?"দেখুন":"Check"}</button>
         </div>
       </div>
 
@@ -83,7 +83,7 @@ export default function WeatherAdvisoryPage() {
             {advisory&&<div className="bg-gradient-to-r from-leaf-50 to-emerald-50 rounded-2xl border border-leaf-200 p-4 shadow-sm"><div className="flex items-center gap-3 mb-3"><div className="w-8 h-8 bg-leaf-600 rounded-xl flex items-center justify-center shadow-sm"><Lightbulb className="w-4 h-4 text-white"/></div><h3 className="text-sm font-bold text-leaf-800">{t("tools.weather.advisory")}</h3></div><div className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">{advisory}</div></div>}
           </>)}
 
-          {!weather&&!loading&&!error&&<div className="flex items-center justify-center py-20 text-center"><div><CloudSun className="w-12 h-12 text-gray-300 mx-auto mb-3"/><p className="text-gray-500 text-sm font-medium">{language==="bn"?"জেলা ও ফসল নির্বাচন করে দেখুন":"Select district & crop to begin"}</p></div></div>}
+          {!weather&&!loading&&!error&&<div className="flex items-center justify-center py-20 text-center"><div><CloudSun className="w-12 h-12 text-gray-300 mx-auto mb-3"/><p className="text-gray-500 text-sm">{language==="bn"?"জেলা ও ফসল নির্বাচন করে দেখুন":"Select district & crop to begin"}</p></div></div>}
         </div>
       </div>
     </div>
