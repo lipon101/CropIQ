@@ -11,13 +11,19 @@ export default function ChatbotPage() {
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
   const [suggestions, setSuggestions] = useState<string[]>([])
+  const [shownSuggestions, setShownSuggestions] = useState<string[]>([])
   const bottomRef = useRef<HTMLDivElement>(null)
 
-  // Fetch fresh suggestions on mount
+  // Fetch fresh suggestions on every mount (page refresh = new questions)
   useEffect(() => {
     fetch("/api/chatbot")
       .then(r => r.json())
-      .then(d => { if (d.suggestions) setSuggestions(d.suggestions) })
+      .then(d => {
+        if (d.suggestions?.length) {
+          setSuggestions(d.suggestions)
+          setShownSuggestions(d.suggestions)
+        }
+      })
       .catch(() => {})
   }, [])
 
@@ -36,16 +42,24 @@ export default function ChatbotPage() {
       const res = await fetch("/api/chatbot", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: msg, history: messages.slice(-10) }),
+        body: JSON.stringify({
+          message: msg,
+          history: messages.slice(-10),
+          shownSuggestions, // pass currently shown questions so server avoids them
+        }),
       })
       const data = await res.json()
       if (data.error) {
         setMessages([...newMessages, { role: "assistant", content: data.error }])
-        if (data.suggestions) setSuggestions(data.suggestions)
+        if (data.suggestions?.length) {
+          setSuggestions(data.suggestions)
+          setShownSuggestions(data.suggestions)
+        }
       } else {
         setMessages([...newMessages, { role: "assistant", content: data.reply }])
-        if (data.suggestions && data.suggestions.length > 0) {
+        if (data.suggestions?.length) {
           setSuggestions(data.suggestions)
+          setShownSuggestions(data.suggestions)
         }
       }
     } catch {
@@ -99,12 +113,12 @@ export default function ChatbotPage() {
           <div ref={bottomRef} />
         </div>
 
-        {/* ── Suggestions as chips ── */}
+        {/* ── Suggestions as clickable chips ── */}
         {showSuggestions && (
           <div className="shrink-0 pb-2">
             <div className="flex items-center gap-1.5 mb-2 px-1">
               <Sparkles className="w-3 h-3 text-amber-400" />
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">জানতে পারেন</span>
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">আরও জানতে চান?</span>
             </div>
             <div className="flex flex-wrap gap-1.5">
               {suggestions.map((s, i) => (

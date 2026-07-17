@@ -87,15 +87,33 @@ function shuffleArray<T>(arr: T[], seed: number): T[] {
   return shuffled
 }
 
-function getFreshSuggestions(message?: string): string[] {
-  const seed = Math.floor(Date.now() / (1000 * 60 * 30)) + (message ? message.length + message.charCodeAt(0) : 0)
+function getFreshSuggestions(exclude: string[] = [], message?: string): string[] {
+  // Every call gets a unique seed — no 30-min window
+  const seed = Date.now() + (exclude.length * 7919)
   const shuffled = shuffleArray(SUGGESTIONS_POOL, seed)
+
+  // Remove already-shown questions first
+  const excludeSet = new Set(exclude)
+  const available = shuffled.filter(q => !excludeSet.has(q))
+
+  // If user sent a farming question, try to find related topics in available pool
   if (message) {
     const lower = message.toLowerCase()
-    const related = shuffled.filter(q => q.split(/\s+/).some(w => lower.includes(w.substring(0, 3))))
-    if (related.length >= 3) return [related[0], related[1], shuffled.find(q => q !== related[0] && q !== related[1]) || shuffled[0]]
+    const words = lower.split(/\s+/).filter((w: string) => w.length >= 3)
+    const related = available.filter(q => words.some((w: string) => q.includes(w)))
+    if (related.length >= 3) {
+      return related.slice(0, 3)
+    }
   }
-  return shuffled.slice(0, 3)
+
+  // Pick from available (excluding shown), fill from full pool if needed
+  if (available.length >= 3) return available.slice(0, 3)
+  const result = [...available]
+  for (const q of shuffled) {
+    if (result.length >= 3) break
+    if (!result.includes(q)) result.push(q)
+  }
+  return result.slice(0, 3)
 }
 
 // ─── BULLETPROOF suggestion extraction ───
@@ -182,11 +200,11 @@ function isSystemPromptLeak(reply: string): boolean {
 
 export async function POST(req: NextRequest) {
   try {
-    const { message, language, history } = await req.json()
+    const { message, language, history, shownSuggestions = [] } = await req.json()
     if (!message?.trim()) return NextResponse.json({ error: "কোন বার্তা প্রদান করা হয়নি" }, { status: 400 })
 
     if (isJailbreakAttempt(message)) {
-      return NextResponse.json({ reply: SAFE_DEFLECT, suggestions: getFreshSuggestions(message) })
+      return NextResponse.json({ reply: SAFE_DEFLECT, suggestions: getFreshSuggestions(shownSuggestions, message) })
     }
 
     const keys = getOpenRouterKeys()
@@ -202,15 +220,15 @@ export async function POST(req: NextRequest) {
     let reply = data.choices?.[0]?.message?.content || "দুঃখিত, এখন উত্তর দিতে পারছি না। আবার চেষ্টা করুন。"
 
     if (isSystemPromptLeak(reply)) {
-      return NextResponse.json({ reply: SAFE_DEFLECT, suggestions: getFreshSuggestions(message) })
+      return NextResponse.json({ reply: SAFE_DEFLECT, suggestions: getFreshSuggestions(shownSuggestions, message) })
     }
 
     // 🧹 Extract suggestions & clean up reply
     const { cleanedReply, suggestions } = extractSuggestions(reply)
     reply = cleanedReply
 
-    // If no suggestions extracted, use dynamic pool
-    const finalSuggestions = suggestions.length >= 2 ? suggestions : getFreshSuggestions(message)
+    // If no suggestions extracted, use dynamic pool (excluding shown)
+    const finalSuggestions = suggestions.length >= 2 ? suggestions : getFreshSuggestions(shownSuggestions, message)
 
     return NextResponse.json({ reply, suggestions: finalSuggestions })
   } catch (error: any) {
@@ -220,5 +238,6 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET() {
+  // Fresh random suggestions every call — no time window
   return NextResponse.json({ suggestions: getFreshSuggestions() })
 }
