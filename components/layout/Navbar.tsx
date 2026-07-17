@@ -68,6 +68,7 @@ export function Navbar() {
                     <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-20 animate-fade-in overflow-hidden">
                       <div className="px-4 py-3 border-b border-gray-100"><p className="text-sm font-semibold text-gray-900 truncate">{user.email}</p><p className="text-xs text-gray-400 mt-0.5">কৃষক</p></div>
                       <Link href="/dashboard" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-leaf-50 hover:text-leaf-700"><LayoutDashboard className="w-4 h-4" />ড্যাশবোর্ড</Link>
+                      <Link href="/settings" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-leaf-50 hover:text-leaf-700"><User className="w-4 h-4" />সেটিংস</Link>
                       <button onClick={() => { setProfileOpen(false); signOut() }} className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 w-full text-left"><LogOut className="w-4 h-4" />লগআউট</button>
                     </div>
                   </>)}
@@ -97,6 +98,9 @@ export function Navbar() {
                 <Link href="/auth/signin" className="btn-secondary-sm flex-1 text-center">লগইন</Link>
                 <Link href="/auth/signup" className="btn-primary-sm flex-1 text-center">রেজিস্ট্রেশন</Link>
               </div>
+            )}
+            {user && (
+              <Link href="/settings" className="block px-4 py-3 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50">সেটিংস</Link>
             )}
           </div>
         </div>
