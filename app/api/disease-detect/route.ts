@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { getOpenRouterKeys } from "@/lib/openrouter"
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,8 +12,8 @@ export async function POST(req: NextRequest) {
     const buffer = Buffer.from(bytes)
     const base64 = buffer.toString("base64")
 
-    const apiKey = process.env.OPENROUTER_API_KEY
-    if (!apiKey) return NextResponse.json({ error: "এআই সার্ভিস কনফিগার করা হয়নি" }, { status: 500 })
+    const keys = getOpenRouterKeys()
+    if (keys.length === 0) return NextResponse.json({ error: "এআই সার্ভিস কনফিগার করা হয়নি" }, { status: 500 })
 
     const prompt = `তুমি একজন বাংলাদেশি কৃষিবিদ। ফসলের ছবি দেখে রোগ সনাক্ত করো।
 
@@ -27,47 +28,57 @@ export async function POST(req: NextRequest) {
   "prevention_bn": "বাংলায় প্রতিরোধের উপায়। সহজ ও কাজের কথা। যেমন: 'জমিতে পানি জমতে দেবেন না, ফসল কাটার পর নাড়া পুড়িয়ে ফেলবেন।'"
 }`
 
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-        "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
-        "X-Title": "CropIQ",
-      },
-      body: JSON.stringify({
-        model: "openrouter/free",
-        messages: [
-          { role: "system", content: prompt },
-          { role: "user", content: [
-            { type: "image_url", image_url: { url: `data:${file.type || "image/jpeg"};base64,${base64}` } },
-            { type: "text", text: "ফসলের রোগ সনাক্ত করো। সহজ বাংলায় চিকিৎসা বলো। শুধু JSON দাও।" },
-          ]},
-        ],
-        max_tokens: 600,
-        temperature: 0.2,
-      }),
-    })
-
-    if (!response.ok) {
-      console.error("OpenRouter error:", response.status)
-      return NextResponse.json({ error: "ছবি বিশ্লেষণ ব্যর্থ — আরও পরিষ্কার ছবি দিয়ে চেষ্টা করুন" }, { status: 502 })
+    const body = {
+      model: "openrouter/free",
+      messages: [
+        { role: "system", content: prompt },
+        { role: "user", content: [
+          { type: "image_url", image_url: { url: `data:${file.type || "image/jpeg"};base64,${base64}` } },
+          { type: "text", text: "ফসলের রোগ সনাক্ত করো। সহজ বাংলায় চিকিৎসা বলো। শুধু JSON দাও।" },
+        ]},
+      ],
+      max_tokens: 600,
+      temperature: 0.2,
     }
 
-    const data = await response.json()
-    const content = data.choices?.[0]?.message?.content || ""
+    // 🔄 Key rotation
+    let lastError = ""
+    for (let i = 0; i < keys.length; i++) {
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${keys[i]}`,
+          "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+          "X-Title": "CropIQ",
+        },
+        body: JSON.stringify(body),
+      })
 
-    let result: any
-    const jsonMatch = content.match(/\{[\s\S]*\}/)
-    if (jsonMatch) {
-      try { result = JSON.parse(jsonMatch[0]) } catch {
-        result = { crop_type: "অজানা", disease_name: "বিশ্লেষণ অসম্পূর্ণ", confidence: 0, cause: "", remedy_bn: content, prevention_bn: "" }
+      if (response.status === 429) {
+        console.warn(`⚠️ Disease-detect: key #${i + 1} rate limited, rotating...`)
+        continue
       }
-    } else {
-      result = { crop_type: "অজানা", disease_name: "নির্ণয় করা যায়নি", confidence: 0, cause: "", remedy_bn: content, prevention_bn: "" }
+
+      if (response.ok) {
+        const data = await response.json()
+        const content = data.choices?.[0]?.message?.content || ""
+
+        let result: any
+        const jsonMatch = content.match(/\{[\s\S]*\}/)
+        if (jsonMatch) {
+          try { result = JSON.parse(jsonMatch[0]) } catch {
+            result = { crop_type: "অজানা", disease_name: "বিশ্লেষণ অসম্পূর্ণ", confidence: 0, cause: "", remedy_bn: content, prevention_bn: "" }
+          }
+        } else {
+          result = { crop_type: "অজানা", disease_name: "নির্ণয় করা যায়নি", confidence: 0, cause: "", remedy_bn: content, prevention_bn: "" }
+        }
+
+        return NextResponse.json({ result })
+      }
     }
 
-    return NextResponse.json({ result })
+    return NextResponse.json({ error: "ছবি বিশ্লেষণ ব্যর্থ — আরও পরিষ্কার ছবি দিয়ে চেষ্টা করুন" }, { status: 502 })
   } catch (error: any) {
     console.error("রোগ সনাক্তকরণ ত্রুটি:", error)
     return NextResponse.json({ error: error.message || "বিশ্লেষণ ব্যর্থ" }, { status: 500 })

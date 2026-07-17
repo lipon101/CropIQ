@@ -20,6 +20,7 @@ export default function WeatherAdvisoryPage() {
   const [advisory, setAdvisory] = useState<Advisory | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [showForecast, setShowForecast] = useState(true)
 
   const districtBn = DISTRICTS.find(d => d.name_en === district)?.name_bn || district
   const cropBn = CROPS.find(c => c.name_en === crop)?.name_bn || crop
@@ -107,32 +108,35 @@ export default function WeatherAdvisoryPage() {
                 </div>
               </div>
 
-              {/* ── 7-Day Forecast — always visible, horizontally centered ── */}
-              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                <div className="px-4 py-2.5 bg-gradient-to-r from-sky-50 to-blue-50 border-b border-sky-100">
-                  <h3 className="text-xs font-extrabold text-gray-700">📅 ৭ দিনের পূর্বাভাস</h3>
-                </div>
-                <div className="p-3 overflow-x-auto">
-                  <div className="flex justify-center gap-2 min-w-max">
-                    {weather.forecast.map((day, i) => {
-                      const dayEn = new Date(day.date).toLocaleDateString("en", { weekday: "short" })
-                      return (
-                        <div key={i} className={`flex-shrink-0 w-[72px] text-center p-2 rounded-xl ${i === 0 ? "bg-sky-50 border border-sky-100" : "bg-gray-50/50 hover:bg-gray-50 transition-colors"}`}>
-                          <p className={`text-[10px] font-bold ${i === 0 ? "text-sky-600" : "text-gray-400"}`}>{i === 0 ? "আজ" : WDAY[dayEn] || dayEn}</p>
-                          <div className="text-xl my-1">{WI[day.icon] || "🌤️"}</div>
-                          <p className="text-[11px] font-bold text-gray-800">{Math.round(day.temp_max)}° <span className="text-gray-400 font-normal">{Math.round(day.temp_min)}°</span></p>
-                          <div className="text-[9px] text-gray-400 mt-0.5 flex justify-center gap-2">
-                            <span>{day.humidity}%</span>
-                            {day.rain_mm > 0 && <span>💧{day.rain_mm}</span>}
+              {/* ── 7-Day Forecast — toggle (default: open), horizontally centered ── */}
+              <button onClick={() => setShowForecast(!showForecast)} className="w-full bg-white rounded-xl border border-gray-200 px-4 py-2.5 flex items-center justify-between text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors shadow-sm">
+                <span>📅 ৭ দিনের পূর্বাভাস</span>
+                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showForecast ? "rotate-180" : ""}`} />
+              </button>
+              {showForecast && (
+                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                  <div className="p-3 overflow-x-auto">
+                    <div className="flex justify-center gap-2 min-w-max">
+                      {weather.forecast.map((day, i) => {
+                        const dayEn = new Date(day.date).toLocaleDateString("en", { weekday: "short" })
+                        return (
+                          <div key={i} className={`flex-shrink-0 w-[72px] text-center p-2 rounded-xl ${i === 0 ? "bg-sky-50 border border-sky-100" : "bg-gray-50/50 hover:bg-gray-50 transition-colors"}`}>
+                            <p className={`text-[10px] font-bold ${i === 0 ? "text-sky-600" : "text-gray-400"}`}>{i === 0 ? "আজ" : WDAY[dayEn] || dayEn}</p>
+                            <div className="text-xl my-1">{WI[day.icon] || "🌤️"}</div>
+                            <p className="text-[11px] font-bold text-gray-800">{Math.round(day.temp_max)}° <span className="text-gray-400 font-normal">{Math.round(day.temp_min)}°</span></p>
+                            <div className="text-[9px] text-gray-400 mt-0.5 flex justify-center gap-2">
+                              <span>{day.humidity}%</span>
+                              {day.rain_mm > 0 && <span>💧{day.rain_mm}</span>}
+                            </div>
                           </div>
-                        </div>
-                      )
-                    })}
+                        )
+                      })}
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
-              {/* ── Advisory Section — always show header, show AI or fallback content ── */}
+              {/* ── Advisory Section ── */}
               <div className="space-y-2">
                 <div className="flex items-center gap-2 px-1">
                   <div className="w-6 h-6 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center shadow-sm">

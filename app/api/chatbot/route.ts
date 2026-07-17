@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { getOpenRouterKeys, fetchOpenRouterWithRetry } from "@/lib/openrouter"
 
 const CHATBOT_SYSTEM_PROMPT = `তুমি কৃষি বন্ধু — বাংলাদেশের কৃষকদের জন্য একজন অভিজ্ঞ চাষি ভাইয়ের মতো সহায়ক। তুমি গ্রামের মানুষ, মাঠে কাজ করো, ফসল চেনো, রোগ-পোকা চেনো। শহুরে অফিসার নও — কৃষক ভাইয়ের মতো কথা বলো।
 
@@ -40,43 +41,76 @@ const CHATBOT_SYSTEM_PROMPT = `তুমি কৃষি বন্ধু — ব
 - প্রশ্ন ২?
 - প্রশ্ন ৩?`
 
-// ─── HARDCODED SAFE RESPONSE (never goes to LLM) ───
+// ─── HARDCODED SAFE RESPONSE ───
 const SAFE_DEFLECT = "ভাই, আমি তো শুধু কৃষি নিয়ে কথা বলি। ফসল, জমি বা রোগ-পোকা নিয়ে কিছু জানতে চান?"
 
-// ─── INPUT GUARD: block jailbreak/phishing before hitting LLM ───
+// ─── INPUT GUARD: block only real jailbreak/phishing, never false-positive Bengali farming questions ───
 const JAILBREAK_PATTERNS = [
-  /system\s*prompt/i,              /instructions?/i,
-  /repeat\s.*words/i,              /word\s*for\s*word/i,
+  /system\s*prompt/i,              /^\s*instructions?\s*$/i,
+  /repeat\s.*(words|above|everything)/i,  /word\s*for\s*word/i,
   /developer\s*mode/i,             /jailbreak/i,
-  /show\s*me\s*your/i,            /previous\s.*instructions?/i,
-  /internal\s*(prompt|instruction)/i, /print\s.*(prompt|instruction)/i,
-  /tell\s*me\s*your/i,            /what\s*are\s*your\s*(rules|instructions)/i,
-  /prefix\s*(above|your)/i,        /start\s*of\s*(prompt|instruction)/i,
-  /ignore\s*(above|previous|all)/i, /disregard\s*(above|previous)/i,
-  /forget\s*(above|previous|all)/i, /pretend\s*(you|to\s*be)/i,
-  /roleplay/i,                      /dan\s*mode/i,
+  /show\s*me\s*your\s*(system|prompt|instructions?)/i,
+  /previous\s.*instructions?/i,
+  /internal\s*(prompt|instruction)/i,
+  /print\s.*(prompt|instruction)/i,
+  /ignore\s*(above|previous|all)\s*(instructions?|prompt)/i,
+  /disregard\s*(above|previous)/i,
+  /forget\s*(above|previous|all)/i,
+  /pretend\s*(you|to\s*be)\s*(are|a|an)/i,
+  /dan\s*mode/i,
   /how\s*were\s*you\s*(made|built|created|trained)/i,
-  /reveal\s*your/i,                /show\s*your/i,
+  /reveal\s*your\s*(system|prompt|instructions?)/i,
+  /what\s*(is|are)\s*your\s*(system\s*)?(prompt|instructions?|rules)/i,
+  /translate\s*(the|your)\s*(above|previous|instructions?|prompt)/i,
+  /output\s*(your|the)\s*(system|instructions?|prompt)/i,
+]
+
+// Farming keywords — if a message contains these, it's a genuine farming question, NEVER block
+const FARMING_KEYWORDS = [
+  /জৈব/, /সার/, /ফসল/, /ধান/, /গম/, /আলু/, /চাষ/, /রোগ/, /পোকা/, /কীট/,
+  /সেচ/, /জমি/, /বীজ/, /ফল/, /সবজি/, /মাটি/, /আবহাওয়া/, /বাজার/, /দাম/,
+  /ধানের/, /গাছ/, /পাতা/, /শিকড়/, /ফুল/, /চারা/, /রোপণ/, /কাটা/,
+  /farm/i, /crop/i, /rice/i, /wheat/i, /soil/i, /seed/i, /plant/i,
+  /fertilizer/i, /pesticide/i, /irrigation/i, /harvest/i, /agriculture/i,
+  /disease/i, / pest/i, /weed/i, /compost/i, /organic/i,
 ]
 
 function isJailbreakAttempt(text: string): boolean {
+  // 🔑 NEVER block Bengali farming questions
+  const hasBengali = /[\u0980-\u09FF]/.test(text)
+  const hasFarmingKeyword = FARMING_KEYWORDS.some(p => p.test(text))
+
+  // If the message contains Bengali script → it's a farmer asking in Bengali → NEVER block
+  if (hasBengali) {
+    // Only check for explicit English jailbreak embedded in Bengali text
+    const lower = text.toLowerCase()
+    for (const pattern of JAILBREAK_PATTERNS) {
+      if (pattern.test(lower)) return true
+    }
+    return false
+  }
+
+  // If the message contains farming keywords in English → it's a genuine farming question → NEVER block
+  if (hasFarmingKeyword) return false
+
+  // Pure English/ASCII message without farming keywords → apply jailbreak filter
   const lower = text.toLowerCase()
-  // Quick check: if message is entirely English and short, likely jailbreak
-  const isMostlyEnglish = /^[a-zA-Z0-9\s!?.,'":;()\-]{10,}$/.test(text.trim())
-  if (isMostlyEnglish) return true
-  
+
+  // Short English-only messages without farming context → likely jailbreak
+  const isPureAscii = /^[\x00-\x7F\s!?.,'":;()\-]+$/.test(text.trim())
+  if (isPureAscii && text.trim().length < 60) return true
+
   for (const pattern of JAILBREAK_PATTERNS) {
     if (pattern.test(lower)) return true
   }
+
   return false
 }
 
-// ─── OUTPUT GUARD: detect if LLM leaked the system prompt ───
+// ─── OUTPUT GUARD ───
 function isSystemPromptLeak(reply: string): boolean {
-  // Immediate block: system prompt prefix leak
   if (reply.includes("তুমি কৃষি বন্ধু") || reply.includes("system prompt") || reply.includes("CHATBOT_SYSTEM_PROMPT")) return true
-  
-  // Require 2+ markers to avoid false positives
+
   const leakMarkers = [
     "কঠোর নিরাপত্তা নিয়ম", "কৃষকের জন্য একজন অভিজ্ঞ",
     "বলার নিয়ম:", "কখনো এইরকম বলবে না:",
@@ -96,7 +130,7 @@ export async function POST(req: NextRequest) {
     const { message, language, history } = await req.json()
     if (!message?.trim()) return NextResponse.json({ error: "কোন বার্তা প্রদান করা হয়নি" }, { status: 400 })
 
-    // 🔒 INPUT FILTER: block jailbreak before LLM sees it
+    // 🔒 INPUT FILTER: block real jailbreak, never block Bengali farming questions
     if (isJailbreakAttempt(message)) {
       return NextResponse.json({
         reply: SAFE_DEFLECT,
@@ -104,8 +138,8 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    const apiKey = process.env.OPENROUTER_API_KEY
-    if (!apiKey) return NextResponse.json({ error: "এআই সার্ভিস কনফিগার করা হয়নি" }, { status: 500 })
+    const keys = getOpenRouterKeys()
+    if (keys.length === 0) return NextResponse.json({ error: "এআই সার্ভিস কনফিগার করা হয়নি" }, { status: 500 })
 
     const messages: any[] = [
       { role: "system", content: CHATBOT_SYSTEM_PROMPT },
@@ -113,26 +147,12 @@ export async function POST(req: NextRequest) {
       { role: "user", content: message.trim() },
     ]
 
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-        "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
-        "X-Title": "CropIQ",
-      },
-      body: JSON.stringify({ model: "openrouter/free", messages, max_tokens: 800, temperature: 0.7 }),
-    })
+    // 🔄 Use key rotation to avoid rate limits
+    const data = await fetchOpenRouterWithRetry({ model: "openrouter/free", messages, max_tokens: 800, temperature: 0.7 })
 
-    if (!response.ok) {
-      console.error("OpenRouter error:", response.status)
-      return NextResponse.json({ error: "চ্যাটবট সমস্যা — আবার চেষ্টা করুন" }, { status: 502 })
-    }
-
-    const data = await response.json()
     let reply = data.choices?.[0]?.message?.content || "দুঃখিত, এখন উত্তর দিতে পারছি না। আবার চেষ্টা করুন।"
 
-    // 🔒 OUTPUT FILTER: if LLM leaked system prompt, replace with safe deflect
+    // 🔒 OUTPUT FILTER
     if (isSystemPromptLeak(reply)) {
       return NextResponse.json({
         reply: SAFE_DEFLECT,
@@ -140,7 +160,7 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    // Parse suggestions
+    // Parse suggestions from reply
     let suggestions: string[] = []
     const sugMatch = reply.match(/---\s*\n\*\*(.+?)\*\*\s*\n((?:-\s*.+\n?)+)/)
     if (sugMatch) {

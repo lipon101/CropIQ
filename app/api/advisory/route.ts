@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic"
 
 import { NextRequest, NextResponse } from "next/server"
+import { getOpenRouterKeys } from "@/lib/openrouter"
 
 const ADVISORY_PROMPT = `তুমি একজন বাংলাদেশি কৃষি কর্মকর্তা। চাষির সাথে যেভাবে কথা বলবে সেভাবে সহজ বাংলায় ছোট ছোট পরামর্শ দেবে।
 
@@ -67,13 +68,12 @@ export async function POST(req: NextRequest) {
     const { district, crop, forecast } = await req.json()
     if (!district || !forecast) return NextResponse.json({ error: "জেলা ও আবহাওয়ার তথ্য প্রয়োজন" }, { status: 400 })
 
-    const apiKey = process.env.OPENROUTER_API_KEY
+    const keys = getOpenRouterKeys()
 
     // Generate fallback advisory first (in case AI fails)
     const fallbackAdvisory = generateFallbackAdvisory(district, crop, forecast)
 
-    if (!apiKey) {
-      // No AI key: return rule-based fallback instead of error
+    if (keys.length === 0) {
       return NextResponse.json({ advisory: fallbackAdvisory })
     }
 
@@ -84,52 +84,62 @@ export async function POST(req: NextRequest) {
       `${d.date}: ${Math.round(d.temp_min)}-${Math.round(d.temp_max)}°C, ${d.description_bn || d.description || ""}, বৃষ্টি ${d.rain_mm}মিমি, আর্দ্রতা ${d.humidity}%`
     ).join(" | ")
 
-    // Try OpenRouter AI, fall back to rule-based if it fails
     let advisory: any = fallbackAdvisory
 
+    // Try OpenRouter AI with key rotation, fall back to rule-based
     try {
-      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-          "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
-          "X-Title": "CropIQ",
-        },
-        body: JSON.stringify({
-          model: "openrouter/free",
-          messages: [
-            { role: "system", content: ADVISORY_PROMPT },
-            { role: "user", content: `জেলা: ${district}\nফসল: ${cropBn}\nআবহাওয়া: ${forecastText}\n\nশুধু JSON দাও। কোনো markdown নয়, কোনো ব্যাকটিক নয়।` },
-          ],
-          max_tokens: 300,
-          temperature: 0.5,
-        }),
-      })
+      for (let i = 0; i < keys.length; i++) {
+        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${keys[i]}`,
+            "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+            "X-Title": "CropIQ",
+          },
+          body: JSON.stringify({
+            model: "openrouter/free",
+            messages: [
+              { role: "system", content: ADVISORY_PROMPT },
+              { role: "user", content: `জেলা: ${district}\nফসল: ${cropBn}\nআবহাওয়া: ${forecastText}\n\nশুধু JSON দাও। কোনো markdown নয়, কোনো ব্যাকটিক নয়।` },
+            ],
+            max_tokens: 300,
+            temperature: 0.5,
+          }),
+        })
 
-      if (response.ok) {
-        const data = await response.json()
-        let raw = data.choices?.[0]?.message?.content || ""
-        raw = raw.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim()
-        try {
-          const jsonMatch = raw.match(/\{[\s\S]*\}/)
-          if (jsonMatch) {
-            const parsed = JSON.parse(jsonMatch[0])
-            if (parsed.summary && parsed.summary.trim()) {
-              advisory = {
-                summary: parsed.summary,
-                actions: parsed.actions || fallbackAdvisory.actions,
-                irrigation: parsed.irrigation || fallbackAdvisory.irrigation,
-                warning: parsed.warning || fallbackAdvisory.warning
+        if (response.status === 429) {
+          console.warn(`⚠️ Advisory: OpenRouter key #${i + 1} rate limited, rotating...`)
+          continue
+        }
+
+        if (response.ok) {
+          const data = await response.json()
+          let raw = data.choices?.[0]?.message?.content || ""
+          raw = raw.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim()
+          try {
+            const jsonMatch = raw.match(/\{[\s\S]*\}/)
+            if (jsonMatch) {
+              const parsed = JSON.parse(jsonMatch[0])
+              if (parsed.summary && parsed.summary.trim()) {
+                advisory = {
+                  summary: parsed.summary,
+                  actions: parsed.actions || fallbackAdvisory.actions,
+                  irrigation: parsed.irrigation || fallbackAdvisory.irrigation,
+                  warning: parsed.warning || fallbackAdvisory.warning
+                }
               }
             }
+          } catch {
+            console.warn("Advisory JSON parse failed, using fallback")
           }
-        } catch {
-          console.warn("JSON parse failed, using fallback")
+          break // success — stop trying more keys
         }
+
+        console.warn(`⚠️ Advisory: OpenRouter key #${i + 1} returned ${response.status}, rotating...`)
       }
     } catch (err) {
-      console.warn("OpenRouter AI failed, using rule-based fallback:", err)
+      console.warn("OpenRouter AI failed for advisory, using rule-based fallback:", err)
     }
 
     return NextResponse.json({ advisory })

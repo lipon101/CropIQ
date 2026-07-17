@@ -1,8 +1,56 @@
 /**
  * OpenRouter AI Client — CropIQ
+ * Supports multi-key rotation to avoid rate limits
  */
 
 const OPENROUTER_BASE = "https://openrouter.ai/api/v1"
+
+// ─── Get all configured API keys ───
+export function getOpenRouterKeys(): string[] {
+  const keys: string[] = []
+  if (process.env.OPENROUTER_API_KEY) keys.push(process.env.OPENROUTER_API_KEY)
+  if (process.env.OPENROUTER_API_KEY_2) keys.push(process.env.OPENROUTER_API_KEY_2)
+  if (process.env.OPENROUTER_API_KEY_3) keys.push(process.env.OPENROUTER_API_KEY_3)
+  return keys
+}
+
+// ─── Fetch with automatic key rotation on 429 ───
+export async function fetchOpenRouterWithRetry(
+  body: any,
+  currentKeyIndex = 0
+): Promise<any> {
+  const keys = getOpenRouterKeys()
+  if (keys.length === 0) throw new Error("No OpenRouter keys configured")
+
+  for (let i = 0; i < keys.length; i++) {
+    const keyIndex = (currentKeyIndex + i) % keys.length
+    const response = await fetch(`${OPENROUTER_BASE}/chat/completions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${keys[keyIndex]}`,
+        "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+        "X-Title": "CropIQ",
+      },
+      body: JSON.stringify(body),
+    })
+
+    if (response.status === 429) {
+      console.warn(`⚠️ OpenRouter key #${keyIndex + 1} rate limited, rotating...`)
+      continue
+    }
+
+    if (response.ok) {
+      const data = await response.json()
+      return data
+    }
+
+    // Non-429 error — try next key
+    console.warn(`⚠️ OpenRouter key #${keyIndex + 1} returned ${response.status}, rotating...`)
+  }
+
+  throw new Error("All OpenRouter keys exhausted — all rate limited or failed")
+}
 
 const DISEASE_SYSTEM_PROMPT = `তুমি একজন অভিজ্ঞ বাংলাদেশি কৃষিবিদ। তুমি গ্রামে-গঞ্জে কৃষকদের ফসলের রোগ নিয়ে পরামর্শ দিয়ে থাকো।
 
@@ -37,22 +85,40 @@ const CHATBOT_SYSTEM_PROMPT = `তুমি কৃষি বন্ধু — ব
 interface ChatMessage { role: "system" | "user" | "assistant"; content: string }
 
 async function callOpenRouter(messages: ChatMessage[], options: { maxTokens?: number; temperature?: number } = {}): Promise<string> {
-  const apiKey = process.env.OPENROUTER_API_KEY
-  if (!apiKey) throw new Error("OPENROUTER_API_KEY কনফিগার করা হয়নি")
+  const keys = getOpenRouterKeys()
+  if (keys.length === 0) throw new Error("OPENROUTER_API_KEY কনফিগার করা হয়নি")
 
   const body = { model: "openrouter/free", messages, max_tokens: options.maxTokens ?? 800, temperature: options.temperature ?? 0.7 }
 
   let retries = 0
   const maxRetries = 3
   let response: Response | null = null
+  let keyIndex = 0
 
   while (retries <= maxRetries) {
+    const key = keys[keyIndex % keys.length]
     response = await fetch(`${OPENROUTER_BASE}/chat/completions`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}`, "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000", "X-Title": "CropIQ" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${key}`,
+        "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+        "X-Title": "CropIQ",
+      },
       body: JSON.stringify(body),
     })
-    if (response.status === 429 && retries < maxRetries) { await new Promise(r => setTimeout(r, Math.pow(2, retries) * 1000)); retries++; continue }
+
+    if (response.status === 429) {
+      if (retries < maxRetries) {
+        keyIndex++ // rotate to next key
+        await new Promise(r => setTimeout(r, Math.pow(2, retries) * 1000))
+        retries++
+        continue
+      }
+    }
+
+    if (response.ok) break
+    if (retries < maxRetries) { await new Promise(r => setTimeout(r, Math.pow(2, retries) * 1000)); retries++; continue }
     break
   }
 
