@@ -241,7 +241,7 @@ export default function DashboardPage() {
                         </Link>
                         <button
                           onClick={(e) => { e.preventDefault(); deleteActivity(item) }}
-                          className="shrink-0 p-1.5 rounded-lg hover:bg-red-50 text-gray-300 hover:text-red-400 transition-all opacity-0 group-hover:opacity-100"
+                          className="shrink-0 p-1.5 rounded-lg hover:bg-red-50 text-gray-300 hover:text-red-400 transition-all "
                           title="ডিলিট"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
