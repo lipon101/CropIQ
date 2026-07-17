@@ -37,6 +37,23 @@ export default function DiseaseDetectorPage() {
 
   useEffect(() => { fetchHistory() }, [user])
 
+  const deleteScan = async (id: number) => {
+    if (!confirm("এই স্ক্যান রেকর্ড ডিলিট করতে চান?")) return
+    try {
+      await supabase.from("disease_scans").delete().eq("id", id)
+      setScanHistory(prev => prev.filter(s => s.id !== id))
+    } catch {}
+  }
+
+  const deleteAllScans = async () => {
+    if (!user || scanHistory.length === 0) return
+    if (!confirm(`সব ${scanHistory.length}টি স্ক্যান রেকর্ড ডিলিট করতে চান?`)) return
+    try {
+      await supabase.from("disease_scans").delete().eq("user_id", user.id)
+      setScanHistory([])
+    } catch {}
+  }
+
   const handleFile = useCallback((file: File) => {
     if (file.size > 10 * 1024 * 1024) { setError("ছবির আকার ১০MB এর বেশি হতে পারবে না"); return }
     setError(""); setResult(null); setImageFile(file)
@@ -249,10 +266,20 @@ export default function DiseaseDetectorPage() {
           {/* ── Scan History ── */}
           {scanHistory.length > 0 && (
             <div className="pb-4">
-              <div className="flex items-center gap-2 mb-2.5 px-1">
-                <Clock className="w-3.5 h-3.5 text-gray-400" />
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">স্ক্যান হিস্ট্রি</span>
-                {historyLoading && <Loader2 className="w-3 h-3 text-gray-400 animate-spin ml-1" />}
+              <div className="flex items-center justify-between mb-2.5 px-1">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-3.5 h-3.5 text-gray-400" />
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">স্ক্যান হিস্ট্রি</span>
+                  {historyLoading && <Loader2 className="w-3 h-3 text-gray-400 animate-spin ml-1" />}
+                </div>
+                {scanHistory.length > 0 && (
+                  <button
+                    onClick={deleteAllScans}
+                    className="text-[10px] font-bold text-red-400 hover:text-red-600 transition-colors"
+                  >
+                    সব ডিলিট
+                  </button>
+                )}
               </div>
               <div className="space-y-1.5">
                 {scanHistory.map((scan: any) => {
@@ -275,6 +302,16 @@ export default function DiseaseDetectorPage() {
                         <span className="text-[11px] font-bold text-emerald-600">{Math.round(scan.confidence * 100)}%</span>
                         <ChevronRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-leaf-400 group-hover:translate-x-0.5 transition-all" />
                       </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          deleteScan(scan.id)
+                        }}
+                        className="shrink-0 p-1.5 rounded-lg hover:bg-red-50 text-gray-300 hover:text-red-400 transition-all opacity-0 group-hover:opacity-100"
+                        title="ডিলিট"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     </button>
                   )
                 })}
