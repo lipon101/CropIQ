@@ -60,7 +60,7 @@ export default function ChatbotPage() {
           user_id: user.id,
           question: msg,
           answer: data.reply,
-        }).then(() => {}).catch(() => {})
+        }).then(() => {})
       }
 
       if (data.error) {
