@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Serif+Bengali:wght@400;500;600;700&display=swap');
+
+@layer base {
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    @apply bg-white text-gray-900 font-sans antialiased;
+  }
+  .font-bengali { font-family: 'Noto Serif Bengali', serif; }
+}
+
+@layer components {
+  .container-cropiq {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  .btn-primary {
+    @apply bg-leaf-600 hover:bg-leaf-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-secondary {
+    @apply bg-white hover:bg-gray-50 text-leaf-700 font-semibold py-3 px-6 rounded-lg border-2 border-leaf-300 transition-all duration-200 hover:border-leaf-500;
+  }
+  .card-cropiq {
+    @apply bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow duration-200;
+  }
+  .input-field {
+    @apply w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-leaf-500 focus:ring-2 focus:ring-leaf-200 outline-none transition-all duration-200;
+  }
+}
+
+@layer utilities {
+  .text-balance { text-wrap: balance; }
+}
