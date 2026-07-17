@@ -49,7 +49,10 @@ export default function DiseaseDetectorPage() {
       if (!isOnline() || !user) return
       setSyncing(true)
       const result = await processQueue({
-        deleteOne: (scanId) => supabase.from("disease_scans").delete().eq("id", scanId),
+        deleteOne: async (scanId) => {
+          const { error } = await supabase.from("disease_scans").delete().eq("id", scanId)
+          return { error }
+        }
       })
       const synced = result.synced
       if (result.synced > 0 || result.failed > 0) {
@@ -105,7 +108,7 @@ export default function DiseaseDetectorPage() {
         next.delete(id)
         return next
       })
-      setError("ডিলিট করতে সমস্যা হয়েছে — আবার চেষ্টা করুন")
+      setError("ডিলিট করতে সমস্যা হয়েছে — চবার চেষ্টা করুন")
       return
     }
 
@@ -155,7 +158,7 @@ export default function DiseaseDetectorPage() {
   }
 
   const handleFile = useCallback((file: File) => {
-    if (file.size > 10 * 1024 * 1024) { setError("ছবির আকার ১০MB এর বেশি হতে পারবে না"); return }
+    if (file.size > 10 * 1024 * 1024) { setError("ছবির চকার ১০MB এর বেশি হতে পারবে না"); return }
     setError(""); setResult(null); setImageFile(file)
     const r = new FileReader(); r.onload = e => setImage(e.target?.result as string); r.readAsDataURL(file)
   }, [])
@@ -214,7 +217,7 @@ export default function DiseaseDetectorPage() {
   const hasContent = mode === "image" ? !!image : !!description.trim()
 
   return (
-    <ToolPageLayout title="ফসল রোগ সনাক্তকারী" icon={<Microscope className="w-4 h-4 text-white" />} currentIndex={1}>
+    <ToolPageLayout title="পসল রোগ সনাক্তকারী" icon={<Microscope className="w-4 h-4 text-white" />} currentIndex={1}>
       <div className="flex flex-col flex-1 min-h-0 overflow-hidden pt-2">
 
         {/* Mode Switch */}
@@ -249,7 +252,7 @@ export default function DiseaseDetectorPage() {
                         <img src={image} alt="ফসলের ছবি" className="max-w-full max-h-[220px] object-contain rounded-xl shadow-sm border border-gray-200" />
                         <button onClick={reset} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-gray-200 bg-white text-xs font-semibold text-gray-500 hover:text-red-500 hover:border-red-200 hover:bg-red-50 transition-all">
                           <Trash2 className="w-3.5 h-3.5" />মুছে ফেলুন
-                        </button>
+            </button>
                       </div>
                     ) : (
                       /* Empty state — upload button */
@@ -406,7 +409,7 @@ export default function DiseaseDetectorPage() {
               </div>
               <div className="space-y-1.5">
                 {scanHistory.length === 0 && deletingIds.size === 0 && (
-                  <p className="text-center text-xs text-gray-400 py-4">কোন স্ক্যান রেকর্ড নেই</p>
+                  <p className="text-center text-xs text-gray-400 py-4">੕োন স্ক্যান রেকর্ড নেই</p>
                 )}
                 {scanHistory.map((scan: any) => {
                   const date = new Date(scan.created_at)
@@ -464,7 +467,7 @@ function getTimeAgo(date: Date): string {
 
   if (diffMin < 1) return "এইমাত্র"
   if (diffMin < 60) return `${diffMin} মিনিট আগে`
-  if (diffHr < 24) return `${diffHr} ঘন্টা আগে`
+  if (diffHr < 24) return `${diffHr} ঘন্টা চগে`
   if (diffDay < 7) return `${diffDay} দিন আগে`
   return date.toLocaleDateString("bn-BD", { day: "numeric", month: "short" })
 }
