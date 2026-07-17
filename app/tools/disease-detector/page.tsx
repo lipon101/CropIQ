@@ -1,16 +1,9 @@
 "use client"
 
 import { useState, useRef, useCallback } from "react"
-import { Upload, Microscope, Loader2, AlertCircle, Trash2, ShieldAlert, ImageIcon, FileText } from "lucide-react"
-import { ToolPageLayout } from "@/components/tools/ToolPageLayout"
+import { Upload, Microscope, Loader2, AlertCircle, Trash2, ShieldAlert, ImageIcon, FileText, Scan, RefreshCw } from "lucide-react"
+import { ToolPageLayout, TOOLS } from "@/components/tools/ToolPageLayout"
 import type { DiagnosisResult } from "@/types"
-
-const TOOLS = [
-  { href: "/tools/chatbot", label: "চ্যাটবট", icon: null, color: "linear-gradient(135deg, #3b82f6, #1d4ed8)" },
-  { href: "/tools/disease-detector", label: "রোগ সনাক্ত", icon: null, color: "linear-gradient(135deg, #ef4444, #e11d48)" },
-  { href: "/tools/market-prices", label: "বাজার মূল্য", icon: null, color: "linear-gradient(135deg, #f59e0b, #ea580c)" },
-  { href: "/tools/weather-advisory", label: "আবহাওয়া", icon: null, color: "linear-gradient(135deg, #0ea5e9, #2563eb)" },
-]
 
 export default function DiseaseDetectorPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -42,65 +35,161 @@ export default function DiseaseDetectorPage() {
   }
   const reset = () => { setImage(null); setImageFile(null); setDescription(""); setResult(null); setError("") }
 
+  const hasContent = mode === "image" ? !!image : !!description.trim()
+
   return (
-    <ToolPageLayout
-      title="ফসল রোগ সনাক্তকারী"
-      icon={<Microscope className="w-4 h-4 text-white" />}
-      tools={TOOLS}
-      currentIndex={1}
-    >
-      {/* Mode toggle */}
-      <div className="flex justify-center mb-4">
-        <div className="inline-flex bg-white rounded-xl border border-gray-200 p-1 shadow-sm">
-          <button onClick={() => setMode("image")} className={`px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${mode === "image" ? "bg-gray-900 text-white shadow-md" : "text-gray-500 hover:text-gray-700"}`}><ImageIcon className="w-3.5 h-3.5" />ছবি</button>
-          <button onClick={() => setMode("text")} className={`px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${mode === "text" ? "bg-gray-900 text-white shadow-md" : "text-gray-500 hover:text-gray-700"}`}><FileText className="w-3.5 h-3.5" />লক্ষণ</button>
+    <ToolPageLayout title="ফসল রোগ সনাক্তকারী" icon={<Microscope className="w-4 h-4 text-white" />} currentIndex={1}>
+      <div className="space-y-6">
+        {/* ── Mode Toggle ── */}
+        <div className="flex justify-center">
+          <div className="inline-flex bg-white rounded-2xl border border-gray-200 p-1.5 shadow-sm">
+            <button onClick={() => { setMode("image"); reset() }} className={`px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all duration-200 ${mode === "image" ? "bg-gray-900 text-white shadow-lg" : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"}`}>
+              <ImageIcon className="w-4 h-4" />ছবি আপলোড
+            </button>
+            <button onClick={() => { setMode("text"); reset() }} className={`px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all duration-200 ${mode === "text" ? "bg-gray-900 text-white shadow-lg" : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"}`}>
+              <FileText className="w-4 h-4" />লক্ষণ লিখুন
+            </button>
+          </div>
         </div>
-      </div>
-      <div className="max-w-xl mx-auto space-y-3">
-          {mode === "image" ? (
-            <div onDrop={handleDrop} onDragOver={e => e.preventDefault()} className={`border-2 border-dashed rounded-2xl p-4 text-center transition-all ${image ? "border-leaf-400 bg-leaf-50/30" : "border-gray-300 hover:border-leaf-400 bg-white"}`}>
-              {image ? (
-                <div className="space-y-2">
-                  <img src={image} alt="প্রিভিউ" className="max-h-40 mx-auto rounded-xl shadow" />
-                  <div className="flex justify-center gap-2">
-                    <button onClick={reset} className="text-xs px-3 py-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-red-50 flex items-center gap-1"><Trash2 className="w-3.5 h-3.5" />সরান</button>
-                    <button onClick={analyze} disabled={loading} className="btn-primary-sm !py-1.5 !px-4 !text-xs">{loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Microscope className="w-3.5 h-3.5" />}{loading ? "বিশ্লেষণ হচ্ছে..." : "বিশ্লেষণ করুন"}</button>
+
+        {/* ── Upload / Input Zone ── */}
+        {!result && !loading && (
+          <>
+            {mode === "image" ? (
+              <div onDrop={handleDrop} onDragOver={e => e.preventDefault()} className={`relative overflow-hidden rounded-2xl border-2 border-dashed transition-all duration-300 ${image ? "border-emerald-400 bg-emerald-50/40" : "border-gray-300 hover:border-emerald-400 bg-white"}`}>
+                {image ? (
+                  <div className="p-5 space-y-4">
+                    <div className="flex items-start gap-4">
+                      <img src={image} alt="প্রিভিউ" className="w-32 h-32 object-cover rounded-xl shadow-md border border-gray-200" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-gray-800 mb-1">ছবি আপলোড হয়েছে</p>
+                        <p className="text-xs text-gray-500">বিশ্লেষণ শুরু করতে নিচের বাটনে ক্লিক করুন</p>
+                        <div className="flex items-center gap-2 mt-3">
+                          <button onClick={reset} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-gray-200 bg-white text-xs font-semibold text-gray-600 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all">
+                            <Trash2 className="w-3.5 h-3.5" />নতুন স্ক্যান
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-8 md:p-10 text-center">
+                    <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                      <Upload className="w-7 h-7 text-red-500" />
+                    </div>
+                    <h3 className="text-base font-bold text-gray-800 mb-1">ছবি আপলোড করুন</h3>
+                    <p className="text-sm text-gray-500 mb-2">ফসলের ছবি তুলুন বা আপনার ডিভাইস থেকে সিলেক্ট করুন</p>
+                    <p className="text-xs text-gray-400 mb-5">JPG, PNG বা WebP (সর্বোচ্চ ১০MB)</p>
+                    <button onClick={() => fileInputRef.current?.click()} className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl border-2 border-gray-200 bg-white text-sm font-bold text-gray-700 hover:border-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all shadow-sm">
+                      <Upload className="w-4 h-4" />ছবি সিলেক্ট করুন
+                    </button>
+                    <input ref={fileInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])} />
+                    <p className="text-xs text-gray-400 mt-4">অথবা ছবি ড্র্যাগ করে এনে দিন</p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 space-y-4">
+                <div className="flex items-center gap-3 mb-1">
+                  <div className="w-9 h-9 bg-amber-50 rounded-xl flex items-center justify-center"><FileText className="w-4 h-4 text-amber-500" /></div>
+                  <div><h3 className="text-sm font-bold text-gray-800">লক্ষণ বর্ণনা করুন</h3><p className="text-xs text-gray-500">ফসলের সমস্যা বিস্তারিত লিখুন</p></div>
+                </div>
+                <textarea value={description} onChange={e => setDescription(e.target.value)} rows={4} className="w-full p-4 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 outline-none text-sm resize-none transition-all" placeholder="যেমন: ধান গাছের পাতা হলুদ হয়ে যাচ্ছে, পাতায় বাদামী দাগ দেখা যাচ্ছে, গাছের বৃদ্ধি থমকে গেছে..." />
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ── Error ── */}
+        {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-2xl text-sm flex items-center gap-2.5"><AlertCircle className="w-4 h-4 shrink-0" />{error}</div>}
+
+        {/* ── Loading ── */}
+        {loading && (
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-10 text-center">
+            <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+            </div>
+            <h3 className="text-base font-bold text-gray-800 mb-1">রোগ সনাক্তকরণ চলছে...</h3>
+            <p className="text-sm text-gray-500">এআই আপনার ফসলের ছবি বিশ্লেষণ করছে, অনুগ্রহ করে অপেক্ষা করুন</p>
+          </div>
+        )}
+
+        {/* ── Results ── */}
+        {result && !loading && (
+          <div className="space-y-4">
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+              {/* Result Header */}
+              <div className="px-5 py-4 bg-gradient-to-r from-red-50 to-rose-50 border-b border-red-100 flex items-center gap-3">
+                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm"><ShieldAlert className="w-5 h-5 text-red-500" /></div>
+                <div>
+                  <h3 className="font-extrabold text-gray-900 text-sm">{result.disease_name}</h3>
+                  <p className="text-xs text-gray-500">{result.crop_type || "ফসল"}</p>
+                </div>
+                <div className="ml-auto text-right">
+                  <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-white rounded-full text-xs font-extrabold text-emerald-600 shadow-sm">
+                    <Scan className="w-3 h-3" />{Math.round(result.confidence * 100)}% নির্ভুল
+                  </span>
+                </div>
+              </div>
+
+              <div className="p-5 space-y-4">
+                {/* Stat pills */}
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="bg-emerald-50 rounded-xl p-3 text-center">
+                    <p className="text-[11px] font-bold text-emerald-500 uppercase tracking-wide mb-1">নির্ভুলতা</p>
+                    <p className="text-lg font-extrabold text-emerald-700">{Math.round(result.confidence * 100)}%</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-xl p-3 text-center">
+                    <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wide mb-1">ফসল</p>
+                    <p className="text-sm font-extrabold text-gray-800">{result.crop_type || "—"}</p>
+                  </div>
+                  <div className="bg-red-50 rounded-xl p-3 text-center">
+                    <p className="text-[11px] font-bold text-red-400 uppercase tracking-wide mb-1">কারণ</p>
+                    <p className="text-xs font-extrabold text-red-600">{result.cause || "—"}</p>
                   </div>
                 </div>
-              ) : (
-                <div className="space-y-2">
-                  <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center mx-auto"><Upload className="w-5 h-5 text-red-500" /></div>
-                  <p className="text-xs text-gray-400">JPG, PNG বা WebP (সর্বোচ্চ ১০MB)</p>
-                  <button onClick={() => fileInputRef.current?.click()} className="btn-primary-sm !py-1.5 !px-4 !text-xs"><Upload className="w-3.5 h-3.5" />ছবি আপলোড করুন</button>
-                  <input ref={fileInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])} />
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="bg-white rounded-2xl border border-gray-200 p-3 shadow-sm space-y-2">
-              <textarea value={description} onChange={e => setDescription(e.target.value)} rows={3} className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-leaf-500 outline-none text-sm resize-none" placeholder="আপনার ফসলের লক্ষণ বর্ণনা করুন... যেমন: ধান গাছের পাতা হলুদ হয়ে যাচ্ছে এবং পাতায় বাদামী দাগ দেখা যাচ্ছে।" />
-              <button onClick={analyze} disabled={loading || !description.trim()} className="btn-primary-sm w-full !text-xs">{loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Microscope className="w-3.5 h-3.5" />}{loading ? "বিশ্লেষণ হচ্ছে..." : "বিশ্লেষণ করুন"}</button>
-            </div>
-          )}
 
-          {error && <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2.5 rounded-xl text-xs flex items-center gap-2"><AlertCircle className="w-3.5 h-3.5 shrink-0" />{error}</div>}
-          {loading && <div className="bg-white rounded-2xl border border-gray-100 p-6 text-center shadow-sm"><Loader2 className="w-6 h-6 text-leaf-600 animate-spin mx-auto mb-2" /><p className="text-sm font-bold text-gray-700">বিশ্লেষণ চলছে...</p></div>}
-
-          {result && !loading && (
-            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-              <div className="px-4 py-2.5 bg-red-50 border-b border-red-100 flex items-center gap-2"><ShieldAlert className="w-4 h-4 text-red-500" /><h3 className="font-bold text-gray-900 text-xs">{result.crop_type} — {result.disease_name}</h3></div>
-              <div className="p-3 space-y-2">
-                <div className="grid grid-cols-3 gap-2 text-center">
-                  <div className="bg-gray-50 rounded-lg p-2"><p className="text-[10px] text-gray-400">নির্ভুলতা</p><p className="text-sm font-bold text-leaf-600">{Math.round(result.confidence * 100)}%</p></div>
-                  <div className="bg-gray-50 rounded-lg p-2"><p className="text-[10px] text-gray-400">ফসল</p><p className="text-xs font-bold text-gray-800">{result.crop_type || "—"}</p></div>
-                  <div className="bg-red-50 rounded-lg p-2"><p className="text-[10px] text-gray-400">কারণ</p><p className="text-xs font-bold text-red-700">{result.cause || "—"}</p></div>
+                {/* Treatment */}
+                <div className="bg-emerald-50/60 rounded-2xl p-4 border border-emerald-100">
+                  <p className="text-xs font-extrabold text-emerald-700 uppercase tracking-wide mb-2 flex items-center gap-1.5">💊 চিকিৎসা</p>
+                  <p className="text-sm text-gray-800 leading-relaxed font-medium">{result.remedy_bn}</p>
                 </div>
-                <div className="bg-leaf-50 rounded-xl p-3"><p className="text-[11px] font-bold text-leaf-700 mb-1">💊 চিকিৎসা</p><p className="text-xs text-gray-700 leading-relaxed">{result.remedy_bn}</p></div>
-                {result.prevention_bn && <div className="bg-blue-50 rounded-xl p-3"><p className="text-[11px] font-bold text-blue-700 mb-1">🛡️ প্রতিরোধ</p><p className="text-xs text-gray-700 leading-relaxed">{result.prevention_bn}</p></div>}
-                {result.is_common_in_bd && <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-[11px] font-medium">⚠️ এই রোগ বাংলাদেশে প্রচলিত</div>}
+
+                {/* Prevention */}
+                {result.prevention_bn && (
+                  <div className="bg-blue-50/60 rounded-2xl p-4 border border-blue-100">
+                    <p className="text-xs font-extrabold text-blue-700 uppercase tracking-wide mb-2 flex items-center gap-1.5">🛡️ প্রতিরোধ</p>
+                    <p className="text-sm text-gray-800 leading-relaxed font-medium">{result.prevention_bn}</p>
+                  </div>
+                )}
+
+                {/* Common in BD warning */}
+                {result.is_common_in_bd && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                    <p className="text-xs font-bold text-amber-800">এই রোগ বাংলাদেশে প্রচলিত — সতর্ক থাকুন</p>
+                  </div>
+                )}
               </div>
             </div>
-          )}
+
+            {/* New Scan button */}
+            <div className="flex justify-center gap-3">
+              <button onClick={reset} className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl border-2 border-gray-200 bg-white text-sm font-bold text-gray-600 hover:border-gray-300 hover:bg-gray-50 transition-all shadow-sm">
+                <RefreshCw className="w-4 h-4" />নতুন স্ক্যান
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── Primary CTA — only show when content ready but no result/loading ── */}
+        {hasContent && !loading && !result && (
+          <div className="flex justify-center">
+            <button onClick={analyze} className="btn-primary text-base py-4 px-10 rounded-2xl shadow-xl shadow-emerald-300/30 text-base">
+              <Scan className="w-5 h-5" />রোগ সনাক্তকরণ শুরু করুন
+            </button>
+          </div>
+        )}
       </div>
     </ToolPageLayout>
   )

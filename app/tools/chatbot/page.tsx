@@ -2,20 +2,13 @@
 
 import { useState, useRef, useEffect } from "react"
 import { Send, Loader2, Copy, Check, Bot, User, ChevronRight, MessageCircle } from "lucide-react"
-import { ToolPageLayout } from "@/components/tools/ToolPageLayout"
+import { ToolPageLayout, TOOLS } from "@/components/tools/ToolPageLayout"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 
 interface Message { id: string; role: "user" | "assistant"; content: string; timestamp: Date }
 let msgCounter = 0
 function genId() { return `msg-${++msgCounter}-${Date.now()}` }
-
-const TOOLS = [
-  { href: "/tools/chatbot", label: "চ্যাটবট", icon: null, color: "linear-gradient(135deg, #3b82f6, #1d4ed8)" },
-  { href: "/tools/disease-detector", label: "রোগ সনাক্ত", icon: null, color: "linear-gradient(135deg, #ef4444, #e11d48)" },
-  { href: "/tools/market-prices", label: "বাজার মূল্য", icon: null, color: "linear-gradient(135deg, #f59e0b, #ea580c)" },
-  { href: "/tools/weather-advisory", label: "আবহাওয়া", icon: null, color: "linear-gradient(135deg, #0ea5e9, #2563eb)" },
-]
 
 export default function ChatbotPage() {
   const [messages, setMessages] = useState<Message[]>([])
@@ -52,7 +45,6 @@ export default function ChatbotPage() {
     <ToolPageLayout
       title="এআই কৃষি চ্যাটবট"
       icon={<MessageCircle className="w-4 h-4 text-white" />}
-      tools={TOOLS}
       currentIndex={0}
     >
       <div className="flex flex-col h-[calc(100vh-140px)] max-w-2xl mx-auto w-full bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">

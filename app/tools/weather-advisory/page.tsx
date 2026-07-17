@@ -4,7 +4,7 @@ import { useState } from "react"
 import { DISTRICTS } from "@/lib/constants/districts"
 import { CROPS } from "@/lib/constants/crops"
 import { CloudSun, CloudRain, Wind, Droplets, Loader2, MapPin, AlertTriangle, Lightbulb, CheckCircle2, AlertCircle, ChevronDown } from "lucide-react"
-import { ToolPageLayout } from "@/components/tools/ToolPageLayout"
+import { ToolPageLayout, TOOLS } from "@/components/tools/ToolPageLayout"
 
 interface ForecastDay { date: string; temp: number; temp_min: number; temp_max: number; humidity: number; rain_mm: number; wind_kmh: number; description?: string; description_bn?: string; icon: string }
 interface WeatherData { district: string; current: ForecastDay; forecast: ForecastDay[] }
@@ -12,13 +12,6 @@ interface Advisory { summary: string; actions: string[]; irrigation: string; war
 
 const WI: Record<string, string> = { "01d": "☀️", "01n": "🌙", "02d": "⛅", "02n": "☁️", "03d": "☁️", "03n": "☁️", "04d": "☁️", "04n": "☁️", "09d": "🌧️", "09n": "🌧️", "10d": "🌦️", "10n": "🌧️", "11d": "⛈️", "11n": "⛈️", "13d": "🌨️", "13n": "🌨️", "50d": "🌫️", "50n": "🌫️" }
 const WDAY: Record<string, string> = { "Sat": "শনি", "Sun": "রবি", "Mon": "সোম", "Tue": "মঙ্গল", "Wed": "বুধ", "Thu": "বৃহঃ", "Fri": "শুক্র" }
-
-const TOOLS = [
-  { href: "/tools/chatbot", label: "চ্যাটবট", icon: null, color: "linear-gradient(135deg, #3b82f6, #1d4ed8)" },
-  { href: "/tools/disease-detector", label: "রোগ সনাক্ত", icon: null, color: "linear-gradient(135deg, #ef4444, #e11d48)" },
-  { href: "/tools/market-prices", label: "বাজার মূল্য", icon: null, color: "linear-gradient(135deg, #f59e0b, #ea580c)" },
-  { href: "/tools/weather-advisory", label: "আবহাওয়া", icon: null, color: "linear-gradient(135deg, #0ea5e9, #2563eb)" },
-]
 
 export default function WeatherAdvisoryPage() {
   const [district, setDistrict] = useState("Dhaka")
@@ -50,7 +43,6 @@ export default function WeatherAdvisoryPage() {
     <ToolPageLayout
       title="আবহাওয়া পরামর্শ"
       icon={<CloudSun className="w-4 h-4 text-white" />}
-      tools={TOOLS}
       currentIndex={3}
     >
       {/* District + Crop selectors */}

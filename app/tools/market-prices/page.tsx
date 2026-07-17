@@ -4,17 +4,10 @@ import { useState, useEffect, useCallback } from "react"
 import { DISTRICTS } from "@/lib/constants/districts"
 import { COMMODITIES } from "@/lib/constants/crops"
 import { DollarSign, TrendingUp, TrendingDown, Minus, Loader2, RefreshCw, BarChart3 } from "lucide-react"
-import { ToolPageLayout } from "@/components/tools/ToolPageLayout"
+import { ToolPageLayout, TOOLS } from "@/components/tools/ToolPageLayout"
 import { formatPrice, formatDate } from "@/lib/utils"
 
 interface PriceRecord { id: string; commodity: string; market: string; district: string; price_per_kg: number; date: string }
-
-const TOOLS = [
-  { href: "/tools/chatbot", label: "চ্যাটবট", icon: null, color: "linear-gradient(135deg, #3b82f6, #1d4ed8)" },
-  { href: "/tools/disease-detector", label: "রোগ সনাক্ত", icon: null, color: "linear-gradient(135deg, #ef4444, #e11d48)" },
-  { href: "/tools/market-prices", label: "বাজার মূল্য", icon: null, color: "linear-gradient(135deg, #f59e0b, #ea580c)" },
-  { href: "/tools/weather-advisory", label: "আবহাওয়া", icon: null, color: "linear-gradient(135deg, #0ea5e9, #2563eb)" },
-]
 
 export default function MarketPricesPage() {
   const [prices, setPrices] = useState<PriceRecord[]>([])
@@ -36,7 +29,6 @@ export default function MarketPricesPage() {
     <ToolPageLayout
       title="বাজার মূল্য বোর্ড"
       icon={<BarChart3 className="w-4 h-4 text-white" />}
-      tools={TOOLS}
       currentIndex={2}
     >
       {/* Filters */}
