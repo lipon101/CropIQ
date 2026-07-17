@@ -73,13 +73,20 @@ function isJailbreakAttempt(text: string): boolean {
 
 // ─── OUTPUT GUARD: detect if LLM leaked the system prompt ───
 function isSystemPromptLeak(reply: string): boolean {
+  // Immediate block: system prompt prefix leak
+  if (reply.includes("তুমি কৃষি বন্ধু") || reply.includes("system prompt") || reply.includes("CHATBOT_SYSTEM_PROMPT")) return true
+  
+  // Require 2+ markers to avoid false positives
   const leakMarkers = [
-    "তুমি কৃষি বন্ধু", "কঠোর নিরাপত্তা নিয়ম", "সিস্টেম প্রম্পট",
-    "system prompt", "CHATBOT_SYSTEM_PROMPT", "কৃষকের জন্য একজন অভিজ্ঞ",
-    "বলার নিয়ম:", "কখনো এইরকম বলবে না:", "তোমার ভাষা হবে একদম সহজ:",
+    "কঠোর নিরাপত্তা নিয়ম", "কৃষকের জন্য একজন অভিজ্ঞ",
+    "বলার নিয়ম:", "কখনো এইরকম বলবে না:",
+    "তোমার ভাষা হবে একদম সহজ:", "শহুরে অফিসার নও",
+    "খরচের কথা বলবে", "দেশি নাম ব্যবহার করবে",
   ]
+  let matchCount = 0
   for (const marker of leakMarkers) {
-    if (reply.includes(marker)) return true
+    if (reply.includes(marker)) matchCount++
+    if (matchCount >= 2) return true
   }
   return false
 }
