@@ -11,6 +11,7 @@ export function getOpenRouterKeys(): string[] {
   if (process.env.OPENROUTER_API_KEY) keys.push(process.env.OPENROUTER_API_KEY)
   if (process.env.OPENROUTER_API_KEY_2) keys.push(process.env.OPENROUTER_API_KEY_2)
   if (process.env.OPENROUTER_API_KEY_3) keys.push(process.env.OPENROUTER_API_KEY_3)
+  if (process.env.OPENROUTER_API_KEY_4) keys.push(process.env.OPENROUTER_API_KEY_4)
   return keys
 }
 
