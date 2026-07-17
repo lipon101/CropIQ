@@ -153,6 +153,8 @@ function isSystemPromptLeak(reply: string): boolean {
 }
 
 export const maxDuration = 60 // Vercel: prevent timeout on long AI responses
+
+export async function POST(req: NextRequest) {
   try {
     const { message, language, history, shownSuggestions = [] } = await req.json()
     if (!message?.trim()) return NextResponse.json({ error: "কোন বার্তা প্রদান করা হয়নি" }, { status: 400 })
