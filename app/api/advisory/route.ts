@@ -44,6 +44,7 @@ function isGarbageResponse(parsed: any): boolean {
   // Mixed script broken text (Bengali + Latin in same word, like "ডrainaেজ")
   for (const field of [summary, ...actions, irrigation, warning]) {
     if (!field) continue
+    if (/[\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF]/.test(field)) return true
     if (/[\u0980-\u09FF][a-zA-Z][\u0980-\u09FF]/.test(field)) return true
     if (/[a-zA-Z]{3,}/.test(field)) return true
   }
@@ -159,7 +160,7 @@ export async function POST(req: NextRequest) {
             "X-Title": "CropIQ",
           },
           body: JSON.stringify({
-            model: "openrouter/free",
+            model: "google/gemini-2.0-flash-001",
             messages: [
               { role: "system", content: ADVISORY_PROMPT },
               { role: "user", content: `জেলা: ${district}\nফসল: ${cropBn}\nআগামী ৭ দিনের আবহাওয়া:\n${forecastText}\n\nউপরে দেয়া তথ্যের ভিত্তিতে কৃষককে করণীয় পরামর্শ দাও। শুধু JSON দাও।` },
