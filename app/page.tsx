@@ -108,30 +108,34 @@ export default function HomePage() {
             <div className="hidden lg:flex justify-center items-center">
               <div className="relative w-[420px] h-[420px]">
                 {/* Spin rings */}
-                <div className="absolute inset-0 rounded-full border border-leaf-200/20 animate-[spin_22s_linear_infinite]" />
-                <div className="absolute inset-2 rounded-full border border-dashed border-leaf-300/15 animate-[spin_28s_linear_infinite_reverse]" />
-                <div className="absolute inset-10 rounded-full border border-emerald-200/15 animate-[spin_34s_linear_infinite]" />
+                <div className="absolute inset-0 rounded-full border border-leaf-200/20 animate-[spin_35s_linear_infinite]" />
+                <div className="absolute inset-2 rounded-full border border-dashed border-leaf-300/15 animate-[spin_45s_linear_infinite_reverse]" />
+                <div className="absolute inset-10 rounded-full border border-emerald-200/15 animate-[spin_40s_linear_infinite]" />
 
-                {/* Orbiting tool icons */}
-                {orbitingIcons.map((item, i) => {
-                  const rad = (item.angle * Math.PI) / 180
-                  const cx = 210, cy = 210, r = 172
-                  const x = cx + r * Math.cos(rad) - 22
-                  const y = cy + r * Math.sin(rad) - 22
-                  return (
-                    <div
-                      key={i}
-                      className="absolute w-11 h-11 rounded-xl bg-white shadow-lg shadow-gray-200/40 border border-gray-100 flex items-center justify-center z-10 hover:scale-125 hover:shadow-xl transition-all duration-300 cursor-default group/icon"
-                      style={{ left: x, top: y }}
-                    >
-                      <div className={`w-full h-full rounded-xl bg-gradient-to-br ${item.gradient} opacity-10 absolute inset-0 group-hover/icon:opacity-20 transition-opacity`} />
-                      <item.icon className="w-5 h-5 text-gray-700 relative z-10" />
-                      <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover/icon:opacity-100 transition-all duration-200 whitespace-nowrap">
-                        <span className="text-[9px] font-bold bg-gray-900/85 text-white px-2.5 py-1 rounded-full backdrop-blur-sm shadow-lg">{item.label}</span>
+                {/* Orbiting tool icons — full orbit rotation */}
+                <div className="absolute inset-0 animate-[spin_30s_linear_infinite]">
+                  {orbitingIcons.map((item, i) => {
+                    const rad = (item.angle * Math.PI) / 180
+                    const cx = 210, cy = 210, r = 172
+                    const x = cx + r * Math.cos(rad) - 22
+                    const y = cy + r * Math.sin(rad) - 22
+                    return (
+                      <div
+                        key={i}
+                        className="absolute animate-[spin_30s_linear_infinite_reverse]"
+                        style={{ left: x, top: y }}
+                      >
+                        <div className="w-11 h-11 rounded-xl bg-white shadow-lg shadow-gray-200/40 border border-gray-100 flex items-center justify-center z-10 hover:scale-125 hover:shadow-xl transition-all duration-300 cursor-default group/icon">
+                          <div className={`w-full h-full rounded-xl bg-gradient-to-br ${item.gradient} opacity-10 absolute inset-0 group-hover/icon:opacity-20 transition-opacity`} />
+                          <item.icon className="w-5 h-5 text-gray-700 relative z-10" />
+                          <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover/icon:opacity-100 transition-all duration-200 whitespace-nowrap">
+                            <span className="text-[9px] font-bold bg-gray-900/85 text-white px-2.5 py-1 rounded-full backdrop-blur-sm shadow-lg">{item.label}</span>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  )
-                })}
+                    )
+                  })}
+                </div>
 
                 {/* Inner circle layers */}
                 <div className="absolute inset-[54px] bg-gradient-to-br from-leaf-200/40 to-emerald-200/30 rounded-full blur-sm animate-pulse-gentle" />
