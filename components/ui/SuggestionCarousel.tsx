@@ -21,7 +21,6 @@ export default function SuggestionCarousel({
 
   if (!suggestions.length) return null
 
-  // ── find closest card to viewport center ──
   const getClosestIndex = () => {
     const el = carouselRef.current
     if (!el) return 0
@@ -37,9 +36,7 @@ export default function SuggestionCarousel({
     return closest
   }
 
-  const handleScroll = () => {
-    setActiveIndex(getClosestIndex())
-  }
+  const handleScroll = () => setActiveIndex(getClosestIndex())
 
   const scrollTo = (i: number) => {
     const el = carouselRef.current
@@ -47,7 +44,6 @@ export default function SuggestionCarousel({
     const children = Array.from(el.children) as HTMLElement[]
     const target = children[i]
     if (!target) return
-    // center the target card in the viewport
     el.scrollTo({
       left: target.offsetLeft - (el.offsetWidth - target.offsetWidth) / 2,
       behavior: "smooth",
@@ -55,69 +51,66 @@ export default function SuggestionCarousel({
   }
 
   const scroll = (dir: -1 | 1) => {
-    const current = getClosestIndex()
-    const next = Math.max(0, Math.min(suggestions.length - 1, current + dir))
+    const next = Math.max(0, Math.min(suggestions.length - 1, getClosestIndex() + dir))
     scrollTo(next)
   }
 
-  const goTo = (i: number) => scrollTo(i)
-
   return (
-    <div className="shrink-0 pb-2">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-2 px-1">
-        <div className="flex items-center gap-1.5">
-          <Sparkles className="w-3 h-3 text-amber-400" />
-          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-            {title}
-          </span>
+    <div className="shrink-0 pb-1">
+      {/* ── Header: warm pill + glass nav ── */}
+      <div className="flex items-center justify-between mb-3 px-1">
+        <div className="inline-flex items-center gap-1.5 bg-amber-50/80 border border-amber-100 rounded-full pl-2 pr-3 py-1">
+          <Sparkles className="w-3 h-3 text-amber-500" />
+          <span className="text-[11px] font-semibold text-amber-700">{title}</span>
         </div>
-        <div className="flex items-center gap-0.5">
+
+        <div className="flex items-center gap-1">
           <button
             onClick={() => scroll(-1)}
             disabled={activeIndex === 0}
-            className="p-1 rounded-full hover:bg-gray-100 disabled:opacity-30 disabled:cursor-default transition-all"
+            className="w-6 h-6 rounded-full bg-white border border-gray-100 flex items-center justify-center hover:bg-gray-50 hover:border-gray-200 disabled:opacity-25 disabled:cursor-default transition-all shadow-sm"
           >
-            <ChevronLeft className="w-3.5 h-3.5 text-gray-500" />
+            <ChevronLeft className="w-3 h-3 text-gray-600" />
           </button>
           <button
             onClick={() => scroll(1)}
             disabled={activeIndex >= suggestions.length - 1}
-            className="p-1 rounded-full hover:bg-gray-100 disabled:opacity-30 disabled:cursor-default transition-all"
+            className="w-6 h-6 rounded-full bg-white border border-gray-100 flex items-center justify-center hover:bg-gray-50 hover:border-gray-200 disabled:opacity-25 disabled:cursor-default transition-all shadow-sm"
           >
-            <ChevronRight className="w-3.5 h-3.5 text-gray-500" />
+            <ChevronRight className="w-3 h-3 text-gray-600" />
           </button>
         </div>
       </div>
 
-      {/* Scrollable cards — dynamic width per card */}
+      {/* ── Cards: left accent + hover arrow ── */}
       <div
         ref={carouselRef}
         onScroll={handleScroll}
-        className="flex gap-2 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-1"
+        className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-1"
       >
         {suggestions.map((s, i) => (
           <button
             key={i}
             onClick={() => onSelect(s)}
             disabled={disabled}
-            className="shrink-0 w-auto max-w-[85%] snap-center text-left px-4 py-2.5 bg-white border border-gray-200 hover:border-leaf-300 hover:bg-leaf-50 rounded-2xl text-[12px] font-semibold text-gray-700 hover:text-leaf-700 transition-all disabled:opacity-50 shadow-sm leading-relaxed"
+            className="group shrink-0 w-auto max-w-[85%] snap-center text-left pl-3.5 pr-8 py-3 bg-white border border-gray-100 border-l-2 border-l-leaf-400 hover:border-l-leaf-500 hover:border-gray-200 hover:shadow-md rounded-xl text-[13px] font-medium text-gray-700 hover:text-leaf-700 transition-all duration-200 disabled:opacity-40 leading-relaxed"
           >
             {s}
+            <ChevronRight className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-300 group-hover:text-leaf-400 group-hover:translate-x-0.5 transition-all" />
           </button>
         ))}
       </div>
 
-      {/* Dots */}
-      <div className="flex items-center justify-center gap-1.5 mt-2">
+      {/* ── Dots ── */}
+      <div className="flex items-center justify-center gap-1.5 mt-2.5">
         {suggestions.map((_, i) => (
           <button
             key={i}
-            onClick={() => goTo(i)}
-            className={`rounded-full transition-all ${
+            onClick={() => scrollTo(i)}
+            className={`rounded-full transition-all duration-300 ${
               i === activeIndex
-                ? "w-5 h-1.5 bg-leaf-500"
-                : "w-1.5 h-1.5 bg-gray-300 hover:bg-gray-400"
+                ? "w-5 h-1.5 bg-leaf-400 shadow-sm shadow-leaf-200"
+                : "w-1.5 h-1.5 bg-gray-200 hover:bg-gray-300"
             }`}
           />
         ))}
