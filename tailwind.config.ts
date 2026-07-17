@@ -44,8 +44,8 @@ const config: Config = {
         },
       },
       fontFamily: {
-        bengali: ["Noto Serif Bengali", "serif"],
-        sans: ["Inter", "Plus Jakarta Sans", "system-ui", "sans-serif"],
+        sans: ["Hind Siliguri", "system-ui", "sans-serif"],
+        bengali: ["Hind Siliguri", "system-ui", "sans-serif"],
       },
       borderRadius: {
         lg: "0.75rem",
