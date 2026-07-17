@@ -237,8 +237,16 @@ const translations: Record<Language, Record<string, string>> = {
   },
 }
 
+function getInitialLanguage(): Language {
+  if (typeof window !== "undefined") {
+    const saved = localStorage.getItem("cropiq-lang") as Language | null
+    if (saved === "bn" || saved === "en") return saved
+  }
+  return "bn"
+}
+
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguageState] = useState<Language>("bn")
+  const [language, setLanguageState] = useState<Language>(getInitialLanguage)
 
   const setLanguage = useCallback((lang: Language) => {
     setLanguageState(lang)
@@ -248,8 +256,14 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const toggleLanguage = useCallback(() => {
-    setLanguage(language === "bn" ? "en" : "bn")
-  }, [language, setLanguage])
+    setLanguageState((prev) => {
+      const next = prev === "bn" ? "en" : "bn"
+      if (typeof window !== "undefined") {
+        localStorage.setItem("cropiq-lang", next)
+      }
+      return next
+    })
+  }, [])
 
   const t = useCallback(
     (key: string): string => {
@@ -257,13 +271,6 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     },
     [language]
   )
-
-  React.useEffect(() => {
-    const saved = localStorage.getItem("cropiq-lang") as Language | null
-    if (saved && (saved === "bn" || saved === "en")) {
-      setLanguageState(saved)
-    }
-  }, [])
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage, t, toggleLanguage }}>

@@ -17,8 +17,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [supabase] = useState(() => createClient())
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    setMounted(true)
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -26,7 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false)
     })
 
-    // Initial session check
+    // Initial session check — only run after mount
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
       setLoading(false)
@@ -41,8 +44,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     window.location.href = "/"
   }
 
+  // During SSR and initial client render, always show "loading" to avoid mismatch
+  const isHydrating = !mounted
+
   return (
-    <AuthContext.Provider value={{ supabase, user, loading, signOut }}>
+    <AuthContext.Provider value={{ supabase, user, loading: isHydrating || loading, signOut }}>
       {children}
     </AuthContext.Provider>
   )

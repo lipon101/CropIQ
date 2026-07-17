@@ -4,6 +4,7 @@ import { AuthProvider } from "@/lib/auth/AuthContext"
 import { LanguageProvider } from "@/lib/i18n/LanguageContext"
 import { Navbar } from "@/components/layout/Navbar"
 import { Footer } from "@/components/layout/Footer"
+import { ErrorBoundary } from "@/components/ErrorBoundary"
 
 export const metadata: Metadata = {
   title: "CropIQ — AI-Powered Agriculture Intelligence for Bangladesh",
@@ -21,14 +22,16 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="bn" suppressHydrationWarning>
-      <body className="min-h-screen flex flex-col bg-gradient-to-b from-leaf-50/30 to-white">
-        <LanguageProvider>
-          <AuthProvider>
-            <Navbar />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </AuthProvider>
-        </LanguageProvider>
+      <body className="min-h-screen flex flex-col bg-gradient-to-b from-leaf-50/30 to-white" suppressHydrationWarning>
+        <ErrorBoundary>
+          <LanguageProvider>
+            <AuthProvider>
+              <Navbar />
+              <main className="flex-1">{children}</main>
+              <Footer />
+            </AuthProvider>
+          </LanguageProvider>
+        </ErrorBoundary>
       </body>
     </html>
   )
