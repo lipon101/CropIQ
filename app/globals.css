@@ -109,7 +109,7 @@
   }
 
   /* Warm earth background */
-  .bg-warm { background: linear-gradient(180deg, #f2f8f1 0%, #f8f6f1 30%, #f5f1e9 70%, #f8f6f1 100%); }
+  .bg-warm { background-color: #f4f0e8; }
 
   /* Premium card shadow on hover */
   .hover-lift { @apply transition-all duration-300; }
