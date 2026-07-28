@@ -67,3 +67,4 @@ Set these in `.env.local` (local) or Vercel dashboard (production):
 | Samia Homayara | UI/UX & Frontend |
 | Md. Aslam Hossain | Data Engineering |
 | Sree Partho Chondro Mohanto | QA & Testing |
+// Vercel deployment: Tue Jul 28 04:02:08 UTC 2026
