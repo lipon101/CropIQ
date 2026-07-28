@@ -196,9 +196,9 @@ export async function POST(req: NextRequest) {
     reply = reply.replace(/---+/g, "\n\n").trim()
     reply = reply.replace(/\n{3,}/g, "\n\n").trim()
     // Strip Tamil and other non-Bengali Indic characters
-    reply = reply.replace(/[\u0B80-\u0BFF\u0C00-\u0C7F\u0C80-\u0CFF\u0D00-\u0D7F]+/g, "").trim()
+    reply = reply.replace(/[\u0900-\u0963\u0970-\u097F\u0B80-\u0BFF\u0C00-\u0C7F\u0C80-\u0CFF\u0D00-\u0D7F]+/g, "").trim()
     // Ensure line breaks before numbered points for readability
-    reply = reply.replace(/([|।])\s*(\d+[\.\)])/g, "$1\n\n$2")
+    reply = reply.replace(/([।:])\s*(\d+[\.\)])/g, "$1\n\n$2")
     if (!reply) reply = "দুঃখিত, এখন উত্তর দিতে পারছি না। আবার চেষ্টা করুন।"
 
     if (isSystemPromptLeak(reply)) {
