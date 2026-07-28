@@ -192,7 +192,7 @@ export async function POST(req: NextRequest) {
     let reply = data?.choices?.[0]?.message?.content || "দুঃখিত, এখন উত্তর দিতে পারছি না। আবার চেষ্টা করুন।"
     // Strip OpenRouter safety prefix (e.g. "User Safety: safe")
     reply = reply.replace(/^User Safety:\s*(safe|unsafe)\s*\n*/i, "").trim()
-    reply = reply.replace(/\*{2,}|_{2,}|~{2,}|#{1,6}\s*/g, "").trim()
+    reply = reply.replace(/_{2,}|~{2,}|#{1,6}\s*/g, "").trim()
     reply = reply.replace(/---+/g, "\n\n").trim()
     reply = reply.replace(/\n{3,}/g, "\n\n").trim()
     // Strip Tamil and other non-Bengali Indic characters

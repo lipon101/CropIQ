@@ -85,7 +85,18 @@ export default function ChatbotPage() {
   }
 
 
-  return (
+  
+function renderMessage(text: string) {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g)
+  return parts.map((part, i) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return <strong key={i}>{part.slice(2, -2)}</strong>
+    }
+    return part
+  })
+}
+
+return (
     <ToolPageLayout title="কৃষি চ্যাটবট" icon={<MessageCircle className="w-4 h-4 text-white" />} currentIndex={2}>
       <div className="flex flex-col flex-1 min-h-0 overflow-hidden pt-2">
 
@@ -110,7 +121,7 @@ export default function ChatbotPage() {
                   ? "bg-gradient-to-r from-leaf-500 to-emerald-600 text-white rounded-br-md"
                   : "bg-white border border-gray-200 text-gray-800 rounded-bl-md shadow-sm"
               }`}>
-                {m.content}
+                {renderMessage(m.content)}
               </div>
             </div>
           ))}
