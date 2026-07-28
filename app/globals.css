@@ -1,0 +1,144 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap');
+
+@layer base {
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+  body { @apply bg-white text-gray-800 font-sans antialiased; }
+  input, textarea, select, button { font-family: inherit; }
+  ::selection { @apply bg-leaf-200 text-leaf-900; }
+}
+
+/* ============================================
+   CONSISTENT COMPONENT DESIGN SYSTEM
+   ============================================ */
+
+@layer components {
+  /* Container */
+  .container-cropiq { @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8; }
+
+  /* ─── Buttons (3 types × 1 size) ─── */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 font-extrabold text-white bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 rounded-2xl shadow-lg shadow-emerald-300/30 hover:shadow-xl hover:shadow-emerald-300/40 hover:-translate-y-0.5 transition-all duration-300 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed text-sm py-3.5 px-7;
+  }
+  .btn-primary-sm { @apply btn-primary text-xs py-2.5 px-5; }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 font-extrabold text-gray-700 bg-white/90 backdrop-blur-sm hover:bg-white border border-gray-200/80 hover:border-gray-300 hover:shadow-lg rounded-2xl shadow-sm transition-all duration-300 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed text-sm py-3.5 px-7;
+  }
+  .btn-secondary-sm { @apply btn-secondary text-xs py-2.5 px-5; }
+
+  .btn-accent {
+    @apply inline-flex items-center justify-center gap-2 font-extrabold text-white bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 rounded-2xl shadow-lg shadow-amber-300/30 hover:shadow-xl hover:shadow-amber-300/40 hover:-translate-y-0.5 transition-all duration-300 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed text-sm py-3.5 px-7;
+  }
+
+  .badge-beta { @apply inline-flex text-[10px] font-extrabold bg-white/20 text-white px-2 py-0.5 rounded-full; }
+
+  /* ─── Cards ─── */
+  .card-default { @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-6 transition-all duration-300 hover:shadow-md; }
+  .card-hover { @apply card-default hover:shadow-lg hover:-translate-y-1; }
+
+  /* ─── Input ─── */
+  .input-field {
+    @apply w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-leaf-500 focus:ring-4 focus:ring-leaf-50 outline-none transition-all text-sm placeholder:text-gray-400 font-sans;
+  }
+
+  /* ─── Typography Scale ─── */
+  .text-page-title { @apply text-xl md:text-2xl font-extrabold text-gray-900 tracking-tight; }
+  .text-section-title { @apply text-lg md:text-xl font-bold text-gray-900; }
+  .text-card-title { @apply text-base font-bold text-gray-900; }
+  .text-body { @apply text-sm text-gray-600 leading-relaxed; }
+  .text-caption { @apply text-xs text-gray-500; }
+  .text-label { @apply text-xs font-bold text-gray-500 uppercase tracking-wider; }
+
+  /* ─── Section Badge ─── */
+  .section-badge {
+    @apply inline-flex items-center gap-2 px-4 py-1.5 bg-leaf-50 text-leaf-700 rounded-full text-xs font-bold border border-leaf-200/60;
+  }
+
+  /* ─── Markdown Content ─── */
+  .markdown-body table { @apply w-full border-collapse my-3 rounded-lg overflow-hidden; }
+  .markdown-body th { @apply bg-gray-100 px-3 py-2 text-left text-xs font-bold text-gray-700; }
+  .markdown-body td { @apply px-3 py-2 text-xs text-gray-600 border-b border-gray-100; }
+  .markdown-body tr:last-child td { @apply border-b-0; }
+  .markdown-body p { @apply mb-2 last:mb-0 leading-relaxed text-sm; }
+  .markdown-body strong { @apply font-bold text-gray-900; }
+  .markdown-body ul, .markdown-body ol { @apply pl-5 mb-2 space-y-1 text-sm; }
+  .markdown-body ul { @apply list-disc; }
+  .markdown-body ol { @apply list-decimal; }
+  .markdown-body li { @apply text-gray-700; }
+  .markdown-body h3, .markdown-body h4 { @apply font-bold text-gray-900 mb-2 mt-3; }
+  .markdown-body h3 { @apply text-base; }
+  .markdown-body h4 { @apply text-sm; }
+}
+
+/* ============================================
+   PREMIUM TEXTURE & UTILITY
+   ============================================ */
+
+@layer utilities {
+  /* Grain / noise texture overlay — realistic photography feel */
+  .bg-grain {
+    position: relative;
+  }
+  .bg-grain::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.065;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.5'/%3E%3C/svg%3E");
+    background-size: 250px 250px;
+    animation: grainFlicker 4s ease-in-out infinite alternate, grainDrift 15s linear infinite;
+  }
+
+  /* Subtle dot pattern */
+  .bg-dots {
+    background-image: radial-gradient(circle, rgba(0,0,0,0.07) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  /* Organic blob gradient */
+  .bg-organic {
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 30%, rgba(34,197,94,0.10) 0%, transparent 55%),
+      radial-gradient(ellipse 60% 50% at 80% 70%, rgba(217,119,6,0.07) 0%, transparent 55%),
+      radial-gradient(ellipse 50% 40% at 50% 50%, rgba(59,130,246,0.05) 0%, transparent 55%);
+  }
+
+  /* Warm earth background */
+  .bg-warm { background-color: #f4f0e8; }
+
+  /* Premium card shadow on hover */
+  .hover-lift { @apply transition-all duration-300; }
+  .hover-lift:hover { transform: translateY(-2px); box-shadow: 0 12px 40px -12px rgba(0,0,0,0.08); }
+}
+
+/* ─── Animated Grain Keyframes ─── */
+@keyframes grainFlicker {
+  0%, 100% { opacity: 0.045; }
+  25% { opacity: 0.072; }
+  50% { opacity: 0.055; }
+  75% { opacity: 0.068; }
+}
+@keyframes grainDrift {
+  0% { background-position: 0% 0%; }
+  25% { background-position: 30% 60%; }
+  50% { background-position: 70% 30%; }
+  75% { background-position: 40% 80%; }
+  100% { background-position: 0% 0%; }
+}
+
+
+
+/* ── Utility: hide scrollbar for carousel ── */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
