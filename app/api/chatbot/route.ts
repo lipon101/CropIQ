@@ -183,8 +183,13 @@ export async function POST(req: NextRequest) {
       { role: "user", content: message.trim() },
     ]
 
-    const data = await fetchOpenRouterWithRetry({ model: "google/gemma-4-26b-a4b-it:free", messages, max_tokens: 1500, temperature: 0.7 })
-    let reply = data.choices?.[0]?.message?.content || "দুঃখিত, এখন উত্তর দিতে পারছি না। আবার চেষ্টা করুন।"
+    let data = await fetchOpenRouterWithRetry({ model: "google/gemma-4-26b-a4b-it:free", messages, max_tokens: 1500, temperature: 0.7 })
+    // Fallback: if Gemma 4 fails, try openrouter/free
+    if (!data?.choices?.[0]?.message?.content) {
+      console.warn("Gemma 4 failed, falling back to openrouter/free")
+      data = await fetchOpenRouterWithRetry({ model: "openrouter/free", messages, max_tokens: 1500, temperature: 0.7 })
+    }
+    let reply = data?.choices?.[0]?.message?.content || "দুঃখিত, এখন উত্তর দিতে পারছি না। আবার চেষ্টা করুন।"
     // Strip OpenRouter safety prefix (e.g. "User Safety: safe")
     reply = reply.replace(/^User Safety:\s*(safe|unsafe)\s*\n*/i, "").trim()
     reply = reply.replace(/\*{2,}|_{2,}|~{2,}|#{1,6}\s*/g, "").trim()

@@ -25,8 +25,11 @@ export async function fetchOpenRouterWithRetry(
 
   for (let i = 0; i < keys.length; i++) {
     const keyIndex = (currentKeyIndex + i) % keys.length
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 30000)
     const response = await fetch(`${OPENROUTER_BASE}/chat/completions`, {
       method: "POST",
+      signal: controller.signal,
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${keys[keyIndex]}`,
@@ -35,6 +38,7 @@ export async function fetchOpenRouterWithRetry(
       },
       body: JSON.stringify(body),
     })
+    clearTimeout(timeoutId)
 
     if (response.status === 429) {
       console.warn(`⚠️ OpenRouter key #${keyIndex + 1} rate limited, rotating...`)
