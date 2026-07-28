@@ -105,7 +105,7 @@ export default function ChatbotPage() {
 
           {messages.map((m, i) => (
             <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-              <div className={`max-w-[85%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed font-medium ${
+              <div className={`max-w-[85%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap whitespace-break-spaces font-medium ${
                 m.role === "user"
                   ? "bg-gradient-to-r from-leaf-500 to-emerald-600 text-white rounded-br-md"
                   : "bg-white border border-gray-200 text-gray-800 rounded-bl-md shadow-sm"
