@@ -175,6 +175,9 @@ export async function POST(req: NextRequest) {
 
     const data = await fetchOpenRouterWithRetry({ model: "openrouter/free", messages, max_tokens: 2500, temperature: 0.7 })
     let reply = data.choices?.[0]?.message?.content || "দুঃখিত, এখন উত্তর দিতে পারছি না। আবার চেষ্টা করুন।"
+    // Strip OpenRouter safety prefix (e.g. "User Safety: safe")
+    reply = reply.replace(/^User Safety:\s*(safe|unsafe)\s*\n*/i, "").trim()
+    if (!reply) reply = "দুঃখিত, এখন উত্তর দিতে পারছি না। আবার চেষ্টা করুন।"
 
     if (isSystemPromptLeak(reply)) {
       return NextResponse.json({ reply: FRIENDLY_REDIRECT, suggestions: getFreshSuggestions(shownSuggestions) })
