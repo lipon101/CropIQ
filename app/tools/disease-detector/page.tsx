@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useCallback, useEffect } from "react"
-import { Upload, Microscope, Loader2, AlertCircle, Trash2, ShieldAlert, ImageIcon, FileText, Scan, RefreshCw, Clock, ChevronRight, WifiOff, Wifi } from "lucide-react"
+import { Upload, Microscope, Loader2, AlertCircle, Trash2, ShieldAlert, ImageIcon, Scan, RefreshCw, Clock, ChevronRight, WifiOff, Wifi } from "lucide-react"
 import { ToolPageLayout, TOOLS } from "@/components/tools/ToolPageLayout"
 import { useAuth } from "@/lib/auth/AuthContext"
 import { createClient } from "@/lib/supabase/client"
@@ -98,11 +98,9 @@ export default function DiseaseDetectorPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [image, setImage] = useState<string | null>(null)
   const [imageFile, setImageFile] = useState<File | null>(null)
-  const [description, setDescription] = useState("")
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<DiagnosisResult | null>(null)
   const [error, setError] = useState("")
-  const [mode, setMode] = useState<"image" | "text">("image")
   const [scanHistory, setScanHistory] = useState<any[]>([])
   const [historyLoading, setHistoryLoading] = useState(false)
   const [deletingIds, setDeletingIds] = useState<Set<number>>(new Set())
@@ -253,10 +251,9 @@ export default function DiseaseDetectorPage() {
   const analyze = async () => {
     setError(""); setResult(null); setLoading(true)
     try {
-      let r: Response
-      if (mode === "image" && imageFile) { const fd = new FormData(); fd.append("file", imageFile); fd.append("language", "bn"); r = await fetch("/api/disease-detect", { method: "POST", body: fd }) }
-      else if (mode === "text" && description.trim()) { r = await fetch("/api/disease-detect-text", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ description, language: "bn" }) }) }
-      else { setError("দয়া করে ছবি আপলোড করুন বা লক্ষণ লিখুন"); setLoading(false); return }
+      if (!imageFile) { setError("দয়া করে ছবি আপলোড করুন"); setLoading(false); return }
+      const fd = new FormData(); fd.append("file", imageFile); fd.append("language", "bn")
+      const r = await fetch("/api/disease-detect", { method: "POST", body: fd })
       if (!r.ok) throw new Error((await r.json()).error || "বিশ্লেষণ ব্যর্থ")
       const d = await r.json()
       if (d.result) {
@@ -283,10 +280,10 @@ export default function DiseaseDetectorPage() {
       }
     } catch (e: any) { setError(e.message) } finally { setLoading(false) }
   }
-  const reset = () => { setImage(null); setImageFile(null); setDescription(""); setResult(null); setError("") }
+  const reset = () => { setImage(null); setImageFile(null); setResult(null); setError("") }
 
   const viewHistoryResult = (scan: any) => {
-    setImage(null); setImageFile(null); setDescription(""); setError("")
+    setImage(null); setImageFile(null); setError("")
     setResult({
       crop_type: scan.crop_type,
       disease_name: scan.disease_name,
@@ -300,35 +297,22 @@ export default function DiseaseDetectorPage() {
     })
   }
 
-  const hasContent = mode === "image" ? !!image : !!description.trim()
+  const hasContent = !!image
 
   return (
     <ToolPageLayout title="ফসল রোগ সনাক্তকারী" icon={<Microscope className="w-4 h-4 text-white" />} currentIndex={1}>
       <div className="flex flex-col flex-1 min-h-0 overflow-hidden pt-2">
 
-        {/* Mode Switch */}
-        <div className="flex justify-center mb-2 shrink-0">
-          <div className="inline-flex bg-white rounded-2xl border-2 border-gray-100 p-1.5 shadow-md">
-            <button onClick={() => { setMode("image"); reset() }} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${mode === "image" ? "bg-gray-900 text-white shadow-lg" : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"}`}>
-              <ImageIcon className="w-4 h-4" />ছবি
-            </button>
-            <button onClick={() => { setMode("text"); reset() }} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${mode === "text" ? "bg-gray-900 text-white shadow-lg" : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"}`}>
-              <FileText className="w-4 h-4" />লক্ষণ
-            </button>
-          </div>
-        </div>
-
         {/* ── Content ── */}
         <div className={`flex-1 w-full space-y-3 ${result || loading ? 'overflow-y-auto' : 'flex flex-col'}`}>
 
-          {/* Input card — same size for both image & text modes */}
+          {/* Input card */}
           {!result && !loading && (
             <div className="flex-1 flex flex-col">
               {/* Unified card container */}
               <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex-1 flex flex-col">
-                {mode === "image" ? (
-                  <div
-                    onDrop={handleDrop}
+                <div
+                  onDrop={handleDrop}
                     onDragOver={e => e.preventDefault()}
                     className="flex-1 flex flex-col"
                   >
@@ -355,18 +339,8 @@ export default function DiseaseDetectorPage() {
                         </div>
                       </button>
                     )}
-                    <input ref={fileInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])} />
-                  </div>
-                ) : (
-                  /* Text mode — identical card size */
-                  <textarea
-                    value={description}
-                    onChange={e => setDescription(e.target.value)}
-                    rows={6}
-                    className="flex-1 w-full p-4 rounded-2xl bg-transparent outline-none text-sm resize-none"
-                    placeholder="লক্ষণ বর্ণনা করুন..."
-                  />
-                )}
+                  <input ref={fileInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])} />
+                </div>
               </div>
 
               {/* Analyze button */}
