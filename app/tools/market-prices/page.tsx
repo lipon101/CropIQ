@@ -271,46 +271,46 @@ export default function MarketPricesPage() {
           )}
         </div>
 
-        {/* ── Source attribution (modern, clickable) ── */}
+        {/* ── Source attribution (both DAM + WFP, clickable) ── */}
         {(source === "dam" || source === "wfp") && (
           <div className="shrink-0 pt-3 pb-1">
-            {source === "dam" ? (
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1.5 text-center">উৎসসমূহ</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <a
                 href="https://market.dam.gov.bd/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-between gap-2 bg-white border border-gray-100 hover:border-amber-200 rounded-xl px-3.5 py-2.5 shadow-sm hover:shadow transition-all group"
+                className={`flex items-center justify-between gap-2 rounded-xl px-3 py-2.5 border shadow-sm hover:shadow transition-all group ${
+                  source === "dam" ? "bg-amber-50 border-amber-200" : "bg-white border-gray-100 hover:border-amber-200"
+                }`}
               >
                 <span className="flex items-center gap-2 min-w-0">
                   <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
-                  <span className="text-[11px] text-gray-500 min-w-0">
-                    <b className="text-gray-700">কৃষি বিপণন অধিদপ্তর (DAM)</b>
-                    <span className="text-gray-400"> · জাতীয় দৈনিক বাজারদর</span>
+                  <span className="min-w-0">
+                    <span className="block text-[11px] font-bold text-gray-700">কৃষি বিপণন অধিদপ্তর (DAM)</span>
+                    <span className="block text-[10px] text-gray-400">জাতীয় দৈনিক বাজারদর</span>
                   </span>
                 </span>
-                <span className="flex items-center gap-1 text-[10px] font-bold text-amber-600 shrink-0">
-                  সোর্স দেখুন <ExternalLink className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                </span>
+                <ExternalLink className="w-3.5 h-3.5 text-amber-600 shrink-0 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
               </a>
-            ) : (
               <a
                 href="https://data.humdata.org/dataset/wfp-food-prices-for-bangladesh"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-between gap-2 bg-white border border-gray-100 hover:border-amber-200 rounded-xl px-3.5 py-2.5 shadow-sm hover:shadow transition-all group"
+                className={`flex items-center justify-between gap-2 rounded-xl px-3 py-2.5 border shadow-sm hover:shadow transition-all group ${
+                  source === "wfp" ? "bg-amber-50 border-amber-200" : "bg-white border-gray-100 hover:border-amber-200"
+                }`}
               >
                 <span className="flex items-center gap-2 min-w-0">
                   <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
-                  <span className="text-[11px] text-gray-500 min-w-0">
-                    <b className="text-gray-700">বিশ্ব খাদ্য কর্মসূচি (WFP)</b>
-                    <span className="text-gray-400"> · জেলা পর্যায়ের মাসিক বাজারদর</span>
+                  <span className="min-w-0">
+                    <span className="block text-[11px] font-bold text-gray-700">বিশ্ব খাদ্য কর্মসূচি (WFP)</span>
+                    <span className="block text-[10px] text-gray-400">জেলা পর্যায়ের মাসিক বাজারদর</span>
                   </span>
                 </span>
-                <span className="flex items-center gap-1 text-[10px] font-bold text-amber-600 shrink-0">
-                  সোর্স দেখুন <ExternalLink className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                </span>
+                <ExternalLink className="w-3.5 h-3.5 text-amber-600 shrink-0 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
               </a>
-            )}
+            </div>
           </div>
         )}
       </div>
