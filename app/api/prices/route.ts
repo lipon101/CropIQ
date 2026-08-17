@@ -1,31 +1,59 @@
 export const dynamic = "force-dynamic"
 
 import { NextRequest, NextResponse } from "next/server"
-import { createServerSupabaseClient } from "@/lib/supabase/server"
+import { fetchDamPrices, bdToday } from "@/lib/dam-prices"
+import { fetchWfpPrices } from "@/lib/wfp-prices"
 
-// Sample seed data for demo — used when Supabase table is empty
-const SEED_PRICES = [
-  { id: "s1", commodity: "Rice (Miniket)", market: "Karwan Bazar", district: "Dhaka", price_per_kg: 72, date: new Date().toISOString().split("T")[0] },
-  { id: "s2", commodity: "Rice (Nazirshail)", market: "Karwan Bazar", district: "Dhaka", price_per_kg: 82, date: new Date().toISOString().split("T")[0] },
-  { id: "s3", commodity: "Potato", market: "Karwan Bazar", district: "Dhaka", price_per_kg: 35, date: new Date().toISOString().split("T")[0] },
-  { id: "s4", commodity: "Onion (Local)", market: "Karwan Bazar", district: "Dhaka", price_per_kg: 65, date: new Date().toISOString().split("T")[0] },
-  { id: "s5", commodity: "Onion (Imported)", market: "Karwan Bazar", district: "Dhaka", price_per_kg: 55, date: new Date().toISOString().split("T")[0] },
-  { id: "s6", commodity: "Garlic", market: "Shyambazar", district: "Dhaka", price_per_kg: 180, date: new Date().toISOString().split("T")[0] },
-  { id: "s7", commodity: "Green Chili", market: "Karwan Bazar", district: "Dhaka", price_per_kg: 120, date: new Date().toISOString().split("T")[0] },
-  { id: "s8", commodity: "Eggplant", market: "Karwan Bazar", district: "Dhaka", price_per_kg: 55, date: new Date().toISOString().split("T")[0] },
-  { id: "s9", commodity: "Tomato", market: "Karwan Bazar", district: "Dhaka", price_per_kg: 40, date: new Date().toISOString().split("T")[0] },
-  { id: "s10", commodity: "Lentil (Local)", market: "Shyambazar", district: "Dhaka", price_per_kg: 140, date: new Date().toISOString().split("T")[0] },
-  { id: "s11", commodity: "Rice (Miniket)", market: "Reazuddin Bazar", district: "Chattogram", price_per_kg: 74, date: new Date().toISOString().split("T")[0] },
-  { id: "s12", commodity: "Potato", market: "Reazuddin Bazar", district: "Chattogram", price_per_kg: 38, date: new Date().toISOString().split("T")[0] },
-  { id: "s13", commodity: "Rice (Miniket)", market: "Shaheb Bazar", district: "Rajshahi", price_per_kg: 68, date: new Date().toISOString().split("T")[0] },
-  { id: "s14", commodity: "Onion (Local)", market: "Shaheb Bazar", district: "Rajshahi", price_per_kg: 60, date: new Date().toISOString().split("T")[0] },
-  { id: "s15", commodity: "Mango", market: "Shaheb Bazar", district: "Rajshahi", price_per_kg: 80, date: new Date().toISOString().split("T")[0] },
-  { id: "s16", commodity: "Rice (Miniket)", market: "Daulatpur", district: "Khulna", price_per_kg: 70, date: new Date().toISOString().split("T")[0] },
-  { id: "s17", commodity: "Fish (Rui)", market: "Daulatpur", district: "Khulna", price_per_kg: 320, date: new Date().toISOString().split("T")[0] },
-  { id: "s18", commodity: "Potato", market: "Zindabazar", district: "Sylhet", price_per_kg: 40, date: new Date().toISOString().split("T")[0] },
-  { id: "s19", commodity: "Egg (Farm)", market: "Karwan Bazar", district: "Dhaka", price_per_kg: 140, date: new Date().toISOString().split("T")[0] },
-  { id: "s20", commodity: "Chicken (Broiler)", market: "Karwan Bazar", district: "Dhaka", price_per_kg: 210, date: new Date().toISOString().split("T")[0] },
-]
+// The national market — DAM's daily averages are shown under this sentinel
+// district; district-scoped queries read the real WFP per-district rows.
+const NATIONAL_MARKET = "জাতীয় বাজার"
+
+// ─── In-memory cache ────────────────────────────────────────────────────────
+// DAM is a cheap daily national ticker; WFP is a ~4.5MB monthly CSV. Both are
+// fetched live and cached briefly so the board is always real but not slow.
+const CACHE_TTL_MS = 6 * 60 * 60 * 1000 // 6 hours
+
+type PriceRow = {
+  id: string
+  commodity: string
+  market: string
+  district: string
+  price_per_kg: number
+  unit: string
+  date: string
+}
+
+let cache: { fetchedAt: number; dam: PriceRow[]; wfp: PriceRow[] } | null = null
+
+async function getLivePrices() {
+  if (cache && Date.now() - cache.fetchedAt < CACHE_TTL_MS) return cache
+
+  const [damP, wfpP] = await Promise.allSettled([fetchDamPrices(), fetchWfpPrices()])
+
+  const today = bdToday()
+  const dam: PriceRow[] = (damP.status === "fulfilled" ? damP.value : []).map((p, i) => ({
+    id: `dam-${i}`,
+    commodity: p.commodity,
+    market: NATIONAL_MARKET,
+    district: NATIONAL_MARKET,
+    price_per_kg: p.pricePerKg,
+    unit: p.unit,
+    date: today,
+  }))
+
+  const wfp: PriceRow[] = (wfpP.status === "fulfilled" ? wfpP.value : []).map((p, i) => ({
+    id: `wfp-${i}`,
+    commodity: p.commodity,
+    market: p.market,
+    district: p.district,
+    price_per_kg: p.pricePerKg,
+    unit: p.unit,
+    date: p.date,
+  }))
+
+  cache = { fetchedAt: Date.now(), dam, wfp }
+  return cache
+}
 
 export async function GET(req: NextRequest) {
   try {
@@ -33,35 +61,31 @@ export async function GET(req: NextRequest) {
     const district = searchParams.get("district") || ""
     const commodity = searchParams.get("commodity") || ""
     const date = searchParams.get("date") || ""
+    // history=1 returns rows ascending by date (oldest first) for a price chart
+    const history = searchParams.get("history") === "1"
 
-    // Try Supabase first
-    try {
-      const supabase = await createServerSupabaseClient()
-      let query = supabase.from("market_prices").select("*")
+    const isNational = !district || district === NATIONAL_MARKET
 
-      if (district) query = query.eq("district", district)
-      if (commodity) query = query.ilike("commodity", `%${commodity}%`)
-      if (date) query = query.eq("date", date)
-      else query = query.order("date", { ascending: false })
+    const { dam, wfp } = await getLivePrices()
 
-      const { data, error } = await query.limit(100)
+    // Pick the real source: national → DAM daily averages; district → WFP rows.
+    let rows = isNational ? dam : wfp.filter((r) => r.district === district)
+    const source = isNational ? "dam" : "wfp"
 
-      if (!error && data && data.length > 0) {
-        return NextResponse.json({ prices: data })
-      }
-    } catch {
-      // Supabase unavailable — fall through to seed data
+    if (commodity) {
+      const lower = commodity.toLowerCase()
+      rows = rows.filter((r) => r.commodity.toLowerCase().includes(lower))
     }
+    if (date) rows = rows.filter((r) => r.date === date)
 
-    // Fallback to seed data
-    let prices = [...SEED_PRICES]
-    if (district) prices = prices.filter((p) => p.district === district)
-    if (commodity) prices = prices.filter((p) => p.commodity.toLowerCase().includes(commodity.toLowerCase()))
-    if (date) prices = prices.filter((p) => p.date === date)
+    // For a chart, oldest-first; otherwise newest-first.
+    rows = [...rows].sort((a, b) => (history ? a.date.localeCompare(b.date) : b.date.localeCompare(a.date)))
 
-    return NextResponse.json({ prices })
+    const updatedAt = rows.length > 0 ? (history ? rows[rows.length - 1].date : rows[0].date) : ""
+
+    return NextResponse.json({ prices: rows, source, updatedAt })
   } catch (error: any) {
-    // Always return seed data on error
-    return NextResponse.json({ prices: SEED_PRICES })
+    console.error("Price board error:", error)
+    return NextResponse.json({ prices: [], source: "", updatedAt: "" }, { status: 200 })
   }
 }

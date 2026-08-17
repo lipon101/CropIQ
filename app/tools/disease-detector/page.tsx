@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useCallback, useEffect } from "react"
-import { Upload, Microscope, Loader2, AlertCircle, Trash2, ShieldAlert, ImageIcon, Scan, RefreshCw, Clock, ChevronRight, WifiOff, Wifi } from "lucide-react"
+import { Upload, Microscope, Loader2, AlertCircle, Trash2, ShieldAlert, Scan, RefreshCw, Clock, ChevronRight, WifiOff, Wifi } from "lucide-react"
 import { ToolPageLayout, TOOLS } from "@/components/tools/ToolPageLayout"
 import { useAuth } from "@/lib/auth/AuthContext"
 import { createClient } from "@/lib/supabase/client"
@@ -251,7 +251,7 @@ export default function DiseaseDetectorPage() {
   const analyze = async () => {
     setError(""); setResult(null); setLoading(true)
     try {
-      if (!imageFile) { setError("দয়া করে ছবি আপলোড করুন"); setLoading(false); return }
+      if (!imageFile) { setError("দয়া করে ফসলের ছবি আপলোড করুন"); setLoading(false); return }
       const fd = new FormData(); fd.append("file", imageFile); fd.append("language", "bn")
       const r = await fetch("/api/disease-detect", { method: "POST", body: fd })
       if (!r.ok) throw new Error((await r.json()).error || "বিশ্লেষণ ব্যর্থ")
@@ -309,13 +309,12 @@ export default function DiseaseDetectorPage() {
           {/* Input card */}
           {!result && !loading && (
             <div className="flex-1 flex flex-col">
-              {/* Unified card container */}
               <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex-1 flex flex-col">
                 <div
                   onDrop={handleDrop}
-                    onDragOver={e => e.preventDefault()}
-                    className="flex-1 flex flex-col"
-                  >
+                  onDragOver={e => e.preventDefault()}
+                  className="flex-1 flex flex-col"
+                >
                     {image ? (
                       /* Image uploaded — show preview */
                       <div className="flex-1 flex flex-col items-center justify-center p-4 gap-3">
@@ -339,8 +338,8 @@ export default function DiseaseDetectorPage() {
                         </div>
                       </button>
                     )}
-                  <input ref={fileInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])} />
-                </div>
+                    <input ref={fileInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])} />
+                  </div>
               </div>
 
               {/* Analyze button */}

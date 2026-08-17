@@ -32,15 +32,31 @@ Set these in `.env.local` (local) or Vercel dashboard (production):
 |----------|-------------|
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon/public key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service-role key (server-only — used by the market-price refresh job) |
+| `CRON_SECRET` | Optional secret to trigger `/api/refresh-prices` manually |
 | `OPENROUTER_API_KEY` | OpenRouter API key |
 | `OPENWEATHERMAP_API_KEY` | OpenWeatherMap API key |
 | `NEXT_PUBLIC_APP_URL` | Your deployed app URL |
+
+## 📈 Market Price Refresh Job
+
+Market prices are written into Supabase's `market_prices` table by `app/api/refresh-prices` from **two real sources** (run daily via the cron in `vercel.json`, 23:00 UTC = 05:00 Bangladesh time):
+
+- **DAM — national daily retail averages** from the official [Department of Agricultural Marketing](https://market.dam.gov.bd) price ticker, stored under the `জাতীয় বাজার` (national market) district.
+- **WFP — district-level monthly retail prices** from the [WFP food-prices dataset on HDX](https://data.humdata.org/dataset/wfp-food-prices-for-bangladesh) (a ~4.5MB CSV of per-market observations covering 62 of 64 districts, sourced in part from DAM). Prices are averaged per district and dated with WFP's observation month. DAM's own per-district report can't be used directly — its legacy BIRT backend is unreachable from outside Bangladesh and its district AJAX cascade fails server-side.
+
+- Run the migration `supabase/migrations/20240801_market_prices.sql` first to create the table.
+- Add `SUPABASE_SERVICE_ROLE_KEY` (and optionally `CRON_SECRET`) to your env.
+- Manual trigger: `curl -H "x-cron-secret: $CRON_SECRET" https://your-app.vercel.app/api/refresh-prices`
+- **Self-healing:** if the newest stored price is more than 2 days old (or the table is empty — e.g. the cron missed a run), the next request to `/api/prices` kicks off a background refresh automatically (deduped, max once per 30 min; the 4.5MB WFP CSV is cached in-process for 6h).
+- The board's district filter shows the real WFP per-district prices; `জাতীয় বাজার (সারাদেশ)` shows the fresh DAM daily national averages.
+- `/api/prices` still falls back to the built-in demo seed data when Supabase is empty or unreachable.
 
 ## 📁 Project Structure
 
 ```
 ├── app/               # Next.js App Router pages & API routes
-│   ├── api/           # 7 API endpoints (AI, weather, prices)
+│   ├── api/           # 8 API endpoints (AI, weather, prices, refresh job)
 │   ├── auth/          # Sign in / Sign up
 │   ├── tools/         # Disease, Chatbot, Market, Weather
 │   └── dashboard/     # User dashboard

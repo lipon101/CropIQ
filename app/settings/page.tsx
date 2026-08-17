@@ -1,25 +1,73 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useAuth } from "@/lib/auth/AuthContext"
 import Link from "next/link"
-import { User, Mail, Shield, Sprout, ChevronLeft, Save, Check, MapPin, Phone, Calendar } from "lucide-react"
+import { User, Mail, Shield, Sprout, ChevronLeft, ChevronDown, Save, Check, MapPin, Phone, Calendar, AlertCircle } from "lucide-react"
+import { DISTRICTS } from "@/lib/constants/districts"
 
 export default function SettingsPage() {
-  const { user } = useAuth()
-  const [name, setName] = useState(user?.user_metadata?.full_name || "")
-  const [phone, setPhone] = useState(user?.user_metadata?.phone || "")
-  const [location, setLocation] = useState(user?.user_metadata?.location || "")
+  const { supabase, user } = useAuth()
+  const [name, setName] = useState("")
+  const [phone, setPhone] = useState("")
+  const [district, setDistrict] = useState("")
   const [saved, setSaved] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
+
+  // Load profile from the profiles table (fall back to auth user metadata for
+  // pre-migration users whose row hasn't been created yet)
+  useEffect(() => {
+    if (!user?.id) return
+    let cancelled = false
+    const meta = user.user_metadata || {}
+
+    ;(async () => {
+      let profile: { full_name?: string | null; phone?: string | null; district?: string | null } | null = null
+      try {
+        const { data } = await supabase
+          .from("profiles")
+          .select("full_name, phone, district")
+          .eq("id", user.id)
+          .maybeSingle()
+        profile = data
+      } catch {
+        // profiles table missing (migration not applied yet) — keep metadata fallback
+      }
+      if (cancelled) return
+      setName(profile?.full_name || meta.full_name || "")
+      setPhone(profile?.phone || meta.phone || "")
+      // Normalize legacy free-text / Bengali names to the canonical English district id
+      const stored = profile?.district || meta.location || ""
+      const matched = DISTRICTS.find(d => d.name_en === stored || d.name_bn === stored)
+      setDistrict(matched ? matched.name_en : "")
+    })()
+
+    return () => { cancelled = true }
+  }, [user?.id, supabase])
 
   const handleSave = async () => {
+    if (!user) { setError("লগইন করা নেই"); return }
     setLoading(true)
-    // Simulate save
-    await new Promise(r => setTimeout(r, 800))
-    setSaved(true)
-    setLoading(false)
-    setTimeout(() => setSaved(false), 3000)
+    setError("")
+    try {
+      const { error: err } = await supabase.from("profiles").upsert(
+        {
+          id: user.id,
+          full_name: name.trim(),
+          phone: phone.trim(),
+          district: district || null,
+        },
+        { onConflict: "id" }
+      )
+      if (err) throw err
+      setSaved(true)
+      setTimeout(() => setSaved(false), 3000)
+    } catch (e: any) {
+      setError(e?.message || "সংরক্ষণ ব্যর্থ হয়েছে — আবার চেষ্টা করুন")
+    } finally {
+      setLoading(false)
+    }
   }
 
   const joinDate = user?.created_at
@@ -44,6 +92,13 @@ export default function SettingsPage() {
 
       {/* Content */}
       <div className="flex-1 px-4 sm:px-6 md:px-10 lg:px-14 py-6 md:py-8 max-w-xl mx-auto w-full space-y-6">
+        {/* Error banner */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm flex items-center gap-2.5">
+            <AlertCircle className="w-4 h-4 shrink-0" />{error}
+          </div>
+        )}
+
         {/* Profile Card */}
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
           {/* Avatar Banner */}
@@ -103,18 +158,24 @@ export default function SettingsPage() {
               />
             </div>
 
-            {/* Location */}
+            {/* District */}
             <div>
               <label className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
-                <MapPin className="w-3.5 h-3.5" />অবস্থান
+                <MapPin className="w-3.5 h-3.5" />জেলা
               </label>
-              <input
-                type="text"
-                value={location}
-                onChange={e => setLocation(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 outline-none text-sm font-semibold text-gray-800 transition-all"
-                placeholder="জেলা, বাংলাদেশ"
-              />
+              <div className="relative">
+                <select
+                  value={district}
+                  onChange={e => setDistrict(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 outline-none text-sm font-semibold text-gray-800 transition-all appearance-none cursor-pointer pr-10"
+                >
+                  <option value="">জেলা নির্বাচন করুন</option>
+                  {DISTRICTS.map(d => (
+                    <option key={d.name_en} value={d.name_en}>{d.name_bn}</option>
+                  ))}
+                </select>
+                <ChevronDown className="w-4 h-4 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
             </div>
           </div>
         </div>

@@ -5,17 +5,27 @@ import { DISTRICTS } from "@/lib/constants/districts"
 import { COMMODITIES } from "@/lib/constants/crops"
 import { DollarSign, TrendingUp, TrendingDown, Minus, Loader2, Search, BarChart3 } from "lucide-react"
 import { ToolPageLayout, TOOLS } from "@/components/tools/ToolPageLayout"
-import { formatPrice, formatDate } from "@/lib/utils"
+import PriceHistoryChart from "@/components/tools/PriceHistoryChart"
+import { formatPrice, formatDate, formatDateBN } from "@/lib/utils"
 
 interface PriceRecord { id: string; commodity: string; market: string; district: string; price_per_kg: number; date: string }
 
 export default function MarketPricesPage() {
   const [prices, setPrices] = useState<PriceRecord[]>([])
+  const [history, setHistory] = useState<PriceRecord[]>([])
+  const [source, setSource] = useState<"dam" | "wfp" | "">("")
+  const [updatedAt, setUpdatedAt] = useState("")
   const [loading, setLoading] = useState(false)
   const [hasSearched, setHasSearched] = useState(false)
   const [district, setDistrict] = useState("Dhaka")
   const [commodity, setCommodity] = useState("")
   const [date, setDate] = useState("")
+
+  const NATIONAL_MARKET = "জাতীয় বাজার"
+  const districtBn = district === NATIONAL_MARKET
+    ? "জাতীয় বাজার (সারাদেশ)"
+    : DISTRICTS.find(d => d.name_en === district)?.name_bn || district
+  const commodityBn = commodity ? COMMODITIES.find(c => c.name_en === commodity)?.name_bn || commodity : ""
 
   const fetchPrices = async () => {
     setLoading(true); setHasSearched(true)
@@ -24,9 +34,30 @@ export default function MarketPricesPage() {
       if (district) p.set("district", district)
       if (commodity) p.set("commodity", commodity)
       if (date) p.set("date", date)
-      const r = await fetch(`/api/prices?${p}`)
-      if (r.ok) { const d = await r.json(); setPrices(d.prices || []) } else { setPrices([]) }
-    } catch { setPrices([]) }
+      // Price history for the selected commodity (daily rows the refresh job accumulates)
+      const historyUrl = commodity
+        ? `/api/prices?district=${encodeURIComponent(district)}&commodity=${encodeURIComponent(commodity)}&history=1`
+        : null
+      const [r, hr] = await Promise.all([
+        fetch(`/api/prices?${p}`),
+        historyUrl ? fetch(historyUrl) : Promise.resolve(null),
+      ])
+      if (r.ok) {
+        const d = await r.json()
+        setPrices(d.prices || [])
+        setSource(d.source === "dam" ? "dam" : d.source === "wfp" ? "wfp" : "")
+        setUpdatedAt(d.updatedAt || "")
+      } else {
+        setPrices([])
+        setSource("")
+        setUpdatedAt("")
+      }
+      if (historyUrl) {
+        if (hr && hr.ok) { const hd = await hr.json(); setHistory(hd.prices || []) } else setHistory([])
+      } else {
+        setHistory([])
+      }
+    } catch { setPrices([]); setHistory([]); setSource(""); setUpdatedAt("") }
     finally { setLoading(false) }
   }
 
@@ -44,6 +75,7 @@ export default function MarketPricesPage() {
         <div className="flex flex-wrap items-end gap-2 mb-3 shrink-0">
           <div className="flex gap-1.5 flex-1 flex-wrap">
             <select value={district} onChange={e => setDistrict(e.target.value)} className="flex-1 min-w-[80px] px-2.5 py-2 rounded-xl border-2 border-gray-100 text-xs font-semibold text-gray-700 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none bg-white shadow-sm hover:border-amber-200 transition-colors">
+              <option value={NATIONAL_MARKET}>জাতীয় বাজার (সারাদেশ)</option>
               {DISTRICTS.map(d => <option key={d.name_en} value={d.name_en}>{d.name_bn}</option>)}
             </select>
             <select value={commodity} onChange={e => setCommodity(e.target.value)} className="flex-1 min-w-[80px] px-2.5 py-2 rounded-xl border-2 border-gray-100 text-xs font-semibold text-gray-700 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none bg-white shadow-sm hover:border-amber-200 transition-colors">
@@ -82,9 +114,10 @@ export default function MarketPricesPage() {
 
           {hasSearched && !loading && prices.length === 0 && (
             <div className="flex items-center justify-center h-full">
-              <div className="text-center">
+              <div className="text-center max-w-xs px-4">
                 <DollarSign className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                <p className="text-xs text-gray-500">কোন মূল্য তথ্য পাওয়া যায়নি</p>
+                <p className="text-xs font-semibold text-gray-600">কোন মূল্য তথ্য পাওয়া যায়নি</p>
+                <p className="text-[11px] text-gray-400 mt-1 leading-relaxed">এই এলাকা ও পণ্যের জন্য এখন কোনো তথ্য নেই। অন্য জেলা বা পণ্য বাছাই করে দেখুন।</p>
               </div>
             </div>
           )}
@@ -94,8 +127,8 @@ export default function MarketPricesPage() {
               <div className="px-4 py-2.5 bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-100 flex items-center gap-2">
                 <BarChart3 className="w-4 h-4 text-amber-500" />
                 <span className="text-xs font-extrabold text-gray-700">
-                  {DISTRICTS.find(d => d.name_en === district)?.name_bn || district}
-                  {commodity && <> · {COMMODITIES.find(c => c.name_en === commodity)?.name_bn || commodity}</>}
+                  {districtBn}
+                  {commodity && <> · {commodityBn}</>}
                 </span>
                 <span className="ml-auto text-[10px] font-bold text-amber-500">{prices.length} টি রেকর্ড</span>
               </div>
@@ -132,6 +165,39 @@ export default function MarketPricesPage() {
               </div>
             </div>
           )}
+
+          {/* ── Price history chart (30 days daily / 12 months monthly) ── */}
+          {hasSearched && !loading && prices.length > 0 && commodity && history.length >= 2 && (
+            <PriceHistoryChart
+              data={history.map(h => ({ date: h.date, price: h.price_per_kg }))}
+              commodityBn={commodityBn}
+              districtBn={districtBn}
+            />
+          )}
+
+          {hasSearched && !loading && prices.length > 0 && commodity && history.length === 1 && (
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 text-center">
+              <p className="text-xs font-bold text-gray-700">📈 {commodityBn} — দামের ইতিহাস</p>
+              <p className="text-xs text-gray-400 mt-1.5 leading-relaxed">
+                এখন পর্যন্ত মাত্র ১টি দামের রেকর্ড আছে। প্রতিটি হালনাগাদে নতুন দাম যোগ হয় — কিছুদিন পর আবার দেখুন।
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* ── Source attribution ── */}
+        <div className="shrink-0 pt-2.5 pb-1 text-center">
+          {source === "wfp" ? (
+            <p className="text-[10px] text-gray-400 font-medium leading-relaxed">
+              দামের উৎস: বিশ্ব খাদ্য কর্মসূচি (WFP) — জেলা পর্যায়ের মাসিক বাজারদর (কৃষি বিপণন অধিদপ্তর সূত্রে)
+              {updatedAt ? <> · সর্বশেষ আপডেট: {formatDateBN(updatedAt)}</> : null}
+            </p>
+          ) : source === "dam" ? (
+            <p className="text-[10px] text-gray-400 font-medium leading-relaxed">
+              দামের উৎস: কৃষি বিপণন অধিদপ্তর (DAM) — জাতীয় দৈনিক বাজারদর
+              {updatedAt ? <> · সর্বশেষ আপডেট: {formatDateBN(updatedAt)}</> : null}
+            </p>
+          ) : null}
         </div>
       </div>
     </ToolPageLayout>

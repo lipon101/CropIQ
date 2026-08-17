@@ -70,4 +70,7 @@ export const COMMODITIES: Commodity[] = [
   { name_en: "Beef", name_bn: "গরুর মাংস", unit: "kg" },
   { name_en: "Fish (Rui)", name_bn: "মাছ (রুই)", unit: "kg" },
   { name_en: "Milk", name_bn: "দুধ", unit: "liter" },
+  { name_en: "Sugar", name_bn: "চিনি", unit: "kg" },
+  { name_en: "Soybean Oil", name_bn: "সয়াবিন তেল", unit: "liter" },
+  { name_en: "Palm Oil", name_bn: "পাম তেল", unit: "liter" },
 ]
