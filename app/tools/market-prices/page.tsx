@@ -1,14 +1,37 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { DISTRICTS } from "@/lib/constants/districts"
 import { COMMODITIES } from "@/lib/constants/crops"
-import { DollarSign, TrendingUp, TrendingDown, Minus, Loader2, Search, BarChart3 } from "lucide-react"
-import { ToolPageLayout, TOOLS } from "@/components/tools/ToolPageLayout"
+import { Loader2, Search, MapPin, Store, CalendarDays, ShieldCheck, Sprout } from "lucide-react"
+import { ToolPageLayout } from "@/components/tools/ToolPageLayout"
 import PriceHistoryChart from "@/components/tools/PriceHistoryChart"
-import { formatPrice, formatDate, formatDateBN } from "@/lib/utils"
+import { formatPrice, formatDateBN } from "@/lib/utils"
 
-interface PriceRecord { id: string; commodity: string; market: string; district: string; price_per_kg: number; date: string }
+interface PriceRecord {
+  id: string
+  commodity: string
+  market: string
+  district: string
+  price_per_kg: number
+  unit?: string
+  date: string
+}
+
+// Product emoji for a friendly, modern card look (falls back to 🌾)
+const PRODUCT_EMOJI: Record<string, string> = {
+  "Rice (Atop)": "🍚", "Rice (Miniket)": "🍚", "Rice (Nazirshail)": "🍚",
+  "Wheat Flour": "🌾", "Potato": "🥔", "Onion (Local)": "🧅", "Onion (Imported)": "🧅",
+  "Garlic": "🧄", "Green Chili": "🌶️", "Dried Chili": "🌶️", "Ginger": "🫚", "Turmeric": "🟡",
+  "Lentil (Local)": "🫘", "Eggplant": "🍆", "Tomato": "🍅", "Cabbage": "🥬", "Cauliflower": "🥦",
+  "Okra": "🌿", "Pumpkin": "🎃", "Bitter Gourd": "🥒", "Ridge Gourd": "🥒", "Cucumber": "🥒",
+  "Banana": "🍌", "Mango": "🥭", "Papaya": "🧡", "Egg (Farm)": "🥚", "Chicken (Broiler)": "🍗",
+  "Beef": "🥩", "Fish (Rui)": "🐟", "Milk": "🥛", "Sugar": "🍬", "Soybean Oil": "🛢️", "Palm Oil": "🛢️",
+}
+
+const UNIT_BN: Record<string, string> = {
+  kg: "প্রতি কেজি", dozen: "প্রতি ডজন", liter: "প্রতি লিটার", pcs: "প্রতি পিস",
+}
 
 export default function MarketPricesPage() {
   const [prices, setPrices] = useState<PriceRecord[]>([])
@@ -17,24 +40,24 @@ export default function MarketPricesPage() {
   const [updatedAt, setUpdatedAt] = useState("")
   const [loading, setLoading] = useState(false)
   const [hasSearched, setHasSearched] = useState(false)
-  const [district, setDistrict] = useState("Dhaka")
+  const [district, setDistrict] = useState("জাতীয় বাজার")
   const [commodity, setCommodity] = useState("")
-  const [date, setDate] = useState("")
+  const [error, setError] = useState("")
 
   const NATIONAL_MARKET = "জাতীয় বাজার"
-  const districtBn = district === NATIONAL_MARKET
+  const isNational = district === NATIONAL_MARKET
+
+  const districtBn = isNational
     ? "জাতীয় বাজার (সারাদেশ)"
     : DISTRICTS.find(d => d.name_en === district)?.name_bn || district
   const commodityBn = commodity ? COMMODITIES.find(c => c.name_en === commodity)?.name_bn || commodity : ""
 
   const fetchPrices = async () => {
-    setLoading(true); setHasSearched(true)
+    setLoading(true); setHasSearched(true); setError("")
     try {
       const p = new URLSearchParams()
       if (district) p.set("district", district)
       if (commodity) p.set("commodity", commodity)
-      if (date) p.set("date", date)
-      // Price history for the selected commodity (daily rows the refresh job accumulates)
       const historyUrl = commodity
         ? `/api/prices?district=${encodeURIComponent(district)}&commodity=${encodeURIComponent(commodity)}&history=1`
         : null
@@ -42,72 +65,72 @@ export default function MarketPricesPage() {
         fetch(`/api/prices?${p}`),
         historyUrl ? fetch(historyUrl) : Promise.resolve(null),
       ])
-      if (r.ok) {
-        const d = await r.json()
-        setPrices(d.prices || [])
-        setSource(d.source === "dam" ? "dam" : d.source === "wfp" ? "wfp" : "")
-        setUpdatedAt(d.updatedAt || "")
-      } else {
-        setPrices([])
-        setSource("")
-        setUpdatedAt("")
-      }
-      if (historyUrl) {
-        if (hr && hr.ok) { const hd = await hr.json(); setHistory(hd.prices || []) } else setHistory([])
-      } else {
-        setHistory([])
-      }
-    } catch { setPrices([]); setHistory([]); setSource(""); setUpdatedAt("") }
-    finally { setLoading(false) }
+      const d = r.ok ? await r.json() : { prices: [], source: "", updatedAt: "" }
+      setPrices(d.prices || [])
+      setSource(d.source === "dam" ? "dam" : d.source === "wfp" ? "wfp" : "")
+      setUpdatedAt(d.updatedAt || "")
+      if (r.status === 429 || (r.status >= 500 && d.prices.length === 0)) setError("দামের উৎসে পৌঁছানো যায়নি — একটু পরে আবার চেষ্টা করুন।")
+      if (historyUrl && hr && hr.ok) {
+        const hd = await hr.json()
+        setHistory(hd.prices || [])
+      } else setHistory([])
+    } catch {
+      setPrices([]); setHistory([]); setSource(""); setUpdatedAt("")
+      setError("দামের উৎসে পৌঁছানো যায়নি — ইন্টারনেট সংযোগ দেখুন।")
+    } finally { setLoading(false) }
   }
 
-  const trend = (px: PriceRecord[], c: string) => {
-    const cp = px.filter(x => x.commodity === c).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    if (cp.length < 2) return null
-    return cp[0].price_per_kg > cp[1].price_per_kg ? "up" : cp[0].price_per_kg < cp[1].price_per_kg ? "down" : "stable"
-  }
+  // Sort prices: highest to lowest for a clear "top item" feel
+  const sorted = useMemo(() => [...prices].sort((a, b) => b.price_per_kg - a.price_per_kg), [prices])
+
+  // Highest/lowest for a mini highlight
+  const high = sorted[0]
+  const low = sorted[sorted.length - 1]
 
   return (
-    <ToolPageLayout title="বাজার মূল্য বোর্ড" icon={<BarChart3 className="w-4 h-4 text-white" />} currentIndex={2}>
-      <div className="flex flex-col flex-1 min-h-0 overflow-hidden max-w-lg mx-auto w-full pt-2">
+    <ToolPageLayout title="বাজার মূল্য বোর্ড" icon={<Sprout className="w-4 h-4 text-white" />} currentIndex={2}>
+      <div className="flex flex-col flex-1 min-h-0 overflow-hidden max-w-2xl mx-auto w-full pt-1">
 
         {/* ── Selectors ── */}
-        <div className="flex flex-wrap items-end gap-2 mb-3 shrink-0">
-          <div className="flex gap-1.5 flex-1 flex-wrap">
-            <select value={district} onChange={e => setDistrict(e.target.value)} className="flex-1 min-w-[80px] px-2.5 py-2 rounded-xl border-2 border-gray-100 text-xs font-semibold text-gray-700 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none bg-white shadow-sm hover:border-amber-200 transition-colors">
-              <option value={NATIONAL_MARKET}>জাতীয় বাজার (সারাদেশ)</option>
-              {DISTRICTS.map(d => <option key={d.name_en} value={d.name_en}>{d.name_bn}</option>)}
-            </select>
-            <select value={commodity} onChange={e => setCommodity(e.target.value)} className="flex-1 min-w-[80px] px-2.5 py-2 rounded-xl border-2 border-gray-100 text-xs font-semibold text-gray-700 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none bg-white shadow-sm hover:border-amber-200 transition-colors">
-              <option value="">সব পণ্য</option>
-              {COMMODITIES.map(c => <option key={c.name_en} value={c.name_en}>{c.name_bn}</option>)}
-            </select>
-            <input type="date" value={date} onChange={e => setDate(e.target.value)} className="flex-1 min-w-[80px] px-2.5 py-2 rounded-xl border-2 border-gray-100 text-xs font-semibold text-gray-700 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none bg-white shadow-sm hover:border-amber-200 transition-colors" />
+        <div className="flex flex-col gap-2 mb-4 shrink-0">
+          <div className="flex gap-2 flex-wrap">
+            <div className="relative flex-1 min-w-[130px]">
+              <MapPin className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <select value={district} onChange={e => setDistrict(e.target.value)} className="w-full pl-9 pr-8 py-2.5 rounded-2xl border-2 border-gray-100 text-sm font-semibold text-gray-700 focus:border-amber-400 outline-none bg-white shadow-sm hover:border-amber-200 transition-colors appearance-none">
+                <option value={NATIONAL_MARKET}>জাতীয় বাজার (সারাদেশ)</option>
+                {DISTRICTS.map(d => <option key={d.name_en} value={d.name_en}>{d.name_bn}</option>)}
+              </select>
+            </div>
+            <div className="relative flex-1 min-w-[130px]">
+              <Store className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <select value={commodity} onChange={e => setCommodity(e.target.value)} className="w-full pl-9 pr-8 py-2.5 rounded-2xl border-2 border-gray-100 text-sm font-semibold text-gray-700 focus:border-amber-400 outline-none bg-white shadow-sm hover:border-amber-200 transition-colors appearance-none">
+                <option value="">সব পণ্য</option>
+                {COMMODITIES.map(c => <option key={c.name_en} value={c.name_en}>{c.name_bn}</option>)}
+              </select>
+            </div>
           </div>
-          <button onClick={fetchPrices} disabled={loading} className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 disabled:from-gray-300 disabled:to-gray-400 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-md shadow-amber-200/30 active:scale-95 transition-all disabled:shadow-none flex items-center gap-1.5 shrink-0">
-            {loading ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> নিচ্ছে</> : <><Search className="w-3.5 h-3.5" /> দেখুন</>}
+          <button onClick={fetchPrices} disabled={loading} className="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 disabled:from-gray-300 disabled:to-gray-400 text-white py-3 rounded-2xl text-sm font-bold shadow-md shadow-amber-200/40 active:scale-[0.99] transition-all disabled:shadow-none flex items-center justify-center gap-2">
+            {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> দাম নিচ্ছে…</> : <><Search className="w-4 h-4" /> বাজারদর দেখুন</>}
           </button>
         </div>
 
         {/* ── Content ── */}
         <div className={`flex-1 ${hasSearched && prices.length > 0 ? 'overflow-y-auto' : 'flex items-center justify-center'}`}>
+
           {loading && (
-            <div className="flex items-center justify-center py-20">
+            <div className="flex flex-col items-center justify-center py-16 gap-3">
               <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
+              <p className="text-xs text-gray-400">সর্বশেষ বাজারদর নেওয়া হচ্ছে…</p>
             </div>
           )}
 
           {!hasSearched && !loading && (
             <div className="flex items-center justify-center h-full">
               <div className="text-center max-w-xs">
-                <div className="w-14 h-14 bg-gradient-to-br from-amber-100 to-orange-200 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-sm">
-                  <DollarSign className="w-7 h-7 text-amber-600" />
-                </div>
-                <h2 className="text-base font-bold text-gray-800 mb-1">বাজার মূল্য দেখুন</h2>
-                <p className="text-xs text-gray-500 mb-4">জেলা ও পণ্য সিলেক্ট করে "দেখুন" বাটনে ক্লিক করুন</p>
-                <button onClick={fetchPrices} className="bg-gradient-to-r from-amber-500 to-orange-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-amber-200/30 hover:shadow-lg active:scale-95 transition-all">
-                  দাম দেখুন
-                </button>
+                <div className="w-16 h-16 bg-gradient-to-br from-amber-100 to-orange-200 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm text-3xl">🌾</div>
+                <h2 className="text-lg font-bold text-gray-800 mb-1">বাজার মূল্য দেখুন</h2>
+                <p className="text-sm text-gray-500 mb-5">জেলা ও পণ্য সিলেক্ট করে দেখুন বাংলাদেশের সর্বশেষ বাজারদর</p>
+                <button onClick={fetchPrices} className="bg-gradient-to-r from-amber-500 to-orange-600 text-white px-6 py-3 rounded-2xl text-sm font-bold shadow-md shadow-amber-200/40 hover:shadow-lg active:scale-95 transition-all">দাম দেখুন</button>
               </div>
             </div>
           )}
@@ -115,90 +138,91 @@ export default function MarketPricesPage() {
           {hasSearched && !loading && prices.length === 0 && (
             <div className="flex items-center justify-center h-full">
               <div className="text-center max-w-xs px-4">
-                <DollarSign className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                <p className="text-xs font-semibold text-gray-600">কোন মূল্য তথ্য পাওয়া যায়নি</p>
-                <p className="text-[11px] text-gray-400 mt-1 leading-relaxed">এই এলাকা ও পণ্যের জন্য এখন কোনো তথ্য নেই। অন্য জেলা বা পণ্য বাছাই করে দেখুন।</p>
+                <div className="text-4xl mb-3">🔍</div>
+                <p className="text-sm font-semibold text-gray-700">কোন মূল্য তথ্য পাওয়া যায়নি</p>
+                <p className="text-xs text-gray-400 mt-1.5 leading-relaxed">{error || "এই এলাকা ও পণ্যের জন্য এখন কোনো তথ্য নেই। অন্য জেলা বা পণ্য বাছাই করে দেখুন।"}</p>
               </div>
             </div>
           )}
 
           {hasSearched && !loading && prices.length > 0 && (
-            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-              <div className="px-4 py-2.5 bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-100 flex items-center gap-2">
-                <BarChart3 className="w-4 h-4 text-amber-500" />
-                <span className="text-xs font-extrabold text-gray-700">
-                  {districtBn}
-                  {commodity && <> · {commodityBn}</>}
-                </span>
-                <span className="ml-auto text-[10px] font-bold text-amber-500">{prices.length} টি রেকর্ড</span>
+            <div className="space-y-3 pb-2">
+              {/* ── Header summary ── */}
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="text-sm font-extrabold text-gray-800">{districtBn}</h3>
+                  {commodity && <span className="text-sm font-bold text-amber-600">· {commodityBn}</span>}
+                </div>
+                <div className="flex items-center gap-2 text-[11px] text-gray-400">
+                  <CalendarDays className="w-3.5 h-3.5" />
+                  <span>সর্বশেষ আপডেট: {updatedAt ? formatDateBN(updatedAt) : "—"}</span>
+                  <span className="text-gray-300">|</span>
+                  <span className="font-semibold text-gray-500">{prices.length} টি পণ্য</span>
+                </div>
+                {sorted.length >= 2 && (
+                  <div className="grid grid-cols-2 gap-2 mt-3">
+                    <div className="bg-red-50 rounded-xl px-3 py-2">
+                      <p className="text-[10px] font-bold text-red-400 uppercase">সর্বোচ্চ</p>
+                      <p className="text-sm font-extrabold text-red-600">{PRODUCT_EMOJI[high.commodity] || "🌾"} {formatPrice(high.price_per_kg)}</p>
+                    </div>
+                    <div className="bg-emerald-50 rounded-xl px-3 py-2">
+                      <p className="text-[10px] font-bold text-emerald-400 uppercase">সর্বনিম্ন</p>
+                      <p className="text-sm font-extrabold text-emerald-600">{PRODUCT_EMOJI[low.commodity] || "🌾"} {formatPrice(low.price_per_kg)}</p>
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[500px] text-xs">
-                  <thead>
-                    <tr className="bg-gray-50/80 border-b border-gray-100">
-                      <th className="text-left px-3 py-2 text-[10px] font-bold text-gray-400 uppercase">পণ্য</th>
-                      <th className="text-left px-3 py-2 text-[10px] font-bold text-gray-400 uppercase">বাজার</th>
-                      <th className="text-left px-3 py-2 text-[10px] font-bold text-gray-400 uppercase">জেলা</th>
-                      <th className="text-right px-3 py-2 text-[10px] font-bold text-gray-400 uppercase">মূল্য</th>
-                      <th className="text-center px-3 py-2 text-[10px] font-bold text-gray-400 uppercase">প্রবণতা</th>
-                      <th className="text-right px-3 py-2 text-[10px] font-bold text-gray-400 uppercase">তারিখ</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50">
-                    {prices.map(p => {
-                      const tr = trend(prices, p.commodity)
-                      return (
-                        <tr key={p.id} className="hover:bg-amber-50/30 transition-colors">
-                          <td className="px-3 py-2 font-bold text-gray-900">{COMMODITIES.find(c => c.name_en === p.commodity)?.name_bn || p.commodity}</td>
-                          <td className="px-3 py-2 text-gray-600">{p.market}</td>
-                          <td className="px-3 py-2 text-gray-500">{DISTRICTS.find(d => d.name_en === p.district)?.name_bn || p.district}</td>
-                          <td className="px-3 py-2 font-extrabold text-right text-emerald-600">{formatPrice(p.price_per_kg)}</td>
-                          <td className="px-3 py-2 text-center">
-                            {tr === "up" ? <TrendingUp className="w-3.5 h-3.5 text-red-500 inline" /> : tr === "down" ? <TrendingDown className="w-3.5 h-3.5 text-green-500 inline" /> : <Minus className="w-3.5 h-3.5 text-gray-300 inline" />}
-                          </td>
-                          <td className="px-3 py-2 text-[10px] text-gray-400 text-right">{formatDate(p.date)}</td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
+
+              {/* ── Product cards ── */}
+              <div className="grid grid-cols-1 gap-2">
+                {sorted.map(p => {
+                  const bengali = COMMODITIES.find(c => c.name_en === p.commodity)?.name_bn || p.commodity
+                  const unitBn = UNIT_BN[p.unit || "kg"] || "প্রতি কেজি"
+                  return (
+                    <div key={p.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-amber-200 transition-all px-4 py-3 flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center text-xl shrink-0">
+                        {PRODUCT_EMOJI[p.commodity] || "🌾"}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-gray-800 truncate">{bengali}</p>
+                        <p className="text-[11px] text-gray-400 truncate">
+                          {isNational ? unitBn : `${p.market} · ${unitBn}`}
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-base font-extrabold text-emerald-600">{formatPrice(p.price_per_kg)}</p>
+                        <p className="text-[10px] text-gray-300 font-semibold">{unitBn}</p>
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
             </div>
           )}
 
-          {/* ── Price history chart (30 days daily / 12 months monthly) ── */}
+          {/* ── Price history chart ── */}
           {hasSearched && !loading && prices.length > 0 && commodity && history.length >= 2 && (
-            <PriceHistoryChart
-              data={history.map(h => ({ date: h.date, price: h.price_per_kg }))}
-              commodityBn={commodityBn}
-              districtBn={districtBn}
-            />
+            <PriceHistoryChart data={history.map(h => ({ date: h.date, price: h.price_per_kg }))} commodityBn={commodityBn} districtBn={districtBn} />
           )}
-
           {hasSearched && !loading && prices.length > 0 && commodity && history.length === 1 && (
-            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 text-center">
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 text-center mt-3">
               <p className="text-xs font-bold text-gray-700">📈 {commodityBn} — দামের ইতিহাস</p>
-              <p className="text-xs text-gray-400 mt-1.5 leading-relaxed">
-                এখন পর্যন্ত মাত্র ১টি দামের রেকর্ড আছে। প্রতিটি হালনাগাদে নতুন দাম যোগ হয় — কিছুদিন পর আবার দেখুন।
-              </p>
+              <p className="text-xs text-gray-400 mt-1.5 leading-relaxed">এখন পর্যন্ত মাত্র ১টি রেকর্ড আছে — পরবর্তী হালনাগাদে ইতিহাস দেখাবে।</p>
             </div>
           )}
         </div>
 
         {/* ── Source attribution ── */}
-        <div className="shrink-0 pt-2.5 pb-1 text-center">
-          {source === "wfp" ? (
-            <p className="text-[10px] text-gray-400 font-medium leading-relaxed">
-              দামের উৎস: বিশ্ব খাদ্য কর্মসূচি (WFP) — জেলা পর্যায়ের মাসিক বাজারদর (কৃষি বিপণন অধিদপ্তর সূত্রে)
-              {updatedAt ? <> · সর্বশেষ আপডেট: {formatDateBN(updatedAt)}</> : null}
+        {(source === "dam" || source === "wfp") && (
+          <div className="shrink-0 pt-3 pb-1 flex items-center justify-center gap-1.5">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+            <p className="text-[10px] text-gray-400 font-medium">
+              {source === "wfp"
+                ? "উৎস: বিশ্ব খাদ্য কর্মসূচি (WFP) — জেলা পর্যায়ের মাসিক বাজারদর"
+                : "উৎস: কৃষি বিপণন অধিদপ্তর (DAM) — জাতীয় দৈনিক বাজারদর"}
             </p>
-          ) : source === "dam" ? (
-            <p className="text-[10px] text-gray-400 font-medium leading-relaxed">
-              দামের উৎস: কৃষি বিপণন অধিদপ্তর (DAM) — জাতীয় দৈনিক বাজারদর
-              {updatedAt ? <> · সর্বশেষ আপডেট: {formatDateBN(updatedAt)}</> : null}
-            </p>
-          ) : null}
-        </div>
+          </div>
+        )}
       </div>
     </ToolPageLayout>
   )
