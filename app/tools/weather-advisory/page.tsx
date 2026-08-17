@@ -224,7 +224,7 @@ export default function WeatherAdvisoryPage() {
                       </div>
                     )}
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div className="space-y-2.5">
                       {advisory.irrigation && (
                         <div className="bg-gradient-to-br from-sky-50 to-blue-50 rounded-2xl border border-sky-100 p-4 shadow-sm">
                           <p className="text-[11px] font-bold text-sky-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5"><Droplets className="w-3.5 h-3.5" />সেচ</p>
