@@ -88,7 +88,7 @@ export default function MarketPricesPage() {
   const downloadCsv = () => {
     if (prices.length === 0) return
     const rows = [
-      ["পণ্য", "বাজার", "জেলা", "মূল্য (টাকা)", "একক", "তারিখ"],
+      ["পণ্য", "বাজার", "জেলা", "খুচরা মূল্য (টাকা)", "একক", "তারিখ"],
       ...prices.map(p => [
         COMMODITIES.find(c => c.name_en === p.commodity)?.name_bn || p.commodity,
         p.market,
@@ -181,9 +181,12 @@ export default function MarketPricesPage() {
             <div className="space-y-3 pb-2">
               {/* ── Header summary ── */}
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-                <div className="flex items-center gap-2 mb-1">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
                   <h3 className="text-sm font-extrabold text-gray-800">{districtBn}</h3>
                   {commodity && <span className="text-sm font-bold text-amber-600">· {commodityBn}</span>}
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold">
+                    খুচরা মূল্য
+                  </span>
                 </div>
                 <div className="flex items-center gap-2 text-[11px] text-gray-400">
                   <CalendarDays className="w-3.5 h-3.5" />
