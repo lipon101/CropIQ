@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react"
 import { DISTRICTS } from "@/lib/constants/districts"
 import { COMMODITIES } from "@/lib/constants/crops"
-import { Loader2, Search, MapPin, Store, CalendarDays, ShieldCheck, Sprout } from "lucide-react"
+import { Loader2, Search, MapPin, Store, CalendarDays, ShieldCheck, Sprout, Download } from "lucide-react"
 import { ToolPageLayout } from "@/components/tools/ToolPageLayout"
 import PriceHistoryChart from "@/components/tools/PriceHistoryChart"
 import { formatPrice, formatDateBN } from "@/lib/utils"
@@ -80,12 +80,33 @@ export default function MarketPricesPage() {
     } finally { setLoading(false) }
   }
 
+  const downloadCsv = () => {
+    if (prices.length === 0) return
+    const rows = [
+      ["পণ্য", "বাজার", "জেলা", "মূল্য (টাকা)", "একক", "তারিখ"],
+      ...prices.map(p => [
+        COMMODITIES.find(c => c.name_en === p.commodity)?.name_bn || p.commodity,
+        p.market,
+        DISTRICTS.find(d => d.name_en === p.district)?.name_bn || p.district,
+        p.price_per_kg.toFixed(2),
+        p.unit || "kg",
+        p.date,
+      ]),
+    ]
+    const csv = "\uFEFF" + rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n")
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `cropiq-prices-${(district === NATIONAL_MARKET ? "sara-desh" : district).toLowerCase()}-${new Date().toISOString().slice(0, 10)}.csv`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
   // Sort prices: highest to lowest for a clear "top item" feel
   const sorted = useMemo(() => [...prices].sort((a, b) => b.price_per_kg - a.price_per_kg), [prices])
-
-  // Highest/lowest for a mini highlight
-  const high = sorted[0]
-  const low = sorted[sorted.length - 1]
 
   return (
     <ToolPageLayout title="বাজার মূল্য বোর্ড" icon={<Sprout className="w-4 h-4 text-white" />} currentIndex={2}>
@@ -158,19 +179,11 @@ export default function MarketPricesPage() {
                   <span>সর্বশেষ আপডেট: {updatedAt ? formatDateBN(updatedAt) : "—"}</span>
                   <span className="text-gray-300">|</span>
                   <span className="font-semibold text-gray-500">{prices.length} টি পণ্য</span>
+                  <button onClick={downloadCsv} className="ml-auto inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 text-[11px] font-bold transition-colors">
+                    <Download className="w-3.5 h-3.5" /> CSV ডাউনলোড
+                  </button>
                 </div>
-                {sorted.length >= 2 && (
-                  <div className="grid grid-cols-2 gap-2 mt-3">
-                    <div className="bg-red-50 rounded-xl px-3 py-2">
-                      <p className="text-[10px] font-bold text-red-400 uppercase">সর্বোচ্চ</p>
-                      <p className="text-sm font-extrabold text-red-600">{PRODUCT_EMOJI[high.commodity] || "🌾"} {formatPrice(high.price_per_kg)}</p>
-                    </div>
-                    <div className="bg-emerald-50 rounded-xl px-3 py-2">
-                      <p className="text-[10px] font-bold text-emerald-400 uppercase">সর্বনিম্ন</p>
-                      <p className="text-sm font-extrabold text-emerald-600">{PRODUCT_EMOJI[low.commodity] || "🌾"} {formatPrice(low.price_per_kg)}</p>
-                    </div>
-                  </div>
-                )}
+
               </div>
 
               {/* ── Product cards ── */}
