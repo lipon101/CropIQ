@@ -179,11 +179,11 @@ export default function WeatherAdvisoryPage() {
                 <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showForecast ? "rotate-180" : ""}`} />
               </button>
               {showForecast && (
-                <div className="grid grid-cols-7 gap-1.5 bg-white rounded-2xl border border-gray-100 shadow-sm p-3">
+                <div className="flex justify-center gap-1.5 bg-white rounded-2xl border border-gray-100 shadow-sm p-3 flex-wrap">
                   {weather.forecast.map((day, i) => {
                     const dayEn = new Date(day.date).toLocaleDateString("en", { weekday: "short" })
                     return (
-                      <div key={i} className={`text-center rounded-xl py-2.5 px-1 ${i === 0 ? "bg-leaf-50 border border-leaf-100" : "hover:bg-gray-50 transition-colors"}`}>
+                      <div key={i} className={`w-[72px] text-center rounded-xl py-2.5 px-1 ${i === 0 ? "bg-leaf-50 border border-leaf-100" : "hover:bg-gray-50 transition-colors"}`}>
                         <p className={`text-[10px] font-bold ${i === 0 ? "text-leaf-600" : "text-gray-400"}`}>{i === 0 ? "আজ" : WDAY[dayEn] || dayEn}</p>
                         <div className="text-xl my-1.5">{WI[day.icon] || "🌤️"}</div>
                         <p className="text-xs font-bold text-gray-800">{Math.round(day.temp_max)}° <span className="text-gray-400 font-normal">{Math.round(day.temp_min)}°</span></p>
