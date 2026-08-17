@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic"
 
 import { NextRequest, NextResponse } from "next/server"
 import { DISTRICTS } from "@/lib/constants/districts"
+import { getSeasonalOutlook } from "@/lib/seasonal"
 
 const weatherDescBn: Record<string, string> = {
   "light rain": "হালকা বৃষ্টি", "moderate rain": "মাঝারি বৃষ্টি", "heavy intensity rain": "ভারী বৃষ্টি",
@@ -56,7 +57,10 @@ export async function GET(req: NextRequest) {
     const forecast = Array.from(dailyMap.values()).slice(0, 7)
     const current = forecast[0]
 
-    return NextResponse.json({ district, current, forecast })
+    const crop = req.nextUrl.searchParams.get("crop") || ""
+    const seasonal = crop ? getSeasonalOutlook(crop) : getSeasonalOutlook("Rice")
+
+    return NextResponse.json({ district, current, forecast, seasonal })
   } catch (error) {
     console.error("আবহাওয়া ত্রুটি:", error)
     return NextResponse.json({ error: "আবহাওয়ার তথ্য সংগ্রহ ব্যর্থ" }, { status: 500 })

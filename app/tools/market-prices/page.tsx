@@ -205,16 +205,25 @@ export default function MarketPricesPage() {
                 {pageItems.map(p => {
                   const bengali = COMMODITIES.find(c => c.name_en === p.commodity)?.name_bn || p.commodity
                   const unitBn = UNIT_BN[p.unit || "kg"] || "প্রতি কেজি"
+                  const isDaily = p.id.startsWith("dam-")
+                  const periodLabel = isDaily ? "আজকের দাম" : "মাসিক দাম"
+                  const periodStyle = isDaily
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                    : "bg-sky-50 text-sky-700 border-sky-200"
                   return (
                     <div key={p.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-amber-200 transition-all px-4 py-3 flex items-center gap-3">
                       <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center text-xl shrink-0">
                         {PRODUCT_EMOJI[p.commodity] || "🌾"}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-gray-800 truncate">{bengali}</p>
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-sm font-bold text-gray-800 truncate">{bengali}</p>
+                          <span className={`inline-flex items-center px-1.5 py-px rounded-full border text-[9px] font-bold shrink-0 ${periodStyle}`}>{periodLabel}</span>
+                        </div>
                         <p className="text-[11px] text-gray-400 truncate">
                           {isNational ? unitBn : `${p.market} · ${unitBn}`}
                         </p>
+                        <p className="text-[10px] text-gray-300 mt-0.5">{formatDateBN(p.date)}</p>
                       </div>
                       <div className="text-right shrink-0">
                         <p className="text-base font-extrabold text-emerald-600">{formatPrice(p.price_per_kg)}</p>

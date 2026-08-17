@@ -11,6 +11,7 @@ import { createClient } from "@/lib/supabase/client"
 interface ForecastDay { date: string; temp: number; temp_min: number; temp_max: number; humidity: number; rain_mm: number; wind_kmh: number; description?: string; description_bn?: string; icon: string }
 interface WeatherData { district: string; current: ForecastDay; forecast: ForecastDay[] }
 interface Advisory { summary: string; actions: string[]; irrigation: string; warning: string }
+interface SeasonalOutlook { season: { name_bn: string; desc_bn: string; hazards_bn: string[] }; crop: { crop_bn: string } | null; phase: { phase_bn: string; action_bn: string } | null }
 
 const WI: Record<string, string> = { "01d": "☀️", "01n": "🌙", "02d": "⛅", "02n": "☁️", "03d": "☁️", "03n": "☁️", "04d": "☁️", "04n": "☁️", "09d": "🌧️", "09n": "🌧️", "10d": "🌦️", "10n": "🌧️", "11d": "⛈️", "11n": "⛈️", "13d": "🌨️", "13n": "🌨️", "50d": "🌫️", "50n": "🌫️" }
 const WDAY: Record<string, string> = { "Sat": "শনি", "Sun": "রবি", "Mon": "সোম", "Tue": "মঙ্গল", "Wed": "বুধ", "Thu": "বৃহঃ", "Fri": "শুক্র" }
@@ -25,16 +26,17 @@ export default function WeatherAdvisoryPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [showForecast, setShowForecast] = useState(false)
+  const [seasonal, setSeasonal] = useState<SeasonalOutlook | null>(null)
 
   const districtBn = DISTRICTS.find(d => d.name_en === district)?.name_bn || district
   const cropBn = CROPS.find(c => c.name_en === crop)?.name_bn || crop
 
   const fetchAll = async () => {
-    setLoading(true); setError(""); setAdvisory(null); setWeather(null)
+    setLoading(true); setError(""); setAdvisory(null); setWeather(null); setSeasonal(null)
     try {
-      const wr = await fetch(`/api/weather?district=${encodeURIComponent(district)}`)
+      const wr = await fetch(`/api/weather?district=${encodeURIComponent(district)}&crop=${encodeURIComponent(crop)}`)
       if (!wr.ok) throw new Error("আবহাওয়া তথ্য পাওয়া যায়নি")
-      const wd = await wr.json(); setWeather(wd)
+      const wd = await wr.json(); setWeather(wd); setSeasonal(wd.seasonal || null)
       const ar = await fetch("/api/advisory", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ district, crop, forecast: wd.forecast }) })
       if (ar.ok) { const ad = await ar.json(); setAdvisory(ad.advisory) }
 
@@ -145,6 +147,37 @@ export default function WeatherAdvisoryPage() {
                       })}
                     </div>
                   </div>
+                </div>
+              )}
+
+              {/* ── Seasonal Outlook ── */}
+              {seasonal && (
+                <div className="bg-gradient-to-br from-violet-50 to-fuchsia-50 rounded-2xl border border-violet-100 p-3.5 shadow-sm">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-lg">🗓️</span>
+                    <div>
+                      <p className="text-xs font-bold text-violet-800">{seasonal.season.name_bn}</p>
+                      <p className="text-[10px] text-violet-500 font-semibold">মৌসুমভিত্তিক পরামর্শ</p>
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-violet-700 leading-relaxed mb-2">{seasonal.season.desc_bn}</p>
+                  {seasonal.season.hazards_bn && seasonal.season.hazards_bn.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mb-2">
+                      {seasonal.season.hazards_bn.map((h, i) => (
+                        <span key={i} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-violet-100 text-violet-700 text-[10px] font-bold">
+                          ⚠️ {h}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  {seasonal.phase ? (
+                    <div className="bg-white/70 rounded-xl border border-violet-100 p-2.5">
+                      <p className="text-[11px] font-bold text-violet-800">{seasonal.crop?.crop_bn || ""} — {seasonal.phase.phase_bn}</p>
+                      <p className="text-[11px] text-violet-700 leading-relaxed mt-1">{seasonal.phase.action_bn}</p>
+                    </div>
+                  ) : (
+                    <p className="text-[11px] text-violet-500">এই ফসলের নির্দিষ্ট মৌসুম-উইন্ডো তথ্য এখনও যোগ করা হয়নি।</p>
+                  )}
                 </div>
               )}
 
