@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react"
 import { DISTRICTS } from "@/lib/constants/districts"
 import { COMMODITIES } from "@/lib/constants/crops"
-import { Loader2, Search, MapPin, Store, CalendarDays, ShieldCheck, Sprout, Download, ChevronLeft, ChevronRight, ExternalLink } from "lucide-react"
+import { Loader2, Search, MapPin, Store, CalendarDays, Sprout, Download, ChevronLeft, ChevronRight } from "lucide-react"
 import { ToolPageLayout } from "@/components/tools/ToolPageLayout"
 import PriceHistoryChart from "@/components/tools/PriceHistoryChart"
 import { formatPrice, formatDateBN } from "@/lib/utils"
@@ -271,26 +271,7 @@ export default function MarketPricesPage() {
           )}
         </div>
 
-        {/* ── Source attribution (WFP, clickable) ── */}
-        {(source === "dam" || source === "wfp") && (
-          <div className="shrink-0 pt-3 pb-1">
-            <a
-              href="https://data.humdata.org/dataset/wfp-food-prices-for-bangladesh"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-between gap-2 rounded-xl px-3 py-2.5 border shadow-sm hover:shadow bg-white border-gray-100 hover:border-amber-200 transition-all group"
-            >
-              <span className="flex items-center gap-2 min-w-0">
-                <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span className="min-w-0">
-                  <span className="block text-[11px] font-bold text-gray-700">বিশ্ব খাদ্য কর্মসূচি (WFP)</span>
-                  <span className="block text-[10px] text-gray-400">জেলা পর্যায়ের মাসিক বাজারদর</span>
-                </span>
-              </span>
-              <ExternalLink className="w-3.5 h-3.5 text-amber-600 shrink-0 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-            </a>
-          </div>
-        )}
+        {/* ── Source attribution (removed — no sources shown) ── */}
       </div>
     </ToolPageLayout>
   )
