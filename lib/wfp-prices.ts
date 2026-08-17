@@ -75,6 +75,12 @@ const COMMODITY_MAP: { wfpName: string; commodity: string; unit: string; multipl
   { wfpName: "Sugar", commodity: "Sugar", unit: "kg" },
   { wfpName: "Oil (soybean, fortified)", commodity: "Soybean Oil", unit: "liter" },
   { wfpName: "Oil (palm)", commodity: "Palm Oil", unit: "liter" },
+  { wfpName: "Rice (coarse)", commodity: "Rice (Atop)", unit: "kg" },
+  { wfpName: "Fish (live, pangasius)", commodity: "Fish (Pangasius)", unit: "kg" },
+  { wfpName: "Snake gourd", commodity: "Snake Gourd", unit: "kg" },
+  { wfpName: "Gourd (bottle)", commodity: "Bottle Gourd", unit: "pcs" },
+  { wfpName: "Spinach (malabar)", commodity: "Spinach", unit: "kg" },
+  { wfpName: "Spinach (red)", commodity: "Spinach", unit: "kg" },
 ]
 
 const COMMODITY_BY_WFP = new Map(COMMODITY_MAP.map((m) => [m.wfpName, m]))

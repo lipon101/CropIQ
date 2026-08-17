@@ -36,15 +36,27 @@ export interface DamPrice {
  */
 const DAM_MAP: { damName: string; commodity: string; unit: string; multiplier?: number }[] = [
   { damName: "Aman-Fine", commodity: "Rice (Atop)", unit: "kg" },
+  { damName: "Aman-Medium", commodity: "Rice (Aman Medium)", unit: "kg" },
+  { damName: "Aman-Coarse", commodity: "Rice (Aman Coarse)", unit: "kg" },
   { damName: "Boro-Fine", commodity: "Rice (Miniket)", unit: "kg" },
+  { damName: "Boro-Medium", commodity: "Rice (Boro Medium)", unit: "kg" },
+  { damName: "Boro-Coarse", commodity: "Rice (Boro Coarse)", unit: "kg" },
   { damName: "Ata (packet)", commodity: "Wheat Flour", unit: "kg" },
   { damName: "Onion-local", commodity: "Onion (Local)", unit: "kg" },
   { damName: "Garlic-local", commodity: "Garlic", unit: "kg" },
+  { damName: "Garlic-Imported", commodity: "Garlic (Imported)", unit: "kg" },
   { damName: "Green Chili", commodity: "Green Chili", unit: "kg" },
   { damName: "Ginger-local", commodity: "Ginger", unit: "kg" },
+  { damName: "Ginger-Imported", commodity: "Ginger (Imported)", unit: "kg" },
   { damName: "Beef", commodity: "Beef", unit: "kg" },
+  { damName: "Mutton", commodity: "Mutton", unit: "kg" },
   { damName: "Farm-raised Hen", commodity: "Chicken (Broiler)", unit: "kg" },
   { damName: "Egg Farm-Red", commodity: "Egg (Farm)", unit: "dozen", multiplier: 3 },
+  { damName: "Sugar (Local)", commodity: "Sugar", unit: "kg" },
+  { damName: "Iodized Salt (Packed)", commodity: "Iodized Salt", unit: "kg" },
+  { damName: "Mung", commodity: "Mung", unit: "kg" },
+  { damName: "Gram-Whole", commodity: "Gram (Chhola)", unit: "kg" },
+  { damName: "Soybean", commodity: "Soybean", unit: "kg" },
 ]
 
 // <span class="stockbox"><a href="#Aman-Fine">Aman-Fine</a>:&nbsp; 72.00 - 75.00 <span ...>▲0.00% </span></span>

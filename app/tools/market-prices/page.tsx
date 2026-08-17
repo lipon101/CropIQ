@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react"
 import { DISTRICTS } from "@/lib/constants/districts"
 import { COMMODITIES } from "@/lib/constants/crops"
-import { Loader2, Search, MapPin, Store, CalendarDays, ShieldCheck, Sprout, Download } from "lucide-react"
+import { Loader2, Search, MapPin, Store, CalendarDays, ShieldCheck, Sprout, Download, ChevronLeft, ChevronRight } from "lucide-react"
 import { ToolPageLayout } from "@/components/tools/ToolPageLayout"
 import PriceHistoryChart from "@/components/tools/PriceHistoryChart"
 import { formatPrice, formatDateBN } from "@/lib/utils"
@@ -27,6 +27,10 @@ const PRODUCT_EMOJI: Record<string, string> = {
   "Okra": "🌿", "Pumpkin": "🎃", "Bitter Gourd": "🥒", "Ridge Gourd": "🥒", "Cucumber": "🥒",
   "Banana": "🍌", "Mango": "🥭", "Papaya": "🧡", "Egg (Farm)": "🥚", "Chicken (Broiler)": "🍗",
   "Beef": "🥩", "Fish (Rui)": "🐟", "Milk": "🥛", "Sugar": "🍬", "Soybean Oil": "🛢️", "Palm Oil": "🛢️",
+  "Rice (Aman Medium)": "🍚", "Rice (Aman Coarse)": "🍚", "Rice (Boro Medium)": "🍚", "Rice (Boro Coarse)": "🍚",
+  "Garlic (Imported)": "🧄", "Ginger (Imported)": "🫚", "Iodized Salt": "🧂", "Mung": "🫘",
+  "Gram (Chhola)": "🫘", "Soybean": "🫛", "Mutton": "🍖", "Fish (Pangasius)": "🐟",
+  "Spinach": "🥬", "Snake Gourd": "🥒", "Bottle Gourd": "🎃",
 }
 
 const UNIT_BN: Record<string, string> = {
@@ -43,6 +47,7 @@ export default function MarketPricesPage() {
   const [district, setDistrict] = useState("জাতীয় বাজার")
   const [commodity, setCommodity] = useState("")
   const [error, setError] = useState("")
+  const [page, setPage] = useState(0)
 
   const NATIONAL_MARKET = "জাতীয় বাজার"
   const isNational = district === NATIONAL_MARKET
@@ -53,7 +58,7 @@ export default function MarketPricesPage() {
   const commodityBn = commodity ? COMMODITIES.find(c => c.name_en === commodity)?.name_bn || commodity : ""
 
   const fetchPrices = async () => {
-    setLoading(true); setHasSearched(true); setError("")
+    setLoading(true); setHasSearched(true); setError(""); setPage(0)
     try {
       const p = new URLSearchParams()
       if (district) p.set("district", district)
@@ -107,6 +112,12 @@ export default function MarketPricesPage() {
 
   // Sort prices: highest to lowest for a clear "top item" feel
   const sorted = useMemo(() => [...prices].sort((a, b) => b.price_per_kg - a.price_per_kg), [prices])
+
+  // Pagination: 6 per page with prev/next navigation
+  const PAGE_SIZE = 6
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE))
+  const safePage = Math.min(page, totalPages - 1)
+  const pageItems = sorted.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE)
 
   return (
     <ToolPageLayout title="বাজার মূল্য বোর্ড" icon={<Sprout className="w-4 h-4 text-white" />} currentIndex={2}>
@@ -188,7 +199,7 @@ export default function MarketPricesPage() {
 
               {/* ── Product cards ── */}
               <div className="grid grid-cols-1 gap-2">
-                {sorted.map(p => {
+                {pageItems.map(p => {
                   const bengali = COMMODITIES.find(c => c.name_en === p.commodity)?.name_bn || p.commodity
                   const unitBn = UNIT_BN[p.unit || "kg"] || "প্রতি কেজি"
                   return (
@@ -210,6 +221,41 @@ export default function MarketPricesPage() {
                   )
                 })}
               </div>
+
+              {/* ── Pagination ── */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-1.5 mt-1">
+                  <button
+                    onClick={() => setPage(p => Math.max(0, p - 1))}
+                    disabled={safePage === 0}
+                    className="w-9 h-9 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-amber-50 hover:border-amber-200 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition-all"
+                    aria-label="আগের পেজ"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setPage(i)}
+                      className={`w-9 h-9 rounded-xl text-xs font-bold transition-all ${
+                        i === safePage
+                          ? "bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-md shadow-amber-200/40"
+                          : "bg-white border border-gray-200 text-gray-500 hover:bg-amber-50"
+                      }`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+                    disabled={safePage === totalPages - 1}
+                    className="w-9 h-9 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-amber-50 hover:border-amber-200 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition-all"
+                    aria-label="পরের পেজ"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
