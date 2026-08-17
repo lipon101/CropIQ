@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react"
 import { DISTRICTS } from "@/lib/constants/districts"
 import { COMMODITIES } from "@/lib/constants/crops"
-import { Loader2, Search, MapPin, Store, CalendarDays, ShieldCheck, Sprout, Download, ChevronLeft, ChevronRight } from "lucide-react"
+import { Loader2, Search, MapPin, Store, CalendarDays, ShieldCheck, Sprout, Download, ChevronLeft, ChevronRight, ExternalLink } from "lucide-react"
 import { ToolPageLayout } from "@/components/tools/ToolPageLayout"
 import PriceHistoryChart from "@/components/tools/PriceHistoryChart"
 import { formatPrice, formatDateBN } from "@/lib/utils"
@@ -271,15 +271,46 @@ export default function MarketPricesPage() {
           )}
         </div>
 
-        {/* ── Source attribution ── */}
+        {/* ── Source attribution (modern, clickable) ── */}
         {(source === "dam" || source === "wfp") && (
-          <div className="shrink-0 pt-3 pb-1 flex items-center justify-center gap-1.5">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-            <p className="text-[10px] text-gray-400 font-medium">
-              {source === "wfp"
-                ? "উৎস: বিশ্ব খাদ্য কর্মসূচি (WFP) — জেলা পর্যায়ের মাসিক বাজারদর"
-                : "উৎস: কৃষি বিপণন অধিদপ্তর (DAM) — জাতীয় দৈনিক বাজারদর"}
-            </p>
+          <div className="shrink-0 pt-3 pb-1">
+            {source === "dam" ? (
+              <a
+                href="https://market.dam.gov.bd/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-between gap-2 bg-white border border-gray-100 hover:border-amber-200 rounded-xl px-3.5 py-2.5 shadow-sm hover:shadow transition-all group"
+              >
+                <span className="flex items-center gap-2 min-w-0">
+                  <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <span className="text-[11px] text-gray-500 min-w-0">
+                    <b className="text-gray-700">কৃষি বিপণন অধিদপ্তর (DAM)</b>
+                    <span className="text-gray-400"> · জাতীয় দৈনিক বাজারদর</span>
+                  </span>
+                </span>
+                <span className="flex items-center gap-1 text-[10px] font-bold text-amber-600 shrink-0">
+                  সোর্স দেখুন <ExternalLink className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                </span>
+              </a>
+            ) : (
+              <a
+                href="https://data.humdata.org/dataset/wfp-food-prices-for-bangladesh"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-between gap-2 bg-white border border-gray-100 hover:border-amber-200 rounded-xl px-3.5 py-2.5 shadow-sm hover:shadow transition-all group"
+              >
+                <span className="flex items-center gap-2 min-w-0">
+                  <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <span className="text-[11px] text-gray-500 min-w-0">
+                    <b className="text-gray-700">বিশ্ব খাদ্য কর্মসূচি (WFP)</b>
+                    <span className="text-gray-400"> · জেলা পর্যায়ের মাসিক বাজারদর</span>
+                  </span>
+                </span>
+                <span className="flex items-center gap-1 text-[10px] font-bold text-amber-600 shrink-0">
+                  সোর্স দেখুন <ExternalLink className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                </span>
+              </a>
+            )}
           </div>
         )}
       </div>
