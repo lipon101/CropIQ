@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useState } from "react"
 import { Sparkles, ChevronLeft, ChevronRight } from "lucide-react"
 
 interface SuggestionCarouselProps {
@@ -10,54 +10,22 @@ interface SuggestionCarouselProps {
   title?: string
 }
 
+const PAGE_SIZE = 3
+
 export default function SuggestionCarousel({
   suggestions,
   onSelect,
   disabled = false,
   title = "আরও জানতে চান?",
 }: SuggestionCarouselProps) {
-  const carouselRef = useRef<HTMLDivElement>(null)
-  const [activeIndex, setActiveIndex] = useState(0)
+  const [page, setPage] = useState(0)
 
   if (!suggestions.length) return null
 
-  // Support navigating through all suggestions (now up to 5)
-  const getClosestIndex = () => {
-    const el = carouselRef.current
-    if (!el) return 0
-    const children = Array.from(el.children) as HTMLElement[]
-    const viewCenter = el.scrollLeft + el.offsetWidth / 2
-    let closest = 0
-    let closestDist = Infinity
-    children.forEach((child, i) => {
-      const cardCenter = child.offsetLeft + child.offsetWidth / 2
-      const dist = Math.abs(cardCenter - viewCenter)
-      if (dist < closestDist) {
-        closestDist = dist
-        closest = i
-      }
-    })
-    return closest
-  }
+  const totalPages = Math.ceil(suggestions.length / PAGE_SIZE)
+  const visible = suggestions.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE)
 
-  const handleScroll = () => setActiveIndex(getClosestIndex())
-
-  const scrollTo = (i: number) => {
-    const el = carouselRef.current
-    if (!el) return
-    const children = Array.from(el.children) as HTMLElement[]
-    const target = children[i]
-    if (!target) return
-    el.scrollTo({
-      left: target.offsetLeft - (el.offsetWidth - target.offsetWidth) / 2,
-      behavior: "smooth",
-    })
-  }
-
-  const scroll = (dir: -1 | 1) => {
-    const next = Math.max(0, Math.min(suggestions.length - 1, getClosestIndex() + dir))
-    scrollTo(next)
-  }
+  const goTo = (p: number) => setPage(Math.max(0, Math.min(totalPages - 1, p)))
 
   return (
     <div className="shrink-0 pb-4 w-full flex flex-col items-center">
@@ -65,7 +33,7 @@ export default function SuggestionCarousel({
       <div className="flex items-center justify-between w-full max-w-2xl px-6 mb-3">
         {/* Empty left spacer of same width as navigation controls to guarantee perfect centering of title */}
         <div className="w-14 hidden sm:block" />
-        
+
         {/* Centered Pill Title */}
         <div className="flex items-center justify-center flex-1">
           <div className="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-100 rounded-full pl-2.5 pr-3.5 py-1 shadow-sm">
@@ -74,60 +42,57 @@ export default function SuggestionCarousel({
           </div>
         </div>
 
-        {/* LinkedIn-style Navigation Controls (< and >) */}
+        {/* LinkedIn-style Navigation Controls (< and >) — only reveal more when clicked */}
         <div className="flex items-center gap-1.5 shrink-0">
           <button
-            onClick={() => scroll(-1)}
-            disabled={activeIndex === 0}
+            onClick={() => goTo(page - 1)}
+            disabled={page === 0}
             className="w-7 h-7 rounded-full bg-white border border-gray-150 flex items-center justify-center hover:bg-emerald-50/20 hover:border-gray-300 disabled:opacity-25 disabled:cursor-default transition-all shadow-sm active:scale-95"
-            title="পূর্ববর্তী প্রশ্ন"
+            title="পূর্ববর্তী"
           >
             <ChevronLeft className="w-3.5 h-3.5 text-gray-600 font-extrabold" />
           </button>
           <button
-            onClick={() => scroll(1)}
-            disabled={activeIndex >= suggestions.length - 1}
+            onClick={() => goTo(page + 1)}
+            disabled={page >= totalPages - 1}
             className="w-7 h-7 rounded-full bg-white border border-gray-150 flex items-center justify-center hover:bg-emerald-50/20 hover:border-gray-300 disabled:opacity-25 disabled:cursor-default transition-all shadow-sm active:scale-95"
-            title="পরবর্তী প্রশ্ন"
+            title="আরও দেখুন"
           >
             <ChevronRight className="w-3.5 h-3.5 text-gray-600 font-extrabold" />
           </button>
         </div>
       </div>
 
-      {/* ── Slide Snapping Suggestions Container (Strict single-line layout, horizontal scrollable) ── */}
-      {/* The container is centered via justify-center but aligns to start for horizontal scrolling */}
-      <div
-        ref={carouselRef}
-        onScroll={handleScroll}
-        className="flex flex-nowrap items-center justify-start md:justify-center gap-4.5 max-w-full w-full overflow-x-auto scrollbar-hide px-6 py-2 scroll-smooth scroll-px-6 snap-x snap-mandatory"
-      >
-        {suggestions.slice(0, 5).map((s, i) => (
+      {/* ── Only 3 Questions Visible by Default — Remaining Stay Hidden Until Arrow Clicked ── */}
+      <div className="flex flex-nowrap items-center justify-start md:justify-center gap-4.5 max-w-full w-full overflow-x-auto scrollbar-hide px-6 py-2 scroll-smooth">
+        {visible.map((s, i) => (
           <button
-            key={i}
+            key={`${page}-${i}`}
             onClick={() => onSelect(s)}
             disabled={disabled}
-            className="group shrink-0 text-left snap-center w-auto max-w-[85%] sm:max-w-md px-5 py-3 bg-white border border-gray-150 border-l-2 border-l-leaf-500 hover:border-l-leaf-600 hover:border-gray-200 hover:shadow-md hover:bg-emerald-50/20 rounded-2xl text-[12.5px] font-extrabold text-gray-700 hover:text-leaf-700 transition-all duration-200 disabled:opacity-40 whitespace-nowrap shadow-sm active:scale-95"
+            className="group shrink-0 text-left w-auto max-w-[85%] sm:max-w-md px-5 py-3 bg-white border border-gray-150 border-l-2 border-l-leaf-500 hover:border-l-leaf-600 hover:border-gray-200 hover:shadow-md hover:bg-emerald-50/20 rounded-2xl text-[12.5px] font-extrabold text-gray-700 hover:text-leaf-700 transition-all duration-200 disabled:opacity-40 whitespace-nowrap shadow-sm active:scale-95 animate-in fade-in"
           >
             {s}
           </button>
         ))}
       </div>
 
-      {/* ── Center Active Indicator Dots ── */}
-      <div className="flex items-center justify-center gap-1.5 mt-2.5">
-        {suggestions.slice(0, 5).map((_, i) => (
-          <button
-            key={i}
-            onClick={() => scrollTo(i)}
-            className={`rounded-full transition-all duration-300 ${
-              i === activeIndex
-                ? "w-5 h-1.5 bg-leaf-400 shadow-sm shadow-leaf-200"
-                : "w-1.5 h-1.5 bg-gray-200 hover:bg-gray-300"
-            }`}
-          />
-        ))}
-      </div>
+      {/* ── Page Indicator Dots (only shown when there's more than 1 page) ── */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-1.5 mt-2.5">
+          {Array.from({ length: totalPages }).map((_, i) => (
+            <button
+              key={i}
+              onClick={() => goTo(i)}
+              className={`rounded-full transition-all duration-300 ${
+                i === page
+                  ? "w-5 h-1.5 bg-leaf-400 shadow-sm shadow-leaf-200"
+                  : "w-1.5 h-1.5 bg-gray-200 hover:bg-gray-300"
+              }`}
+            />
+          ))}
+        </div>
+      )}
     </div>
   )
 }
