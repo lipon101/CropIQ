@@ -217,20 +217,20 @@ export default function WeatherAdvisoryPage() {
                   <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showForecast ? "rotate-180" : ""}`} />
                 </button>
                 {showForecast && (
-                  <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 mt-4 pt-1 w-full">
+                  <div className="flex flex-wrap justify-center items-stretch gap-3 mt-4 pt-1 w-full">
                     {weather.forecast.map((f, i) => {
                       const day = WDAY[f.date.split(",")[0].trim()] || f.date.split(",")[0]
                       const dateNum = f.date.split(",")[1]?.trim() || f.date
                       return (
-                        <div key={i} className="p-3 bg-gray-50 border border-gray-100 rounded-2xl text-center space-y-2 hover:bg-leaf-50/30 hover:border-leaf-100/40 transition-all flex flex-col justify-between min-h-[140px] shadow-sm hover:shadow-md">
+                        <div key={i} className="w-[110px] sm:w-[120px] p-3 bg-gray-50 border border-gray-100 rounded-2xl text-center flex flex-col justify-between min-h-[140px] hover:bg-leaf-50/30 hover:border-leaf-100/40 transition-all shadow-sm hover:shadow-md shrink-0">
                           <div>
-                            <p className="text-xs font-bold text-gray-700">{day}</p>
-                            <p className="text-[10px] text-gray-400 font-semibold mt-0.5">{dateNum}</p>
+                            <p className="text-xs font-bold text-gray-700 truncate">{day}</p>
+                            <p className="text-[9px] text-gray-400 font-semibold mt-0.5 truncate">{dateNum}</p>
                           </div>
                           <div className="text-3xl py-1">{WI[f.icon] || "☀️"}</div>
                           <div>
                             <p className="text-xs font-extrabold text-gray-800">{Math.round(f.temp)}°</p>
-                            <p className="text-[9px] text-gray-400 font-bold truncate mt-0.5" title={f.description_bn || f.description}>{f.description_bn || f.description || ""}</p>
+                            <p className="text-[9px] text-gray-400 font-extrabold truncate mt-0.5" title={f.description_bn || f.description}>{f.description_bn || f.description || ""}</p>
                           </div>
                         </div>
                       )

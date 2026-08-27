@@ -311,26 +311,18 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Modern Premium Confirmation Modal */}
+      {/* Ultra-Premium Clean Minimal Delete Modal */}
       {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-x-hidden overflow-y-auto animate-in fade-in duration-200">
           <div 
-            className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" 
+            className="fixed inset-0 bg-gray-900/40 backdrop-blur-xs transition-opacity" 
             onClick={() => { if (!deleteLoading) setDeleteTarget(null) }}
           />
           
-          <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-gray-100 p-6 flex flex-col transform transition-all scale-in duration-300">
-            <button
-              onClick={() => setDeleteTarget(null)}
-              disabled={deleteLoading}
-              className="absolute top-4 right-4 p-1.5 rounded-xl hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-all"
-            >
-              <X className="w-4 h-4" />
-            </button>
-
-            <div className="flex items-start gap-4 mb-4 mt-2">
-              <div className="w-11 h-11 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center shrink-0">
-                <AlertTriangle className="w-5 h-5 text-red-500 animate-pulse" />
+          <div className="relative w-full max-w-sm bg-white rounded-2xl shadow-xl border border-gray-100 p-5 flex flex-col transform transition-all scale-in duration-200">
+            <div className="flex items-center gap-3 mb-3.5">
+              <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-4.5 h-4.5 text-red-500" />
               </div>
               <div>
                 <h3 className="text-sm font-extrabold text-gray-900">রেকর্ড মুছে ফেলতে চান?</h3>
@@ -340,33 +332,33 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl mb-5 flex items-center gap-3">
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${activityIcon(deleteTarget).bg}`}>
-                <div className="text-current"><Sprout className="w-4 h-4" /></div>
+            <div className="px-3.5 py-2.5 bg-gray-50 border border-gray-100 rounded-xl mb-4.5 flex items-center gap-2.5">
+              <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${activityIcon(deleteTarget).bg}`}>
+                <div className="text-current"><Sprout className="w-3.5 h-3.5" /></div>
               </div>
               <div className="min-w-0">
                 <p className="text-xs font-bold text-gray-700 truncate">{activityText(deleteTarget).title}</p>
-                <p className="text-[10px] text-gray-400 font-semibold mt-0.5">{formatDate(deleteTarget.created_at)}</p>
+                <p className="text-[10px] text-gray-400 font-bold mt-0.5">{formatDate(deleteTarget.created_at)}</p>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 justify-end">
+            <div className="flex items-center gap-2 justify-end">
               <button
                 onClick={() => setDeleteTarget(null)}
                 disabled={deleteLoading}
-                className="px-4 py-2.5 rounded-2xl border border-gray-150 text-xs font-extrabold text-gray-600 hover:bg-gray-50 transition-all active:scale-95 disabled:opacity-40"
+                className="px-3.5 py-2 rounded-xl border border-gray-150 text-[11px] font-extrabold text-gray-500 hover:bg-gray-50 transition-all active:scale-95 disabled:opacity-40"
               >
                 বাতিল
               </button>
               <button
                 onClick={confirmDelete}
                 disabled={deleteLoading}
-                className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 hover:shadow-lg hover:shadow-red-100 text-white text-xs font-extrabold flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-60"
+                className="px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 hover:shadow-md hover:shadow-red-100 text-white text-[11px] font-extrabold flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-60"
               >
                 {deleteLoading ? (
-                  <><Loader2 className="w-3.5 h-3.5 animate-spin" />মুছে ফেলা হচ্ছে...</>
+                  <><Loader2 className="w-3 h-3 animate-spin" />মুছে ফেলা হচ্ছে...</>
                 ) : (
-                  <><Trash2 className="w-3.5 h-3.5" />মুছে ফেলুন</>
+                  <><Trash2 className="w-3 h-3" />মুছে ফেলুন</>
                 )}
               </button>
             </div>
