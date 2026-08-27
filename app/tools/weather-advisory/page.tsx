@@ -104,7 +104,7 @@ export default function WeatherAdvisoryPage() {
                 <CloudSun className="w-8 h-8 text-leaf-600" />
               </div>
               <h2 className="text-lg font-bold text-gray-800 mb-1">আবহাওয়া পরামর্শ নিন</h2>
-              <p className="text-sm text-gray-500 mb-5">জেলা ও ফসল সিলেক্ট করে আবহাওয়ার ভিত্তিতে সঠিক কৃষি পরামর্শ পান</p>
+              <p className="text-xs sm:text-sm text-gray-500 mb-5 truncate whitespace-nowrap" title="জেলা ও ফসল সিলেক্ট করে আবহাওয়ার ভিত্তিতে সঠিক কৃষি পরামর্শ পান">জেলা ও ফসল সিলেক্ট করে আবহাওয়ার ভিত্তিতে সঠিক কৃষি পরামর্শ পান</p>
               <button onClick={fetchAll} className="btn-primary-sm">পরামর্শ নিন</button>
             </div>
           </div>
@@ -151,7 +151,7 @@ export default function WeatherAdvisoryPage() {
                       <CalendarDays className="w-3.5 h-3.5" />
                       <span>মৌসুমি পূর্বাভাস ({seasonal.season.name_bn})</span>
                     </div>
-                    <p className="text-xs text-gray-500 leading-relaxed mb-3">{seasonal.season.desc_bn}</p>
+                    <p className="text-[11px] text-gray-500 leading-relaxed mb-3 truncate" title={seasonal.season.desc_bn}>{seasonal.season.desc_bn}</p>
                     {seasonal.phase && (
                       <div className="p-3 bg-amber-50/50 rounded-2xl border border-amber-100/40 text-xs leading-relaxed">
                         <span className="font-extrabold text-amber-800">ফসলের পর্যায়: </span>
