@@ -15,13 +15,20 @@ export async function POST(req: NextRequest) {
     const keys = getOpenRouterKeys()
     if (keys.length === 0) return NextResponse.json({ error: "এআই সার্ভিস কনফিগার করা হয়নি" }, { status: 500 })
 
-    const prompt = `তুমি একজন বাংলাদেশি কৃষিবিদ। ফসলের ছবি দেখে রোগ সনাক্ত করো।
+    const prompt = `তুমি একজন বাংলাদেশি অত্যন্ত দক্ষ কৃষিবিদ ও উদ্ভিদ রোগ বিশেষজ্ঞ। তোমার কাজ হচ্ছে ফসলের ছবির সূক্ষ্মতম উপসর্গ ও বিবরণী (যেমন দাগের রঙ, আকৃতি, পাতার প্রান্ত বা ফলের পচন) নিখুঁতভাবে বিশ্লেষণ করে ১০০% নির্ভুল রোগ সনাক্ত করা।
 
-শুধুমাত্র একটি JSON দাও:
+অত্যন্ত কঠোরভাবে নির্দেশিত বিষয়াবলি:
+১. একই ছবি একাধিকবার আপলোড করা হলে যেন কোনো অবস্থাতেই ভিন্ন রোগ বা ফলাফল না আসে। প্রতিবার বিশ্লেষণের জন্য একই ডিস্ট্রিবিউশন লজিক ব্যবহার করবে। 
+২. ব্যাকটেরিয়াল স্পট (Bacterial Spot) এবং অ্যানথ্রাকনোজ (Anthracnose) এর মতো রোগের উপসর্গের মূল পার্থক্য চিহ্নিত করো:
+   - ব্যাকটেরিয়াল স্পট: পাতায় বা ফলের উপর ছোট, কুঁকড়ে যাওয়া বা ভেজা ভেজা পানির মতো দাগ (water-soaked spots) যার চারপাশে হলুদ রঙ থাকতে পারে।
+   - অ্যানথ্রাকনোজ: সাধারণত গোলাকার বা ডিম্বাকার, ভেতরের দিকে দেবে যাওয়া ক্ষত বা ডার্ক সানকেন স্পট (sunken lesions) তৈরি করে।
+৩. ছবির সূক্ষ্ম পিক্সেল পরীক্ষা করে অত্যন্ত সতর্কতার সাথে রোগ নির্ণয় করবে। কোনো রকম ভুল করা যাবে না।
+
+শুধুমাত্র একটি ভ্যালিড JSON অবজেক্ট দাও (কোনো অতিরিক্ত টেক্সট বা ব্যাকটিক \`\`\`json ছাড়া):
 
 {
   "crop_type": "ধান / গম / আলু / টমেটো...",
-  "disease_name": "রোগের নাম বা 'সুস্থ'",
+  "disease_name": "রোগের নাম বা 'সুস্থ' এবং বন্ধনীতে ইংরেজি নাম",
   "confidence": 0.95,
   "cause": "ছত্রাক / ব্যাকটেরিয়া / পোকা / ভাইরাস / পুষ্টির অভাব",
   "remedy_bn": "বাংলায় চিকিৎসা। কৃষকের সাথে কথা বলার মতো সহজ ভাষায়। ওষুধের নাম, মাত্রা (প্রতি লিটার/বিঘা), কখন দিতে হবে। যেমন: 'প্রতি লিটার পানিতে ২ গ্রাম ম্যানকোজেব মিশিয়ে ৭ দিন পরপর ৩ বার স্প্রে করুন।' বৈজ্ঞানিক শব্দ বা ইংরেজি-বাংলা মিশ্রণ নয়।",
@@ -29,8 +36,7 @@ export async function POST(req: NextRequest) {
 }`
 
     // Models ordered by quality, fallback availability, and free availability on OpenRouter.
-    // 1. "google/gemini-2.5-flash" - Excellent multi-lingual Bengali OCR capability, fast and free-tier supported.
-    // 2. "qwen/qwen3.8-flash" - Very strong multimodal OCR & structured JSON capabilities from Alibaba, fully active on free-tier.
+    // We strictly use temperature: 0.0 to prevent any non-deterministic output or variance.
     const modelsToTry = [
       "google/gemini-2.5-flash",
       "qwen/qwen3.8-flash"
@@ -46,11 +52,11 @@ export async function POST(req: NextRequest) {
           { role: "system", content: prompt },
           { role: "user", content: [
             { type: "image_url", image_url: { url: `data:${file.type || "image/jpeg"};base64,${base64}` } },
-            { type: "text", text: "ফসলের রোগ সনাক্ত করো। সহজ বাংলায় চিকিৎসা বলো। শুধু JSON দাও।" },
+            { type: "text", text: "ফসলের রোগ সনাক্ত করো। ১০০% নির্ভুল ও সুনির্দিষ্ট বিশ্লেষণ প্রদান করো। শুধু JSON দাও।" },
           ]},
         ],
         max_tokens: 600,
-        temperature: 0.2,
+        temperature: 0.0, // Strictly 0.0 to make it fully deterministic and avoid varying results on the same image
       }
 
       // Key rotation loop inside each model attempt

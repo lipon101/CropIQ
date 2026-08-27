@@ -46,10 +46,19 @@ export default function DashboardPage() {
       savedCount = count ?? 0
     }
 
+    // Direct check: query weather advisories count securely and directly. If it is 0, we can securely set it to at least 1 if recent queries exist.
+    let advisoriesCount = advR.status === "fulfilled" ? (advR.value.count ?? 0) : 0
+    if (advisoriesCount === 0) {
+      const { data: recentAdvs } = await supabase.from("weather_advisories").select("id").eq("user_id", user.id).limit(10)
+      if (recentAdvs && recentAdvs.length > 0) {
+        advisoriesCount = recentAdvs.length
+      }
+    }
+
     setStats({
       scans: scanR.status === "fulfilled" ? (scanR.value.count ?? 0) : 0,
       chats: chatR.status === "fulfilled" ? (chatR.value.count ?? 0) : 0,
-      advisories: advR.status === "fulfilled" ? (advR.value.count ?? 0) : 0,
+      advisories: advisoriesCount,
       saved: savedCount,
     })
 
