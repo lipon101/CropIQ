@@ -1,6 +1,7 @@
 "use client"
 
-import { Sparkles } from "lucide-react"
+import { useRef, useState } from "react"
+import { Sparkles, ChevronLeft, ChevronRight } from "lucide-react"
 
 interface SuggestionCarouselProps {
   suggestions: string[]
@@ -15,31 +16,115 @@ export default function SuggestionCarousel({
   disabled = false,
   title = "আরও জানতে চান?",
 }: SuggestionCarouselProps) {
+  const carouselRef = useRef<HTMLDivElement>(null)
+  const [activeIndex, setActiveIndex] = useState(0)
+
   if (!suggestions.length) return null
+
+  // Ensure we display up to 3 questions normally, but on smaller screens we can scroll through them smoothly
+  const getClosestIndex = () => {
+    const el = carouselRef.current
+    if (!el) return 0
+    const children = Array.from(el.children) as HTMLElement[]
+    const viewCenter = el.scrollLeft + el.offsetWidth / 2
+    let closest = 0
+    let closestDist = Infinity
+    children.forEach((child, i) => {
+      const cardCenter = child.offsetLeft + child.offsetWidth / 2
+      const dist = Math.abs(cardCenter - viewCenter)
+      if (dist < closestDist) {
+        closestDist = dist
+        closest = i
+      }
+    })
+    return closest
+  }
+
+  const handleScroll = () => setActiveIndex(getClosestIndex())
+
+  const scrollTo = (i: number) => {
+    const el = carouselRef.current
+    if (!el) return
+    const children = Array.from(el.children) as HTMLElement[]
+    const target = children[i]
+    if (!target) return
+    el.scrollTo({
+      left: target.offsetLeft - (el.offsetWidth - target.offsetWidth) / 2,
+      behavior: "smooth",
+    })
+  }
+
+  const scroll = (dir: -1 | 1) => {
+    const next = Math.max(0, Math.min(suggestions.length - 1, getClosestIndex() + dir))
+    scrollTo(next)
+  }
 
   return (
     <div className="shrink-0 pb-4 w-full flex flex-col items-center">
-      {/* ── Center Aligned Pill Header ── */}
-      <div className="flex items-center justify-center mb-3">
-        <div className="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-100 rounded-full pl-2.5 pr-3.5 py-1 shadow-sm">
-          <Sparkles className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
-          <span className="text-[10px] sm:text-[11px] font-extrabold text-amber-700 tracking-wide">{title}</span>
+      {/* ── Center Aligned Pill Header + LinkedIn-Style Premium Navigation Controls ── */}
+      <div className="flex items-center justify-between w-full max-w-2xl px-6 mb-3">
+        {/* Empty left spacer of same width as navigation controls to guarantee perfect centering of title */}
+        <div className="w-14 hidden sm:block" />
+        
+        {/* Centered Pill Title */}
+        <div className="flex items-center justify-center flex-1">
+          <div className="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-100 rounded-full pl-2.5 pr-3.5 py-1 shadow-sm">
+            <Sparkles className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
+            <span className="text-[11px] font-extrabold text-amber-700 tracking-wide">{title}</span>
+          </div>
+        </div>
+
+        {/* LinkedIn-style Navigation Controls (< and >) */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          <button
+            onClick={() => scroll(-1)}
+            disabled={activeIndex === 0}
+            className="w-7 h-7 rounded-full bg-white border border-gray-150 flex items-center justify-center hover:bg-emerald-50/20 hover:border-gray-300 disabled:opacity-25 disabled:cursor-default transition-all shadow-sm active:scale-95"
+            title="পূর্ববর্তী প্রশ্ন"
+          >
+            <ChevronLeft className="w-3.5 h-3.5 text-gray-600 font-extrabold" />
+          </button>
+          <button
+            onClick={() => scroll(1)}
+            disabled={activeIndex >= suggestions.length - 1}
+            className="w-7 h-7 rounded-full bg-white border border-gray-150 flex items-center justify-center hover:bg-emerald-50/20 hover:border-gray-300 disabled:opacity-25 disabled:cursor-default transition-all shadow-sm active:scale-95"
+            title="পরবর্তী প্রশ্ন"
+          >
+            <ChevronRight className="w-3.5 h-3.5 text-gray-600 font-extrabold" />
+          </button>
         </div>
       </div>
 
-      {/* ── Dynamic, Uniform Suggestion Cards (No endless horizontal stretching, perfectly wrapped & responsive) ── */}
-      <div className="flex flex-nowrap items-stretch justify-start md:justify-center gap-3.5 max-w-full w-full overflow-x-auto scrollbar-hide px-6 py-2 scroll-smooth scroll-px-6">
-        {suggestions.map((s, i) => (
+      {/* ── Slide Snapping Suggestions Container (Strict single-line layout, horizontal scrollable) ── */}
+      <div
+        ref={carouselRef}
+        onScroll={handleScroll}
+        className="flex flex-nowrap items-center justify-start gap-4 max-w-full w-full overflow-x-auto scrollbar-hide px-6 py-2 scroll-smooth scroll-px-6 snap-x snap-mandatory"
+      >
+        {suggestions.slice(0, 3).map((s, i) => (
           <button
             key={i}
             onClick={() => onSelect(s)}
             disabled={disabled}
-            className="group shrink-0 text-left md:text-center w-[230px] md:w-auto md:max-w-[280px] px-4 py-3 bg-white border border-gray-150 border-l-2 border-l-leaf-500 hover:border-l-leaf-600 hover:border-gray-200 hover:shadow-md hover:bg-emerald-50/10 rounded-2xl text-[12px] font-bold text-gray-700 hover:text-leaf-700 transition-all duration-200 disabled:opacity-40 shadow-sm active:scale-95 flex items-center justify-center"
+            className="group shrink-0 text-center snap-center w-auto max-w-[85%] sm:max-w-md px-5 py-3 bg-white border border-gray-150 border-l-2 border-l-leaf-500 hover:border-l-leaf-600 hover:border-gray-200 hover:shadow-md hover:bg-emerald-50/20 rounded-2xl text-[12.5px] font-extrabold text-gray-700 hover:text-leaf-700 transition-all duration-200 disabled:opacity-40 whitespace-nowrap shadow-sm active:scale-95"
           >
-            <span className="line-clamp-2 leading-snug break-words">
-              {s}
-            </span>
+            {s}
           </button>
+        ))}
+      </div>
+
+      {/* ── Center Active Indicator Dots ── */}
+      <div className="flex items-center justify-center gap-1.5 mt-2.5">
+        {suggestions.slice(0, 3).map((_, i) => (
+          <button
+            key={i}
+            onClick={() => scrollTo(i)}
+            className={`rounded-full transition-all duration-300 ${
+              i === activeIndex
+                ? "w-5 h-1.5 bg-leaf-400 shadow-sm shadow-leaf-200"
+                : "w-1.5 h-1.5 bg-gray-200 hover:bg-gray-300"
+            }`}
+          />
         ))}
       </div>
     </div>
