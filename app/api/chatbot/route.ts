@@ -15,7 +15,7 @@ Understand the user's intent perfectly in whichever language they write, and rep
 ✅ শেষে ৩টি করে সম্পর্কিত প্রশ্ন সুপারিশ করবে।
 
 🔴 কখনো যা করবে না:
-🚫 ইংরেজি বা কঠিন শব্দ ব্যবহার করবে না। যেমন: অভিজ্ঞতা, বিশ্লেষণ, পরিমাণ - এই সব শব্দ চলবে না।
+🚫 ইংরেজি বা কঠিন শব্দ ব্যবহার করবে না। যেমন: অভিজ্ঞতা, विश्लेषण, পরিমাণ - এই সব শব্দ চলবে না।
 🚫 ভুয়া বাংলা শব্দ একদম তৈরি করবে না। যেমন: ছারে, কপিরা, জমি পুষ্টি, উপজরায়ন, মোটর, প্লাগিং, মৎস্য - এই সব ভুয়া শব্দ কখনো বলবে না।
 🚫 মার্কডাউন ফরম্যাট দেবে না - ** বা --- বা ### বা ## - কিছুই না। শুধু সরল বাংলা টেক্সট।
 🚫 কোড, প্রোগ্রামিং, এআই নিয়ে কোনো কথা বলবে না।
@@ -38,7 +38,7 @@ Understand the user's intent perfectly in whichever language they write, and rep
 // ─── 55 unique farming questions ───
 const SUGGESTIONS_POOL = [
   "ধান গাছে ব্লাস্ট রোগের চিকিৎসা?", "ধান গাছে পাতা পোড়া রোগ কেন হয়?", "ধান চাষে ইউরিয়া সারের সঠিক মাত্রা কত?",
-  "ধানের জমিতে পোকা দমনের জৈব উপায় কী?", "বোরো ধান চাষের সঠিক সময় কখন?", "ধান গাছে শীষ বের না হলে করণীয় কী?",
+  "ধানের জমিতে পোকা দমনের জৈব উপায় কী?", "বোরো ধান চাষের সঠিক সময় কখন?", "ধান গাছে ভাষা বের না হলে করণীয় কী?",
   "আমন ধানের জন্য সেরা জাত কোনটি?", "ধান গাছে মাজরা পোকা দমনের উপায়?", "আলু চাষের সঠিক সময় ও পদ্ধতি?",
   "টমেটো পাতা কুঁকড়ে যায় কেন?", "বেগুন গাছে ফল ছিদ্রকারী পোকা দমন?", "পটল চাষে ফলন বাড়ানোর উপায়?",
   "লাউ গাছে পাউডারি মিলডিউ রোগের চিকিৎসা?", "মরিচ গাছে ফুল ঝরে যায় কেন?", "ঢেঁড়স চাষে সার প্রয়োগের নিয়ম?",
@@ -101,7 +101,7 @@ function extractSuggestions(reply: string): { cleanedReply: string; suggestions:
   if (match) {
     cleaned = cleaned.replace(match[0], "").trim()
     const raw = match[1] || match[2] || ""
-    const lines = raw.split("\n").map(l => l.replace(/^[\-\d.\s•]+/, "").trim()).filter(l => l.length > 3)
+    const lines = raw.split("\n").map(l => l.replace(/^[\\-\d.\s•]+/, "").trim()).filter(l => l.length > 3)
     if (lines.length >= 2) return { cleanedReply: cleaned, suggestions: lines.slice(0, 3) }
     return { cleanedReply: cleaned, suggestions: [] }
   }
@@ -200,12 +200,14 @@ export async function POST(req: NextRequest) {
     let reply = data?.choices?.[0]?.message?.content || "দুঃখিত, এখন উত্তর দিতে পারছি না। আবার চেষ্টা করুন।"
     
     // Strip OpenRouter safety prefix
-    reply = reply.replace(/^User Safety:\s*(safe|unsafe)\s*\n*/i, "").trim()
-    reply = reply.replace(/_{2,}|~{2,}|#{1,6}\s*/g, "").trim()
-    reply = reply.replace(/---+/g, "\n\n").trim()
-    reply = reply.replace(/\n{3,}/g, "\n\n").trim()
-    reply = reply.replace(/[\u0900-\u0963\u0970-\u097F\u0B80-\u0BFF\u0C00-\u0C7F\u0C80-\u0CFF\u0D00-\u0D7F]+/g, "").trim()
-    reply = reply.replace(/([।:])\s*([\p{Nd}]+[\.\)])/gu, "$1\n\n$2")
+    reply = reply.replace(/^User Safety:\\s*(safe|unsafe)\\s*\\n*/i, "").trim()
+    reply = reply.replace(/_{2,}|~{2,}|#{1,6}\\s*/g, "").trim()
+    reply = reply.replace(/---+/g, "\\n\\n").trim()
+    reply = reply.replace(/\\n{3,}/g, "\\n\\n").trim()
+    
+    // Safety check - ONLY replace Devanagari/Hindi and Tamil, DO NOT strip entire Unicode ranges that might include Bengali or spaces!
+    reply = reply.replace(/[\\u0900-\\u0903\\u093C\\u093E-\\u094D\\u0951-\\u0954\\u0962-\\u0963\\u0970-\\u097F\\u0B80-\\u0BFF\\u0C00-\\u0C7F\\u0C80-\\u0CFF\\u0D00-\\u0D7F]+/g, "").trim()
+    reply = reply.replace(/([।:])\\s*([\\p{Nd}]+[\\.\\)])/gu, "$1\\n\\n$2")
     if (!reply) reply = "দুঃখিত, এখন উত্তর দিতে পারছি না। আবার চেষ্টা করুন।"
 
     if (isSystemPromptLeak(reply)) {
