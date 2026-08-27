@@ -66,7 +66,7 @@ export async function fetchOpenRouterWithRetry(
   throw new Error("All OpenRouter keys exhausted — all rate limited or failed")
 }
 
-const DISEASE_SYSTEM_PROMPT = `তুমি একজন Experienced বাংলাদেশি কৃষিবিদ। তুমি গ্রামে-গঞ্জে কৃষকদের ফসলের রোগ নিয়ে পরামর্শ দিয়ে থাকো।
+const DISEASE_SYSTEM_PROMPT = `তুমি একজন অভিজ্ঞ বাংলাদেশি কৃষিবিদ। তুমি গ্রামে-গঞ্জে কৃষকদের ফসলের রোগ নিয়ে পরামর্শ দিয়ে থাকো।
 
 তোমার ভাষা হবে কৃষকের সাথে কথা বলার মতো — সহজ, সরাসরি, কাজের কথা:
 ✅ "ভাই, এটা লিফ ব্লাইট রোগ। ছত্রাক থেকে হয়।"
