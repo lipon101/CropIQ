@@ -83,67 +83,67 @@ const WINDOW_RULES: CropWindowRule[] = [
     crop_en: "Rice",
     crop_bn: "ধান",
     phases: [
-      { season: "rabi", phase_bn: "বোরো ধান রোপণ/পরিচর্যা", action_bn: "বোরো চারার বীজতলা তৈরি করুন; সেচ নিশ্চিত রাখুন।" },
-      { season: "kharif1", phase_bn: "বোরো কাটা ও আউশ বপন", action_bn: "বোরো ধান কাটুন; খালি জমিতে আউশ বপনের প্রস্তুতি নিন।" },
-      { season: "kharif2", phase_bn: "আমন রোপণ", action_bn: "আমন চারা রোপণের সঠিক সময় — রোপণে দেরি করবেন না।" },
+      { season: "rabi", phase_bn: "বোরো ধান রোপণ/পরিচর্যা", action_bn: "বীজতলা তৈরি ও নিয়মিত সেচ দিন।" },
+      { season: "kharif1", phase_bn: "বোরো কাটা ও আউশ বপন", action_bn: "ধান কাটা ও আউশ বপন করুন।" },
+      { season: "kharif2", phase_bn: "আমন রোপণ", action_bn: "চারা রোপণের উপযুক্ত সময়।" },
     ],
   },
   {
     crop_en: "Wheat",
     crop_bn: "গম",
     phases: [
-      { season: "rabi", phase_bn: "গম বপন ও বৃদ্ধি", action_bn: "রবি মৌসুমে গম বপনের উপযুক্ত সময় — সেচ ও আগাছা নিয়ন্ত্রণ করুন।" },
+      { season: "rabi", phase_bn: "গম বপন ও বৃদ্ধি", action_bn: "গম বপন ও আগাছা পরিষ্কার করুন।" },
     ],
   },
   {
     crop_en: "Potato",
     crop_bn: "আলু",
     phases: [
-      { season: "rabi", phase_bn: "আলু রোপণ ও পরিচর্যা", action_bn: "রবি মৌসুমে আলু লাগান; ঠান্ডা আবহাওয়ায় রোগ থেকে গাছ বাঁচান।" },
+      { season: "rabi", phase_bn: "আলু রোপণ ও পরিচর্যা", action_bn: "আলু লাগান ও রোগবালাই দমন করুন।" },
     ],
   },
   {
     crop_en: "Jute",
     crop_bn: "পাট",
     phases: [
-      { season: "kharif1", phase_bn: "পাট বপন", action_bn: "প্রাক-বর্ষায় পাট বপনের সময়; জমি গভীর চাষ দিন।" },
-      { season: "kharif2", phase_bn: "পাট সেচ ও আগাছা নিয়ন্ত্রণ", action_bn: "বর্ষায় পাট গাছ দ্রুত বাড়ে — জমিতে পানি জমতে দেবেন না।" },
+      { season: "kharif1", phase_bn: "পাট বপন", action_bn: "জমি চাষ দিয়ে পাট বপন করুন।" },
+      { season: "kharif2", phase_bn: "পাট সেচ ও আগাছা নিয়ন্ত্রণ", action_bn: "পানি নিকাশ ও আগাছা দমন করুন।" },
     ],
   },
   {
     crop_en: "Maize",
     crop_bn: "ভুট্টা",
     phases: [
-      { season: "rabi", phase_bn: "রবি ভুট্টা বপন", action_bn: "শীত মৌসুমে ভুট্টার ফলন ভালো — ভালো বীজ বেছে লাগান।" },
-      { season: "kharif1", phase_bn: "খরিফ ভুট্টা বৃদ্ধি", action_bn: "গরমে ভুট্টার সেচ বাড়ান; পোকা পর্যবেক্ষণ করুন।" },
+      { season: "rabi", phase_bn: "রবি ভুট্টা বপন", action_bn: "ভালো বীজ নির্বাচন ও বপন করুন।" },
+      { season: "kharif1", phase_bn: "খরিফ ভুট্টা বৃদ্ধি", action_bn: "সেচ বৃদ্ধি ও পোকা দমন করুন।" },
     ],
   },
   {
     crop_en: "Mustard",
     crop_bn: "সরিষা",
     phases: [
-      { season: "rabi", phase_bn: "সরিষা বপন", action_bn: "রবিতে সরিষা বপন করুন — অল্প সময়ের ফসল, সেচে লাভ ভালো।" },
+      { season: "rabi", phase_bn: "সরিষা বপন", action_bn: "সরিষা বপন ও হালকা সেচ দিন।" },
     ],
   },
   {
     crop_en: "Onion",
     crop_bn: "পেঁয়াজ",
     phases: [
-      { season: "rabi", phase_bn: "পেঁয়াজ চারা রোপণ", action_bn: "শীত মৌসুমে পেঁয়াজ লাগান; জমি উঁচু রাখুন।" },
+      { season: "rabi", phase_bn: "পেঁয়াজ চারা রোপণ", action_bn: "উঁচু জমিতে পেঁয়াজ লাগান।" },
     ],
   },
   {
     crop_en: "Tomato",
     crop_bn: "টমেটো",
     phases: [
-      { season: "rabi", phase_bn: "টমেটো চারা রোপণ", action_bn: "শীতে টমেটো লাগান; ঠান্ডা ও কুয়াশায় রোগ প্রতিরোধে সতর্ক থাকুন।" },
+      { season: "rabi", phase_bn: "টমেটো চারা রোপণ", action_bn: "টমেটো রোপণ ও কুয়াশা থেকে রক্ষা করুন।" },
     ],
   },
   {
     crop_en: "Chili",
     crop_bn: "মরিচ",
     phases: [
-      { season: "kharif2", phase_bn: "মরিচ রোপণ/পরিচর্যা", action_bn: "বর্ষায় মরিচ গাছে রোগ বেশি — নিকাশ ভালো রাখুন।" },
+      { season: "kharif2", phase_bn: "মরিচ রোপণ/পরিচর্যা", action_bn: "নিকাশ নালা পরিষ্কার রাখুন।" },
     ],
   },
 ]
