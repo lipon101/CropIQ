@@ -333,9 +333,9 @@ export default function DashboardPage() {
                 <AlertTriangle className="w-5 h-5 text-red-500 animate-pulse" />
               </div>
               <div>
-                <h3 className="text-md font-extrabold text-gray-900">রেকর্ড মুছে ফেলতে চান?</h3>
-                <p className="text-xs text-gray-500 mt-1 font-semibold leading-relaxed">
-                  আপনি কি নিশ্চিতভাবে এই রেকর্ডটি চিরতরে মুছে ফেলতে চান? একবার মুছে ফেললে এই ডাটা পুনরুদ্ধার করা সম্ভব হবে না।
+                <h3 className="text-sm font-extrabold text-gray-900">রেকর্ড মুছে ফেলতে চান?</h3>
+                <p className="text-[11px] text-gray-400 font-semibold mt-0.5">
+                  চিরতরে মুছে ফেলতে চান? এটি পুনরুদ্ধার করা যাবে না।
                 </p>
               </div>
             </div>
