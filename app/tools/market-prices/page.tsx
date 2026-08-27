@@ -161,7 +161,7 @@ export default function MarketPricesPage() {
               <div className="text-center max-w-xs">
                 <div className="w-16 h-16 bg-gradient-to-br from-amber-100 to-orange-200 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm text-3xl">🌾</div>
                 <h2 className="text-lg font-bold text-gray-800 mb-1">বাজার মূল্য দেখুন</h2>
-                <p className="text-sm text-gray-500 mb-5">জেলা ও পণ্য সিলেক্ট করে দেখুন বাংলাদেশের সর্বশেষ বাজারদর</p>
+                <p className="text-xs sm:text-sm text-gray-500 mb-5 whitespace-nowrap">সর্বশেষ বাজারদর ও দামের সঠিক তথ্য জানুন</p>
                 <button onClick={fetchPrices} className="bg-gradient-to-r from-amber-500 to-orange-600 text-white px-6 py-3 rounded-2xl text-sm font-bold shadow-md shadow-amber-200/40 hover:shadow-lg active:scale-95 transition-all">দাম দেখুন</button>
               </div>
             </div>
