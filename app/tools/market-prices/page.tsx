@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react"
 import { DISTRICTS } from "@/lib/constants/districts"
 import { COMMODITIES } from "@/lib/constants/crops"
-import { Loader2, Search, MapPin, Store, CalendarDays, Sprout, Download, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Database, CheckCircle, HelpCircle } from "lucide-react"
+import { Loader2, Search, MapPin, Store, CalendarDays, Sprout, Download, ChevronLeft, ChevronRight, CheckCircle } from "lucide-react"
 import { ToolPageLayout } from "@/components/tools/ToolPageLayout"
 import PriceHistoryChart from "@/components/tools/PriceHistoryChart"
 import { formatPrice, formatDateBN } from "@/lib/utils"
@@ -49,13 +49,6 @@ export default function MarketPricesPage() {
   const [error, setError] = useState("")
   const [page, setPage] = useState(0)
 
-  // Live Database Inspector States
-  const [showInspector, setShowInspector] = useState(false)
-  const [rawPrices, setRawPrices] = useState<any[]>([])
-  const [loadingRaw, setLoadingRaw] = useState(false)
-  const [rawSearch, setRawSearch] = useState("")
-  const [rawPage, setRawPage] = useState(0)
-
   const NATIONAL_MARKET = "জাতীয় বাজার"
   const isNational = district === NATIONAL_MARKET
 
@@ -63,84 +56,6 @@ export default function MarketPricesPage() {
     ? "জাতীয় বাজার (সারাদেশ)"
     : DISTRICTS.find(d => d.name_en === district)?.name_bn || district
   const commodityBn = commodity ? COMMODITIES.find(c => c.name_en === commodity)?.name_bn || commodity : ""
-
-  const fetchRawPrices = async () => {
-    if (rawPrices.length > 0 || loadingRaw) return
-    setLoadingRaw(true)
-    try {
-      const r = await fetch('/api/prices?raw=1')
-      if (r.ok) {
-        const d = await r.json()
-        const combined = [
-          ...(d.dam || []).map((x: any) => ({ ...x, source: 'dam' })),
-          ...(d.wfp || []).map((x: any) => ({ ...x, source: 'wfp' }))
-        ]
-        setRawPrices(combined)
-      }
-    } catch (e) {
-      console.error("Error loading raw prices:", e)
-    } finally {
-      setLoadingRaw(false)
-    }
-  }
-
-  const toggleInspector = () => {
-    const next = !showInspector
-    setShowInspector(next)
-    if (next) {
-      fetchRawPrices()
-    }
-  }
-
-  const downloadAll728Csv = () => {
-    if (rawPrices.length === 0) return
-    const rows = [
-      ["পণ্য", "বাজার", "জেলা", "উৎস", "খুচরা মূল্য (টাকা)", "একক", "তারিখ"],
-      ...rawPrices.map(p => [
-        COMMODITIES.find(c => c.name_en === p.commodity)?.name_bn || p.commodity,
-        p.market,
-        DISTRICTS.find(d => d.name_en === p.district)?.name_bn || p.district,
-        p.source === 'dam' ? 'DAM (সরকারি)' : 'WFP (জাতিসংঘ)',
-        p.price_per_kg.toFixed(2),
-        p.unit || "kg",
-        p.date,
-      ]),
-    ]
-    const csv = "\uFEFF" + rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n")
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = `cropiq-all-728-verified-prices-${new Date().toISOString().slice(0, 10)}.csv`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-  }
-
-  // Filter raw prices by search query
-  const filteredRaw = useMemo(() => {
-    if (!rawSearch.trim()) return rawPrices
-    const q = rawSearch.toLowerCase()
-    return rawPrices.filter(p => {
-      const cropBn = COMMODITIES.find(c => c.name_en === p.commodity)?.name_bn || p.commodity
-      const distBn = DISTRICTS.find(d => d.name_en === p.district)?.name_bn || p.district
-      const marketBn = p.market
-      const sourceLabel = p.source === 'dam' ? 'dam' : 'wfp'
-      return (
-        p.commodity.toLowerCase().includes(q) ||
-        cropBn.toLowerCase().includes(q) ||
-        p.district.toLowerCase().includes(q) ||
-        distBn.toLowerCase().includes(q) ||
-        marketBn.toLowerCase().includes(q)
-      )
-    })
-  }, [rawPrices, rawSearch])
-
-  const RAW_PAGE_SIZE = 10
-  const totalRawPages = Math.max(1, Math.ceil(filteredRaw.length / RAW_PAGE_SIZE))
-  const safeRawPage = Math.min(rawPage, totalRawPages - 1)
-  const paginatedRaw = filteredRaw.slice(safeRawPage * RAW_PAGE_SIZE, safeRawPage * RAW_PAGE_SIZE + RAW_PAGE_SIZE)
 
   const fetchPrices = async () => {
     setLoading(true); setHasSearched(true); setError(""); setPage(0)
@@ -198,8 +113,10 @@ export default function MarketPricesPage() {
   // Sort prices: highest to lowest for a clear "top item" feel
   const sorted = useMemo(() => [...prices].sort((a, b) => b.price_per_kg - a.price_per_kg), [prices])
 
-  // Pagination: 6 per page with prev/next navigation
-  const PAGE_SIZE = 6
+  // Pagination: 24 per page — the national view now shows the FULL live
+  // dataset (728+ real DAM + WFP rows, not a 34-item national average), so a
+  // larger page size keeps browsing practical.
+  const PAGE_SIZE = 24
   const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE))
   const safePage = Math.min(page, totalPages - 1)
   const pageItems = sorted.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE)
@@ -273,15 +190,20 @@ export default function MarketPricesPage() {
                     খুচরা মূল্য
                   </span>
                 </div>
-                <div className="flex items-center gap-2 text-[11px] text-gray-400">
+                <div className="flex items-center gap-2 text-[11px] text-gray-400 flex-wrap">
                   <CalendarDays className="w-3.5 h-3.5" />
                   <span>সর্বশেষ আপডেট: {updatedAt ? formatDateBN(updatedAt) : "—"}</span>
                   <span className="text-gray-300">|</span>
-                  <span className="font-semibold text-gray-500">{prices.length} টি পণ্য</span>
+                  <span className="font-semibold text-gray-500">{prices.length} টি লাইভ রেকর্ড</span>
                   <button onClick={downloadCsv} className="ml-auto inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 text-[11px] font-bold transition-colors">
                     <Download className="w-3.5 h-3.5" /> CSV ডাউনলোড
                   </button>
                 </div>
+                {isNational && !commodity && (
+                  <p className="text-[10px] text-emerald-600 font-semibold mt-1.5 flex items-center gap-1">
+                    <CheckCircle className="w-3 h-3" /> DAM ও WFP-এর সম্পূর্ণ লাইভ ডাটাবেস — সব জেলার সব এন্ট্রি, কোনো সীমাবদ্ধতা নেই
+                  </p>
+                )}
 
               </div>
 
@@ -291,10 +213,17 @@ export default function MarketPricesPage() {
                   const bengali = COMMODITIES.find(c => c.name_en === p.commodity)?.name_bn || p.commodity
                   const unitBn = UNIT_BN[p.unit || "kg"] || "প্রতি কেজি"
                   const isDaily = p.id.startsWith("dam-")
-                  const periodLabel = isDaily ? "আজকের দাম" : "মাসিক দাম"
+                  const periodLabel = isDaily ? "আজকের দাম (DAM)" : "মাসিক দাম (WFP)"
                   const periodStyle = isDaily
                     ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                     : "bg-sky-50 text-sky-700 border-sky-200"
+                  // In the merged national view a row can be a true national
+                  // DAM average OR a real per-district WFP entry — show the
+                  // district/market whenever it's not the national sentinel,
+                  // so users can see exactly which of the 728 rows they're on.
+                  const rowIsNational = p.district === NATIONAL_MARKET
+                  const rowDistrictBn = rowIsNational ? "" : (DISTRICTS.find(d => d.name_en === p.district)?.name_bn || p.district)
+                  const locationLabel = rowIsNational ? unitBn : `${rowDistrictBn} · ${p.market} · ${unitBn}`
                   return (
                     <div key={p.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-amber-200 transition-all px-4 py-3 flex items-center gap-3">
                       <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center text-xl shrink-0">
@@ -306,7 +235,7 @@ export default function MarketPricesPage() {
                           <span className={`inline-flex items-center px-1.5 py-px rounded-full border text-[9px] font-bold shrink-0 ${periodStyle}`}>{periodLabel}</span>
                         </div>
                         <p className="text-[11px] text-gray-400 truncate">
-                          {isNational ? unitBn : `${p.market} · ${unitBn}`}
+                          {locationLabel}
                         </p>
                         <p className="text-[10px] text-gray-300 mt-0.5">{formatDateBN(p.date)}</p>
                       </div>
@@ -319,34 +248,70 @@ export default function MarketPricesPage() {
                 })}
               </div>
 
-              {/* ── Pagination ── */}
+              {/* ── Pagination (compact & windowed — safe for 30+ pages on the full 728-row view) ── */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-1.5 mt-1">
+                <div className="flex items-center justify-center gap-1.5 mt-1 flex-wrap">
                   <button
                     onClick={() => setPage(p => Math.max(0, p - 1))}
                     disabled={safePage === 0}
-                    className="w-9 h-9 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-amber-50 hover:border-amber-200 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition-all"
+                    className="w-9 h-9 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-amber-50 hover:border-amber-200 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition-all shrink-0"
                     aria-label="আগের পেজ"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
-                  {Array.from({ length: totalPages }, (_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setPage(i)}
-                      className={`w-9 h-9 rounded-xl text-xs font-bold transition-all ${
-                        i === safePage
-                          ? "bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-md shadow-amber-200/40"
-                          : "bg-white border border-gray-200 text-gray-500 hover:bg-amber-50"
-                      }`}
-                    >
-                      {i + 1}
-                    </button>
-                  ))}
+
+                  {totalPages <= 7 ? (
+                    Array.from({ length: totalPages }, (_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setPage(i)}
+                        className={`w-9 h-9 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                          i === safePage
+                            ? "bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-md shadow-amber-200/40"
+                            : "bg-white border border-gray-200 text-gray-500 hover:bg-amber-50"
+                        }`}
+                      >
+                        {i + 1}
+                      </button>
+                    ))
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => setPage(0)}
+                        className={`w-9 h-9 rounded-xl text-xs font-bold transition-all shrink-0 ${safePage === 0 ? "bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-md shadow-amber-200/40" : "bg-white border border-gray-200 text-gray-500 hover:bg-amber-50"}`}
+                      >
+                        ১
+                      </button>
+                      {safePage > 2 && <span className="px-0.5 text-gray-300 text-xs shrink-0">···</span>}
+                      {Array.from({ length: totalPages }, (_, i) => i)
+                        .filter(i => i > 0 && i < totalPages - 1 && Math.abs(i - safePage) <= 1)
+                        .map(i => (
+                          <button
+                            key={i}
+                            onClick={() => setPage(i)}
+                            className={`w-9 h-9 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                              i === safePage
+                                ? "bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-md shadow-amber-200/40"
+                                : "bg-white border border-gray-200 text-gray-500 hover:bg-amber-50"
+                            }`}
+                          >
+                            {i + 1}
+                          </button>
+                        ))}
+                      {safePage < totalPages - 3 && <span className="px-0.5 text-gray-300 text-xs shrink-0">···</span>}
+                      <button
+                        onClick={() => setPage(totalPages - 1)}
+                        className={`w-9 h-9 rounded-xl text-xs font-bold transition-all shrink-0 ${safePage === totalPages - 1 ? "bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-md shadow-amber-200/40" : "bg-white border border-gray-200 text-gray-500 hover:bg-amber-50"}`}
+                      >
+                        {totalPages}
+                      </button>
+                    </>
+                  )}
+
                   <button
                     onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
                     disabled={safePage === totalPages - 1}
-                    className="w-9 h-9 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-amber-50 hover:border-amber-200 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition-all"
+                    className="w-9 h-9 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-amber-50 hover:border-amber-200 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition-all shrink-0"
                     aria-label="পরের পেজ"
                   >
                     <ChevronRight className="w-4 h-4" />
@@ -370,146 +335,6 @@ export default function MarketPricesPage() {
 
         {/* ── Source attribution (removed — no sources shown) ── */}
 
-        {/* ── Live Database Inspector ── */}
-        <div className="mt-4 border border-amber-200/60 bg-amber-50/20 rounded-2xl overflow-hidden shrink-0 shadow-sm">
-          <button
-            onClick={toggleInspector}
-            className="w-full px-4 py-3 flex items-center justify-between bg-gradient-to-r from-amber-50 to-orange-50/50 hover:from-amber-100/70 hover:to-orange-100/40 transition-all"
-          >
-            <div className="flex items-center gap-2 text-left">
-              <Database className="w-4 h-4 text-amber-600 animate-pulse" />
-              <div>
-                <h4 className="text-xs sm:text-sm font-extrabold text-gray-800 flex items-center gap-1.5">
-                  📊 লাইভ ডাটাবেস ইন্সপেক্টর
-                  <span className="bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
-                    ৭২৮টি রেকর্ড
-                  </span>
-                </h4>
-                <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5">বিশ্ব খাদ্য কর্মসূচি (WFP) ও কৃষি বিপণন অধিদপ্তরের (DAM) রিয়েল ডেটা</p>
-              </div>
-            </div>
-            {showInspector ? <ChevronUp className="w-4 h-4 text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-500" />}
-          </button>
-
-          {showInspector && (
-            <div className="p-4 bg-white border-t border-gray-100 space-y-4">
-              {loadingRaw ? (
-                <div className="py-12 flex flex-col items-center justify-center gap-2">
-                  <Loader2 className="w-6 h-6 text-amber-500 animate-spin" />
-                  <p className="text-xs text-gray-400">লাইভ ডাটাবেস থেকে ৭২৮টি রেকর্ড লোড হচ্ছে...</p>
-                </div>
-              ) : (
-                <>
-                  {/* Stats Cards */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    <div className="p-2.5 rounded-xl bg-gray-50 border border-gray-100 text-center">
-                      <p className="text-[10px] text-gray-400 font-bold">মোট রেকর্ড</p>
-                      <p className="text-sm font-extrabold text-amber-600 mt-0.5">{rawPrices.length} টি</p>
-                    </div>
-                    <div className="p-2.5 rounded-xl bg-gray-50 border border-gray-100 text-center">
-                      <p className="text-[10px] text-gray-400 font-bold">সক্রিয় জেলা</p>
-                      <p className="text-sm font-extrabold text-amber-600 mt-0.5">৬২টি</p>
-                    </div>
-                    <div className="p-2.5 rounded-xl bg-gray-50 border border-gray-100 text-center">
-                      <p className="text-[10px] text-gray-400 font-bold">পণ্য কভারেজ</p>
-                      <p className="text-sm font-extrabold text-amber-600 mt-0.5">৩৪টি</p>
-                    </div>
-                    <div className="p-2.5 rounded-xl bg-gray-50 border border-gray-100 text-center">
-                      <p className="text-[10px] text-gray-400 font-bold">উৎস ভেরিফাইড</p>
-                      <p className="text-sm font-extrabold text-emerald-600 mt-0.5 flex items-center justify-center gap-0.5">
-                        <CheckCircle className="w-3.5 h-3.5 inline text-emerald-500" /> ১০০%
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Actions & Search */}
-                  <div className="flex gap-2 items-center flex-wrap sm:flex-nowrap">
-                    <div className="relative flex-1 w-full sm:w-auto">
-                      <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                      <input
-                        type="text"
-                        value={rawSearch}
-                        onChange={e => { setRawSearch(e.target.value); setRawPage(0); }}
-                        placeholder="জেলা, পণ্য বা বাজার লিখে খুঁজুন..."
-                        className="w-full pl-8.5 pr-4 py-2 rounded-xl border border-gray-200 text-xs font-semibold text-gray-700 outline-none focus:border-amber-400 transition-colors bg-gray-50/50"
-                      />
-                    </div>
-                    <button
-                      onClick={downloadAll728Csv}
-                      disabled={rawPrices.length === 0}
-                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 text-xs font-bold transition-all disabled:opacity-55 cursor-pointer shrink-0 w-full sm:w-auto justify-center"
-                    >
-                      <Download className="w-3.5 h-3.5" /> ৭২৮টি রেকর্ড CSV ডাউনলোড
-                    </button>
-                  </div>
-
-                  {/* Raw Data List */}
-                  <div className="border border-gray-100 rounded-xl overflow-hidden shadow-inner max-h-[280px] overflow-y-auto bg-gray-50/20">
-                    {paginatedRaw.length === 0 ? (
-                      <div className="py-8 text-center text-xs text-gray-400">কোন রেকর্ড পাওয়া যায়নি।</div>
-                    ) : (
-                      <div className="divide-y divide-gray-100">
-                        {paginatedRaw.map((p, i) => {
-                          const isDaily = p.source === 'dam'
-                          const sourceLabel = isDaily ? 'DAM (সরকারি)' : 'WFP (জাতিসংঘ)'
-                          const sourceColor = isDaily
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                            : 'bg-sky-50 text-sky-700 border-sky-200'
-                          const cropBn = COMMODITIES.find(c => c.name_en === p.commodity)?.name_bn || p.commodity
-                          const distBn = DISTRICTS.find(d => d.name_en === p.district)?.name_bn || p.district
-                          const unitBn = UNIT_BN[p.unit || 'kg'] || 'প্রতি কেজি'
-                          return (
-                            <div key={p.id || i} className="p-3 bg-white flex items-center justify-between gap-2 hover:bg-amber-50/20 transition-all">
-                              <div className="min-w-0">
-                                <div className="flex items-center gap-1.5 flex-wrap">
-                                  <p className="text-xs font-extrabold text-gray-800">{cropBn}</p>
-                                  <span className={`px-1.5 py-px rounded text-[8px] font-bold border ${sourceColor}`}>
-                                    {sourceLabel}
-                                  </span>
-                                </div>
-                                <p className="text-[10px] text-gray-400 mt-0.5">
-                                  {distBn} {p.market && p.market !== 'জাতীয় বাজার' ? `· ${p.market}` : ''}
-                                </p>
-                                <p className="text-[8px] text-gray-300 mt-0.5">{formatDateBN(p.date)}</p>
-                              </div>
-                              <div className="text-right shrink-0">
-                                <p className="text-xs font-black text-emerald-600">{formatPrice(p.price_per_kg)}</p>
-                                <p className="text-[9px] text-gray-400 font-semibold">{unitBn}</p>
-                              </div>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Pagination for raw data */}
-                  {totalRawPages > 1 && (
-                    <div className="flex items-center justify-between text-xs text-gray-500 pt-1 border-t border-gray-100">
-                      <span>মোট {filteredRaw.length} টি রেকর্ডের মধ্যে {safeRawPage * RAW_PAGE_SIZE + 1} - {Math.min((safeRawPage + 1) * RAW_PAGE_SIZE, filteredRaw.length)} দেখানো হচ্ছে</span>
-                      <div className="flex gap-1.5">
-                        <button
-                          onClick={() => setRawPage(p => Math.max(0, p - 1))}
-                          disabled={safeRawPage === 0}
-                          className="px-2.5 py-1 rounded-lg border border-gray-200 text-gray-600 hover:bg-amber-50 disabled:opacity-40 font-bold transition-all"
-                        >
-                          আগের
-                        </button>
-                        <button
-                          onClick={() => setRawPage(p => Math.min(totalRawPages - 1, p + 1))}
-                          disabled={safeRawPage === totalRawPages - 1}
-                          className="px-2.5 py-1 rounded-lg border border-gray-200 text-gray-600 hover:bg-amber-50 disabled:opacity-40 font-bold transition-all"
-                        >
-                          পরের
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          )}
-        </div>
       </div>
     </ToolPageLayout>
   )

@@ -81,29 +81,11 @@ export async function GET(req: NextRequest) {
     let rows: PriceRow[]
     let source: string
     if (isNational) {
-      const wfpByCommodity = new Map<string, { total: number; count: number; unit: string; date: string }>()
-      for (const r of wfp) {
-        const g = wfpByCommodity.get(r.commodity) ?? { total: 0, count: 0, unit: r.unit, date: r.date }
-        g.total += r.price_per_kg
-        g.count += 1
-        wfpByCommodity.set(r.commodity, g)
-      }
-      const damCommodities = new Set(dam.map((r) => r.commodity))
-      const wfpNational: PriceRow[] = []
-      let wi = 0
-      for (const [commodity, g] of wfpByCommodity.entries()) {
-        if (damCommodities.has(commodity)) continue // DAM already covers it
-        wfpNational.push({
-          id: `wfp-nat-${wi++}`,
-          commodity,
-          market: NATIONAL_MARKET,
-          district: NATIONAL_MARKET,
-          price_per_kg: Math.round((g.total / g.count) * 100) / 100,
-          unit: g.unit,
-          date: g.date,
-        })
-      }
-      rows = [...dam, ...wfpNational].sort((a, b) => b.price_per_kg - a.price_per_kg)
+      // Full transparency: show every live record (DAM national + all WFP
+      // district-level rows) instead of collapsing WFP into one national
+      // average per commodity — so the board proves it holds all 728+ real
+      // rows, not just a shortlist of national averages.
+      rows = [...dam, ...wfp].sort((a, b) => b.price_per_kg - a.price_per_kg)
       source = "dam"
     } else {
       rows = wfp.filter((r) => r.district === district)
