@@ -104,7 +104,7 @@ export default function WeatherAdvisoryPage() {
                 <CloudSun className="w-8 h-8 text-leaf-600" />
               </div>
               <h2 className="text-lg font-bold text-gray-800 mb-1">আবহাওয়া পরামর্শ নিন</h2>
-              <p className="text-xs sm:text-sm text-gray-500 mb-5 truncate whitespace-nowrap" title="জেলা ও ফসল সিলেক্ট করে আবহাওয়ার ভিত্তিতে সঠিক কৃষি পরামর্শ পান">জেলা ও ফসল সিলেক্ট করে আবহাওয়ার ভিত্তিতে সঠিক কৃষি পরামর্শ পান</p>
+              <p className="text-xs sm:text-sm text-gray-500 mb-5 whitespace-nowrap">সঠিক আবহাওয়া ও কৃষি পরামর্শ পান</p>
               <button onClick={fetchAll} className="btn-primary-sm">পরামর্শ নিন</button>
             </div>
           </div>
