@@ -90,7 +90,7 @@ export default function WeatherAdvisoryPage() {
             <ChevronDown className="w-4 h-4 text-gray-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
           <button onClick={fetchAll} disabled={loading} className="bg-gradient-to-r from-leaf-500 to-leaf-600 hover:from-leaf-600 hover:to-emerald-700 disabled:from-gray-300 disabled:to-gray-400 text-white px-6 py-3 rounded-2xl text-sm font-bold shadow-md shadow-leaf-200/40 active:scale-[0.98] transition-all disabled:shadow-none flex items-center justify-center gap-2 shrink-0">
-            {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> নিচ্ছে</> : <><Search className="w-4 h-4" /> পরামর্শ নিন</>}
+            {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> খোঁজা হচ্ছে...</> : <><Search className="w-4 h-4" /> পরামর্শ নিন</>}
           </button>
         </div>
 

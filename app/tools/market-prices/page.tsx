@@ -142,7 +142,7 @@ export default function MarketPricesPage() {
             </div>
           </div>
           <button onClick={fetchPrices} disabled={loading} className="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 disabled:from-gray-300 disabled:to-gray-400 text-white py-3 rounded-2xl text-sm font-bold shadow-md shadow-amber-200/40 active:scale-[0.99] transition-all disabled:shadow-none flex items-center justify-center gap-2">
-            {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> দাম নিচ্ছে…</> : <><Search className="w-4 h-4" /> বাজারদর দেখুন</>}
+            {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> খোঁজা হচ্ছে...</> : <><Search className="w-4 h-4" /> বাজারদর দেখুন</>}
           </button>
         </div>
 
