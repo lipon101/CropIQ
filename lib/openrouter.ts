@@ -15,7 +15,7 @@ export function getOpenRouterKeys(): string[] {
   return keys
 }
 
-// ─── Fetch with automatic key rotation on 429 ───
+// ─── Fetch with automatic key rotation on 429, errors, and network issues ───
 export async function fetchOpenRouterWithRetry(
   body: any,
   currentKeyIndex = 0
@@ -26,38 +26,47 @@ export async function fetchOpenRouterWithRetry(
   for (let i = 0; i < keys.length; i++) {
     const keyIndex = (currentKeyIndex + i) % keys.length
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 30000)
-    const response = await fetch(`${OPENROUTER_BASE}/chat/completions`, {
-      method: "POST",
-      signal: controller.signal,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${keys[keyIndex]}`,
-        "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
-        "X-Title": "CropIQ",
-      },
-      body: JSON.stringify(body),
-    })
-    clearTimeout(timeoutId)
+    const timeoutId = setTimeout(() => controller.abort(), 35000) // Increase to 35s to allow slower model responses
 
-    if (response.status === 429) {
-      console.warn(`⚠️ OpenRouter key #${keyIndex + 1} rate limited, rotating...`)
-      continue
+    try {
+      const response = await fetch(`${OPENROUTER_BASE}/chat/completions`, {
+        method: "POST",
+        signal: controller.signal,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${keys[keyIndex]}`,
+          "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+          "X-Title": "CropIQ",
+        },
+        body: JSON.stringify(body),
+      })
+      clearTimeout(timeoutId)
+
+      if (response.status === 429) {
+        console.warn(`⚠️ OpenRouter key #${keyIndex + 1} rate limited, rotating...`)
+        continue
+      }
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data?.error) {
+          console.warn(`⚠️ OpenRouter key #${keyIndex + 1} returned internal error:`, data.error.message || data.error)
+          continue // Try next key
+        }
+        return data
+      }
+
+      console.warn(`⚠️ OpenRouter key #${keyIndex + 1} returned status ${response.status}, rotating...`)
+    } catch (e) {
+      clearTimeout(timeoutId)
+      console.warn(`⚠️ OpenRouter key #${keyIndex + 1} fetch failed or timed out, rotating...`, e)
     }
-
-    if (response.ok) {
-      const data = await response.json()
-      return data
-    }
-
-    // Non-429 error — try next key
-    console.warn(`⚠️ OpenRouter key #${keyIndex + 1} returned ${response.status}, rotating...`)
   }
 
   throw new Error("All OpenRouter keys exhausted — all rate limited or failed")
 }
 
-const DISEASE_SYSTEM_PROMPT = `তুমি একজন অভিজ্ঞ বাংলাদেশি কৃষিবিদ। তুমি গ্রামে-গঞ্জে কৃষকদের ফসলের রোগ নিয়ে পরামর্শ দিয়ে থাকো।
+const DISEASE_SYSTEM_PROMPT = `তুমি একজন Experienced বাংলাদেশি কৃষিবিদ। তুমি গ্রামে-গঞ্জে কৃষকদের ফসলের রোগ নিয়ে পরামর্শ দিয়ে থাকো।
 
 তোমার ভাষা হবে কৃষকের সাথে কথা বলার মতো — সহজ, সরাসরি, কাজের কথা:
 ✅ "ভাই, এটা লিফ ব্লাইট রোগ। ছত্রাক থেকে হয়।"
