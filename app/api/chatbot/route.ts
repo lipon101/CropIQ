@@ -66,12 +66,12 @@ function getFreshSuggestions(exclude: string[] = [], message?: string): string[]
   if (message) {
     const words = message.toLowerCase().split(/\s+/).filter((w: string) => w.length >= 3)
     const related = available.filter(q => words.some((w: string) => q.includes(w)))
-    if (related.length >= 3) return related.slice(0, 3)
+    if (related.length >= 5) return related.slice(0, 5)
   }
-  if (available.length >= 3) return available.slice(0, 3)
+  if (available.length >= 5) return available.slice(0, 5)
   const result = [...available]
-  for (const q of shuffled) { if (result.length >= 3) break; if (!result.includes(q)) result.push(q) }
-  return result.slice(0, 3)
+  for (const q of shuffled) { if (result.length >= 5) break; if (!result.includes(q)) result.push(q) }
+  return result.slice(0, 5)
 }
 
 function extractSuggestions(reply: string): { cleanedReply: string; suggestions: string[] } {
@@ -83,14 +83,14 @@ function extractSuggestions(reply: string): { cleanedReply: string; suggestions:
     const idx = lines.findIndex(l => /^(?:আরও\s*(জানতে|প্রশ্ন|জানবেন|জানার))/.test(l.trim()))
     if (idx >= 0) {
       const after = lines.slice(idx + 1).map(l => l.trim()).filter(l => l.length > 5 && /\?/.test(l))
-      if (after.length >= 2) { cleaned = lines.slice(0, idx).join("\n").trim(); return { cleanedReply: cleaned, suggestions: after.slice(0, 3).map(q => q.replace(/^[\d.\-•\s]+/, "").trim()) } }
+      if (after.length >= 2) { cleaned = lines.slice(0, idx).join("\n").trim(); return { cleanedReply: cleaned, suggestions: after.slice(0, 5).map(q => q.replace(/^[\d.\-•\s]+/, "").trim()) } }
     }
   }
   if (match) {
     cleaned = cleaned.replace(match[0], "").trim()
     const raw = match[1] || match[2] || ""
     const lines = raw.split("\n").map(l => l.replace(/^[\-\d.\s•]+/, "").trim()).filter(l => l.length > 3)
-    if (lines.length >= 2) return { cleanedReply: cleaned, suggestions: lines.slice(0, 3) }
+    if (lines.length >= 2) return { cleanedReply: cleaned, suggestions: lines.slice(0, 5) }
     return { cleanedReply: cleaned, suggestions: [] }
   }
   return { cleanedReply: cleaned, suggestions: [] }

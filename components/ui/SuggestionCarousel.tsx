@@ -21,7 +21,7 @@ export default function SuggestionCarousel({
 
   if (!suggestions.length) return null
 
-  // Ensure we display up to 3 questions normally, but on smaller screens we can scroll through them smoothly
+  // Support navigating through all suggestions (now up to 5)
   const getClosestIndex = () => {
     const el = carouselRef.current
     if (!el) return 0
@@ -96,17 +96,18 @@ export default function SuggestionCarousel({
       </div>
 
       {/* ── Slide Snapping Suggestions Container (Strict single-line layout, horizontal scrollable) ── */}
+      {/* The container is centered via justify-center but aligns to start for horizontal scrolling */}
       <div
         ref={carouselRef}
         onScroll={handleScroll}
-        className="flex flex-nowrap items-center justify-start gap-4 max-w-full w-full overflow-x-auto scrollbar-hide px-6 py-2 scroll-smooth scroll-px-6 snap-x snap-mandatory"
+        className="flex flex-nowrap items-center justify-start md:justify-center gap-4.5 max-w-full w-full overflow-x-auto scrollbar-hide px-6 py-2 scroll-smooth scroll-px-6 snap-x snap-mandatory"
       >
-        {suggestions.slice(0, 3).map((s, i) => (
+        {suggestions.slice(0, 5).map((s, i) => (
           <button
             key={i}
             onClick={() => onSelect(s)}
             disabled={disabled}
-            className="group shrink-0 text-center snap-center w-auto max-w-[85%] sm:max-w-md px-5 py-3 bg-white border border-gray-150 border-l-2 border-l-leaf-500 hover:border-l-leaf-600 hover:border-gray-200 hover:shadow-md hover:bg-emerald-50/20 rounded-2xl text-[12.5px] font-extrabold text-gray-700 hover:text-leaf-700 transition-all duration-200 disabled:opacity-40 whitespace-nowrap shadow-sm active:scale-95"
+            className="group shrink-0 text-left snap-center w-auto max-w-[85%] sm:max-w-md px-5 py-3 bg-white border border-gray-150 border-l-2 border-l-leaf-500 hover:border-l-leaf-600 hover:border-gray-200 hover:shadow-md hover:bg-emerald-50/20 rounded-2xl text-[12.5px] font-extrabold text-gray-700 hover:text-leaf-700 transition-all duration-200 disabled:opacity-40 whitespace-nowrap shadow-sm active:scale-95"
           >
             {s}
           </button>
@@ -115,7 +116,7 @@ export default function SuggestionCarousel({
 
       {/* ── Center Active Indicator Dots ── */}
       <div className="flex items-center justify-center gap-1.5 mt-2.5">
-        {suggestions.slice(0, 3).map((_, i) => (
+        {suggestions.slice(0, 5).map((_, i) => (
           <button
             key={i}
             onClick={() => scrollTo(i)}
