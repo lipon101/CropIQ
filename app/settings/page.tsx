@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useAuth } from "@/lib/auth/AuthContext"
 import Link from "next/link"
-import { User, Mail, Shield, Sprout, ChevronLeft, ChevronDown, Save, Check, MapPin, Phone, Calendar, AlertCircle, Navigation, Loader2 } from "lucide-react"
+import { User, Mail, Shield, Sprout, ChevronLeft, ChevronDown, Save, Check, MapPin, Phone, Calendar, AlertCircle } from "lucide-react"
 import { DISTRICTS } from "@/lib/constants/districts"
 
 export default function SettingsPage() {
@@ -13,7 +13,6 @@ export default function SettingsPage() {
   const [district, setDistrict] = useState("")
   const [saved, setSaved] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [detecting, setDetecting] = useState(false)
   const [error, setError] = useState("")
 
   // Load profile from the profiles table (fall back to auth user metadata for
@@ -46,135 +45,6 @@ export default function SettingsPage() {
 
     return () => { cancelled = true }
   }, [user?.id, supabase])
-
-  // ── High-reliability IP-based location detector (Dual API fallback) ──
-  const fetchIPLocation = async (): Promise<boolean> => {
-    // Attempt 1: ipapi.co
-    try {
-      const res = await fetch("https://ipapi.co/json/")
-      if (res.ok) {
-        const data = await res.json()
-        const city = data.city || ""
-        const region = data.region || ""
-        console.log("ipapi.co detected location:", city, region)
-        
-        const matched = DISTRICTS.find(d => 
-          city.toLowerCase().includes(d.name_en.toLowerCase()) || 
-          region.toLowerCase().includes(d.name_en.toLowerCase()) ||
-          d.name_en.toLowerCase().includes(city.toLowerCase())
-        )
-        if (matched) {
-          setDistrict(matched.name_en)
-          return true
-        }
-      }
-    } catch (e) {
-      console.warn("ipapi.co failed, trying ip-api.com fallback:", e)
-    }
-
-    // Attempt 2: ip-api.com (reliable backup)
-    try {
-      const res = await fetch("http://ip-api.com/json/")
-      if (res.ok) {
-        const data = await res.json()
-        if (data.status === "success") {
-          const city = data.city || ""
-          const region = data.regionName || ""
-          console.log("ip-api.com detected location:", city, region)
-
-          const matched = DISTRICTS.find(d => 
-            city.toLowerCase().includes(d.name_en.toLowerCase()) || 
-            region.toLowerCase().includes(d.name_en.toLowerCase()) ||
-            d.name_en.toLowerCase().includes(city.toLowerCase())
-          )
-          if (matched) {
-            setDistrict(matched.name_en)
-            return true
-          }
-        }
-      }
-    } catch (e) {
-      console.warn("ip-api.com failed too:", e)
-    }
-
-    return false
-  }
-
-  // ── Auto-Detect Location (GPS first with intelligent timeout/error IP-fallback) ──
-  const detectLocation = async () => {
-    setDetecting(true)
-    setError("")
-
-    // We try to request GPS coordinates first
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          try {
-            const { latitude, longitude } = position.coords
-            const geoRes = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`)
-            if (geoRes.ok) {
-              const geoData = await geoRes.json()
-              const principalSubdivision = geoData.principalSubdivision || ""
-              const city = geoData.city || ""
-              const locality = geoData.locality || ""
-              console.log("Geo detected locality:", principalSubdivision, city, locality)
-
-              const matched = DISTRICTS.find(d => 
-                principalSubdivision.toLowerCase().includes(d.name_en.toLowerCase()) || 
-                city.toLowerCase().includes(d.name_en.toLowerCase()) ||
-                locality.toLowerCase().includes(d.name_en.toLowerCase()) ||
-                d.name_en.toLowerCase().includes(city.toLowerCase())
-              )
-              if (matched) {
-                setDistrict(matched.name_en)
-                setDetecting(false)
-                return
-              }
-            }
-          } catch (err) {
-            console.error("Reverse geocode failed:", err)
-          }
-
-          // Fallback to IP-based if reverse-geocoding fails
-          const ipSuccess = await fetchIPLocation()
-          if (!ipSuccess) {
-            setError("অবস্থান সনাক্ত করা যায়নি। অনুগ্রহ করে ম্যানুয়ালি জেলা সিলেক্ট করুন।")
-          }
-          setDetecting(false)
-        },
-        async (geoErr) => {
-          console.warn("Geolocation GPS failed (error code:", geoErr.code, "), triggering silent IP fallback...", geoErr.message)
-          
-          // If GPS fails, DO NOT show error immediately! Silently run IP location which has 100% success rate on desktops/networks!
-          const ipSuccess = await fetchIPLocation()
-          if (!ipSuccess) {
-            if (geoErr.code === 1) {
-              setError("অবস্থান সনাক্তকরণের অনুমতি দেওয়া হয়নি বা ব্রাউজার দ্বারা ব্লকড। অনুগ্রহ করে ম্যানুয়ালি জেলা সিলেক্ট করুন।")
-            } else if (geoErr.code === 2) {
-              setError("আপনার ডিভাইস থেকে জিপিএস সংকেত পাওয়া যায়নি। ম্যানুয়ালি জেলা সিলেক্ট করুন।")
-            } else if (geoErr.code === 3) {
-              setError("অবস্থান সংকেত পেতে সময় শেষ হয়েছে (Timeout)। ম্যানুয়ালি জেলা সিলেক্ট করুন।")
-            } else {
-              setError("অবস্থান সনাক্তকরণ ব্যর্থ হয়েছে। ম্যানুয়ালি জেলা সিলেক্ট করুন।")
-            }
-          }
-          setDetecting(false)
-        },
-        { 
-          enableHighAccuracy: false, // Set to false to return location much faster without waiting for high-precision satellites
-          timeout: 6000,            // Fast 6s timeout so it quickly falls back to IP-based location if GPS is sluggish
-          maximumAge: 300000        // Allow cached location up to 5 minutes old
-        }
-      )
-    } else {
-      // Direct IP fallback for browsers without Geolocation API
-      const ipSuccess = await fetchIPLocation()
-      if (!ipSuccess) {
-        setError("আপনার ব্রাউজারে অবস্থান সনাক্তকরণ সুবিধা নেই এবং আইপি ট্র্যাকিংও ব্যর্থ হয়েছে।")
-      }
-      setDetecting(false)
-    }
-  }
 
   const handleSave = async () => {
     if (!user) { setError("লগইন করা নেই"); return }
@@ -300,38 +170,23 @@ export default function SettingsPage() {
               />
             </div>
 
-            {/* District */}
+            {/* District (Manual Select Only - Suspicious Geolocation/IP scripts completely removed) */}
             <div>
               <label className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
                 <MapPin className="w-3.5 h-3.5" />জেলা
               </label>
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <select
-                    value={district}
-                    onChange={e => setDistrict(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 outline-none text-sm font-semibold text-gray-800 transition-all appearance-none cursor-pointer pr-10"
-                  >
-                    <option value="">জেলা নির্বাচন করুন</option>
-                    {DISTRICTS.map(d => (
-                      <option key={d.name_en} value={d.name_en}>{d.name_bn}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="w-4 h-4 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-                </div>
-                <button
-                  onClick={detectLocation}
-                  disabled={detecting}
-                  type="button"
-                  title="আমার অবস্থান অটো-ডিটেক্ট করুন"
-                  className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-3.5 rounded-xl border border-emerald-200 hover:border-emerald-300 transition-all flex items-center justify-center gap-1 text-xs font-extrabold active:scale-95 disabled:opacity-50 shrink-0 animate-pulse"
+              <div className="relative">
+                <select
+                  value={district}
+                  onChange={e => setDistrict(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 outline-none text-sm font-semibold text-gray-800 transition-all appearance-none cursor-pointer pr-10"
                 >
-                  {detecting ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <><Navigation className="w-4 h-4" /> অবর্তন</>
-                  )}
-                </button>
+                  <option value="">জেলা নির্বাচন করুন</option>
+                  {DISTRICTS.map(d => (
+                    <option key={d.name_en} value={d.name_en}>{d.name_bn}</option>
+                  ))}
+                </select>
+                <ChevronDown className="w-4 h-4 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
             </div>
           </div>
