@@ -18,7 +18,20 @@ interface Advisory { summary: string; actions: string[]; irrigation: string; war
 interface SeasonalOutlook { season: { name_bn: string; desc_bn: string; hazards_bn: string[] }; crop: { crop_bn: string } | null; phase: { phase_bn: string; action_bn: string } | null }
 
 const WI: Record<string, string> = { "01d": "☀️", "01n": "🌙", "02d": "⛅", "02n": "☁️", "03d": "☁️", "03n": "☁️", "04d": "☁️", "04n": "☁️", "09d": "🌧️", "09n": "🌧️", "10d": "🌦️", "10n": "🌧️", "11d": "⛈️", "11n": "⛈️", "13d": "🌨️", "13n": "🌨️", "50d": "🌫️", "50n": "🌫️" }
-const WDAY: Record<string, string> = { "Sat": "শনি", "Sun": "রবি", "Mon": "সোম", "Tue": "মঙ্গল", "Wed": "বুধ", "Thu": "বৃহঃ", "Fri": "শুক্র" }
+
+const getDayNameBn = (dateStr: string) => {
+  const date = new Date(dateStr)
+  if (isNaN(date.getTime())) return dateStr
+  const days = ["রবিবার", "সোমবার", "মঙ্গলবার", "বুধবার", "বৃহস্পতিবার", "শুক্রবার", "শনিবার"]
+  return days[date.getDay()]
+}
+
+const formatDateBn = (dateStr: string) => {
+  const date = new Date(dateStr)
+  if (isNaN(date.getTime())) return dateStr
+  const months = ["জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন", "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"]
+  return `${date.getDate()} ${months[date.getMonth()]}`
+}
 
 export default function WeatherAdvisoryPage() {
   const { user } = useAuth()
@@ -219,13 +232,13 @@ export default function WeatherAdvisoryPage() {
                 {showForecast && (
                   <div className="flex flex-wrap justify-center items-stretch gap-3 mt-4 pt-1 w-full">
                     {weather.forecast.map((f, i) => {
-                      const day = WDAY[f.date.split(",")[0].trim()] || f.date.split(",")[0]
-                      const dateNum = f.date.split(",")[1]?.trim() || f.date
+                      const day = getDayNameBn(f.date)
+                      const dateNum = formatDateBn(f.date)
                       return (
-                        <div key={i} className="w-[110px] sm:w-[120px] p-3 bg-gray-50 border border-gray-100 rounded-2xl text-center flex flex-col justify-between min-h-[140px] hover:bg-leaf-50/30 hover:border-leaf-100/40 transition-all shadow-sm hover:shadow-md shrink-0">
+                        <div key={i} className="w-[110px] sm:w-[120px] p-3.5 bg-gray-50/60 border border-gray-100/80 rounded-2xl text-center flex flex-col justify-between min-h-[140px] hover:bg-leaf-50/30 hover:border-leaf-100/40 hover:shadow-md transition-all shrink-0">
                           <div>
-                            <p className="text-xs font-bold text-gray-700 truncate">{day}</p>
-                            <p className="text-[9px] text-gray-400 font-semibold mt-0.5 truncate">{dateNum}</p>
+                            <p className="text-[11px] font-extrabold text-gray-800 truncate">{day}</p>
+                            <p className="text-[9px] text-gray-400 font-bold mt-0.5 truncate">{dateNum}</p>
                           </div>
                           <div className="text-3xl py-1">{WI[f.icon] || "☀️"}</div>
                           <div>
