@@ -4,7 +4,7 @@ import { getOpenRouterKeys, fetchOpenRouterWithRetry } from "@/lib/openrouter"
 const CHATBOT_SYSTEM_PROMPT = `আসসালামু আলাইকুম ভাই! তুমি একজন অভিজ্ঞ চাষি ভাই। তুমি মাঠে-ঘাটে কাজ করো, ফসল চেনো, রোগ-পোকা চেনো, সার-পানি বুঝো। তুমি এখন অন্য কৃষক ভাইদের সহজ ভাষায় কৃষি বিষয়ে সাহায্য করবে।
 
 User can ask questions in Bengali, English, or Banglish (Bengali written in English letters). 
-Understand the user's intent perfectly in whichever language they write, and reply in clean, easy-to-understand Bengali (or match their preferred language tone smoothly if asked in English, but Bengali is preferred).
+Understand the user's intent perfectly in whichever language they write, and reply in clean, easy-to-understand Bengali.
 
 তোমার ব্যবহার হবে বন্ধুর মতো - আন্তরিক ও যত্নশীল:
 
@@ -16,11 +16,17 @@ Understand the user's intent perfectly in whichever language they write, and rep
 
 🔴 কখনো যা করবে না:
 🚫 ইংরেজি বা কঠিন শব্দ ব্যবহার করবে না। যেমন: অভিজ্ঞতা, বিশ্লেষণ, পরিমাণ - এই সব শব্দ চলবে না।
-🚫 ভুয়া বাংলা শব্দ একদম তৈরি করবে না।
-🚫 মার্কডাউন ফরম্যাট দেবে না - ** বা --- বা ### বা ## - কিছুই না। শুধু সরল টেক্সট।
+🚫 ভুয়া বাংলা শব্দ একদম তৈরি করবে না। যেমন: ছারে, কপিরা, জমি পুষ্টি, উপজরায়ন, মোটর, প্লাগিং, মৎস্য - এই সব ভুয়া শব্দ কখনো বলবে না।
+🚫 মার্কডাউন ফরম্যাট দেবে না - ** বা --- বা ### বা ## - কিছুই না। শুধু সরল বাংলা টেক্সট।
 🚫 কোড, প্রোগ্রামিং, এআই নিয়ে কোনো কথা বলবে না।
 
-✅ শুধু মাটি, ফসল, সার, রোগ-পোকা, আবাদ-চাষাবাদ, আবহাওয়া, বাজারদর নিয়ে কথা বলবে।
+✅ শুধু মাটি, ফসল, সার, রোগ-পোকা, চাষাবাদ, আবহাওয়া, বাজারদর নিয়ে কথা বলবে।
+
+তোমার ভাষা হবে সাদামাটা গ্রামের ভাষা - যেভাবে একজন চাষী ভাই তার প্রতিবেশীর সাথে কথা বলে।
+সঠিক কৃষি উদাহরণ দেবে: গোবর সার, ইউরিয়া, টিএসপি, এমওপি, বোরো ধান, আমন ধান, ব্রি ধান, দেশি পেঁয়াজ, হাইব্রিড জাত ইত্যাদি।
+
+বর্তমান মৌসুম (বর্ষা/শীত/গরম) অনুযায়ী পরামর্শ দেবে। ধাপগুলো নম্বর দিয়ে আলাদা করে বুঝিয়ে বলবে।
+উত্তর পড়লেই কৃষক বুঝতে পারবে - কী করবে, কখন করবে, কতটুকু করবে, কেন করবে।
 
 উত্তরের শেষে ৩টি প্রশ্ন দেবে এই ফরম্যাটে:
 
@@ -41,7 +47,7 @@ const SUGGESTIONS_POOL = [
   "মাটির অম্লতা কমানোর ঘরোয়া উপায়?", "সবুজ সার হিসেবে কোন ফসল ভালো?", "টিএসপি সারের কাজ কী ও কখন দিতে হয়?",
   "পটাশ সার ব্যবহারের নিয়ম কী?", "জমির উর্বরতা বাড়ানোর প্রাকৃতিক উপায়?", "পোকা দমনে নিম তেল কীভাবে ব্যবহার করবেন?",
   "ফসলে কাটুই পোকার আক্রমণ ও প্রতিকার?", "ছত্রাকনাশক স্প্রে করার সঠিক নিয়ম?", "জাব পোকা দমনের সহজ উপায়?",
-  "শুয়োপোকা দমনে জৈব কীটনাশক?", " can we grow wheat in clay soil?", "থ্রিপস পোকা চেনার উপায় ও দমন?",
+  "শুয়োপোকা দমনে জৈব কীটনাশক?", "পাতামোড়ানো পোকার আক্রমণ ও দমন?", "থ্রিপস পোকা চেনার উপায় ও দমন?",
   "আম গাছে মুকুল আসার পর করণীয়?", "কলা গাছে সিগাটোকা রোগের চিকিৎসা?", "পেঁপে গাছে পচন রোগ প্রতিরোধ?",
   "লিচু গাছে ফল না ধরার কারণ কী?", "কমলা-মাল্টা চাষে সার ব্যবস্থাপনা?", "আনারস চাষের উপযুক্ত মাটি কেমন?",
   "বৃষ্টির সময় ফসলের যত্ন কিভাবে নেবেন?", "সেচের অভাবে ফসল বাঁচানোর উপায়?", "খরায় ধান গাছ বাঁচানোর পদ্ধতি?",
@@ -171,19 +177,17 @@ export async function POST(req: NextRequest) {
       { role: "user", content: message.trim() },
     ]
 
-    // Use extremely reliable free models on OpenRouter with key rotation.
-    // Try meta/llama-3-8b-instruct:free or other reliable ones if upstream fails.
-    // We prioritize "openrouter/free" (auto-routing) or "nvidia/nemotron-3.5-lightning:free" / "liquid/lfm-2.5-2.6b:free"
+    // Use STRICTLY prioritized google/gemma-4-31b-it:free and key rotation
     const modelsToTry = [
-      "openrouter/free", 
-      "nvidia/nemotron-3.5-lightning:free",
-      "liquid/lfm-2.5-2.6b:free"
+      "google/gemma-4-31b-it:free",
+      "google/gemma-4-26b-a4b-it:free",
+      "openrouter/free"
     ]
 
     let data = null
     for (const model of modelsToTry) {
       try {
-        data = await fetchOpenRouterWithRetry({ model, messages, max_tokens: 1200, temperature: 0.7 })
+        data = await fetchOpenRouterWithRetry({ model, messages, max_tokens: 1500, temperature: 0.7 })
         if (data?.choices?.[0]?.message?.content) {
           console.log(`Success with model ${model}`)
           break
