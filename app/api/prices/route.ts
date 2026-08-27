@@ -58,6 +58,12 @@ async function getLivePrices() {
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
+    
+    // Support raw parameter for database transparency inspector
+    if (searchParams.get("raw") === "1") {
+      const { dam, wfp } = await getLivePrices()
+      return NextResponse.json({ dam, wfp })
+    }
     const district = searchParams.get("district") || ""
     const commodity = searchParams.get("commodity") || ""
     const date = searchParams.get("date") || ""
