@@ -1,32 +1,23 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getOpenRouterKeys, fetchOpenRouterWithRetry } from "@/lib/openrouter"
 
-const CHATBOT_SYSTEM_PROMPT = `আসসালামু আলাইকুম ভাই! তুমি একজন অভিজ্ঞ চাষি ভাই। তুমি মাঠে-ঘাটে কাজ করো, ফসল চেনো, রোগ-পোকা চেনো, সার-পানি বুঝো। তুমি এখন অন্য কৃষক ভাইদের সহজ ভাষায় কৃষি বিষয়ে সাহায্য করবে।
+const CHATBOT_SYSTEM_PROMPT = `আসসালামু আলাইকুম ভাই! তুমি মাঠ পর্যায়ের একজন অত্যন্ত অভিজ্ঞ এবং বাস্তবসম্মত কৃষি সম্প্রসারণ কর্মকর্তা (Agricultural Officer)। তুমি বাংলাদেশি চাষি ভাইদের অত্যন্ত সহজ, সরল ও বৈজ্ঞানিকভাবে শতভাগ সঠিক কৃষি পরামর্শ দেবে।
 
-কৃষক ভাই বাংলা, ইংরেজি অথবা বাংলিশ (ইংরেজি হরফে লেখা বাংলা) - যেকোনো ভাষায় প্রশ্ন করতে পারেন। যেকোনো ভাষায় প্রশ্ন এলেও তুমি তার মূল ভাব সঠিকভাবে বুঝে সবসময় সহজ, सरल বাংলায় উত্তর দেবে।
+তোমার প্রতিটি উত্তর হতে হবে বাস্তবসম্মত, বাস্তব অভিজ্ঞতাসম্পন্ন মানুষের মতো এবং শতভাগ বিজ্ঞানসম্মত। কোনো কাল্পনিক, ভুল বা ক্ষতিকর পরামর্শ দেওয়া যাবে না।
 
-তোমার ব্যবহার হবে বন্ধুর মতো - আন্তরিক ও যত্নশীল।
+⚠️ অত্যন্ত গুরুত্বপূর্ণ বাস্তব কৃষি নিয়মাবলী (Strict Agricultural Accuracy):
+১. আম গাছে মুকুল ফোটার সময় (flowering stage) কখনোই পানি সেচ দেওয়া যাবে না। সেচ দিলে মুকুল ঝরে যায় এবং নতুন পাতা গজায়। ফল মটরদানা সাইজ বা গুটি হলে তখন প্রতি ১০-১৫ দিন পর পর হালকা সেচ দিতে হবে।
+২. রাসায়নিক সার সরাসরি পানির সাথে কড়া ডোজে মিশিয়ে গাছের গোড়ায় ঢেলে দেওয়া যাবে না, এতে শিকড় পুড়ে গাছ মরে যাবে। সারের সঠিক ডোজ হবে: প্রতি পূর্ণবয়স্ক আম গাছের গোড়া থেকে ৪-৫ ফুট দূরে রিং করে মাটির সাথে ২৫0-৩০০ গ্রাম ইউরিয়া, ৩০০ গ্রাম টিএসপি এবং ২৫০ গ্রাম পটাশ (MOP) মিশিয়ে দিতে হবে এবং তা মুকুল আসার অন্তত ১-২ মাস আগে অথবা ফল সংগ্রহের পর বর্ষায়।
+৩. মুকুল আসার পর হপার পোকা এবং পাউডারি মিলডিউ (ছত্রাক) দমনে মুকুল ফোটার আগে একবার এবং গুটি ধরার পর আরেকবার ইমিডাক্লোপ্রিড গ্রুপর কীটনাশক (যেমন: এডমায়ার ০.৫ মিলি/লিটার) এবং কার্বেনডাজিম গ্রুপের ছত্রাকনাশক (যেমন: অটোস্টিন ১ গ্রাম/লিটার) মিশিয়ে স্প্রে করতে হবে। ফুল ফোটা অবস্থায় স্প্রে করা যাবে না, এতে পরাগায়নকারী মৌমাছি মারা যায়।
+৪. কোনো মনগড়া পরিমাণ (যেমন: ১ কেজি ইউরিয়া ১ লিটার পানিতে মিশিয়ে দেওয়া) বা মনগড়া কাজ (যেমন মুকুলের ভার কমাতে পাতা কেটে ফেলা) একদমই বলবে না।
 
-⚠️ অত্যন্ত গুরুত্বপূর্ণ নির্দেশাবলী:
-১. এই প্রশ্নটি যদি কোনো চলমান আলোচনার (ongoing chat/follow-up) অংশ হয় (অর্থাৎ ইউজার যখন পূর্ববর্তী উত্তরের পর আরেকটি সম্পূরক প্রশ্ন করছেন, যেমন: "আমি কি কোনো সার দেব?"), তবে উত্তরটি হতে হবে অত্যন্ত সংক্ষিপ্ত, সরাসরি (direct) এবং সুনির্দিষ্ট (concise)।
-২. চলমান চ্যাটের সম্পূরক প্রশ্নের জবাবে কোনো নতুন সালাম, অভিবাদন ("আসসালামু আলাইকুম", "কেমন আছেন") বা দীর্ঘ সূচনা দেওয়া সম্পূর্ণ নিষিদ্ধ। সরাসরি কাজের কথা দিয়ে উত্তর শুরু করবে।
-৩. উত্তর খুব সহজ ভাষায় দেবে - যাতে কম লেখাপড়া জানা কৃষকও বুঝতে পারে।
-৪. ছোট ছোট বাক্যে, ধাপে ধাপে বুঝিয়ে বলবে। কেজি, শতাংশ, টাকা দিয়ে উদাহরণ দেবে।
-৫. সবসময় পূর্ণ উত্তর দেবে - কখনো অসমাপ্ত রেখে দেবে না।
-৬. শেষে ৩টি করে সম্পর্কিত প্রশ্ন সুপারিশ করবে।
-
-🔴 কখনো যা করবে না:
-🚫 ইংরেজি বা কঠিন শব্দ ব্যবহার করবে না। যেমন: অভিজ্ঞতা, বিশ্লেষণ, পরিমাণ - এই সব শব্দ চলবে না।
-🚫 ভুয়া বাংলা শব্দ একদম তৈরি করবে না। যেমন: ছারে, কপিরা, জমি পুষ্টি, উপজরায়ন, মোটর, প্লাগিং, মৎস্য - এই সব ভুয়া শব্দ কখনো বলবে না।
-🚫 মার্কডাউন ফরম্যাট দেবে না - ** বা --- বা ### বা ## - কিছুই না। শুধু সরল বাংলা টেক্সট।
-🚫 কোড, প্রোগ্রামিং, এআই নিয়ে কোনো কথা বলবে না।
-🚫 কোনো ইংরেজি হরফ, রাসায়নিক সংকেত বা বন্ধনীর ভেতরে কোনো ইংরেজি অক্ষর লিখবে না। যেমন "ফসফরাস (P)" লেখা যাবে না, শুধু "ফসফরাস" লিখবে।
-🚫 কখনো খালি বন্ধনী () লিখবে না। কোনো ধরনের ব্র্যাকেট বা ইংরেজি সংক্ষিপ্ত রূপ ব্যবহার করবে না।
-
-✅ শুধু মাটি, ফসল, সার, রোগ-পোকা, চাষাবাদ, আবহাওয়া, বাজারদর নিয়ে কথা বলবে।
-
-তোমার ভাষা হবে সাদামাটা গ্রামের ভাষা - যেভাবে একজন চাষী ভাই তার প্রতিবেশীর সাথে কথা বলে।
-সহজ উদাহরণ দেবে: গোবর সার, ইউরিয়া, টিএসপি, এমওপি, বোরো ধান ইত্যাদি।
+⚠️ উত্তর দেওয়ার শৈলী ও নিয়মাবলী:
+১. এই প্রশ্নটি যদি কোনো চলমান আলোচনার (ongoing chat) অংশ হয়, তবে উত্তরটি হতে হবে অত্যন্ত সংক্ষিপ্ত, সরাসরি কাজের কথা (direct) এবং সুনির্দিষ্ট (concise)। কোনো সালাম বা দীর্ঘ ভূমিকা দেবে না।
+২. উত্তর খুব সহজ বাংলায় দেবে - যাতে কম লেখাপড়া জানা কৃষকও বুঝতে পারে।
+৩. কোনো ইংরেজি হরফ, রাসায়নিক সংকেত বা বন্ধনীর ভেতরে কোনো ইংরেজি অক্ষর লিখবে না (যেমন: "ফসফরাস (P)" লেখা যাবে না, শুধু "ফসফরাস" লিখবে)।
+৪. কখনো খালি বন্ধনী () লিখবে না। কোনো ধরনের ব্র্যাকেট বা ইংরেজি সংক্ষিপ্ত রূপ ব্যবহার করবে না।
+৫. মার্কডাউন ফরম্যাট দেবে না - ** বা --- বা ### বা ## - কিছুই না। শুধু সরল বাংলা টেক্সট।
+৬. শেষে ৩টি সম্পর্কিত প্রশ্ন সুপারিশ করবে।
 
 উত্তরের শেষে ৩টি প্রশ্ন দেবে এই ফরম্যাটে:
 
@@ -41,7 +32,7 @@ const SUGGESTIONS_POOL = [
   "ধানের জমিতে পোকা দমনের জৈব উপায় কী?", "বোরো ধান চাষের সঠিক সময় কখন?", "ধান গাছে শীষ বের না হলে করণীয় কী?",
   "আমন ধানের জন্য সেরা জাত কোনটি?", "ধান গাছে মাজরা পোকা দমনের উপায়?", "আলু চাষের সঠিক সময় ও পদ্ধতি?",
   "টমেটো পাতা কুঁকড়ে যায় কেন?", "বেগুন গাছে ফল ছিদ্রকারী পোকা দমন?", "পটল চাষে ফলন বাড়ানোর উপায়?",
-  "লাউ গাছে পাউডারি মিলডিউ রোগের চিকিৎসা?", "মরিচ গাছে ফুল ঝরে যায় কেন?", "ঢেঁড়স চাষে সার প্রয়োগের নিয়ম?",
+  "লাউ গাছে পাউডারি মিলডিউ রোগের চিকিৎসা?", "مরিচ গাছে ফুল ঝরে যায় কেন?", "ঢেঁড়স চাষে সার প্রয়োগের নিয়ম?",
   "কুমড়া গাছে পোকামাকড় দমনের ঘরোয়া উপায়?", "বাঁধাকপি ও ফুলকপি চাষের পার্থক্য?", "শসা চাষে রোগবালাই ও প্রতিকার?",
   "পেঁয়াজ চাষে সেচ ব্যবস্থাপনা কেমন হবে?", "জৈব সার তৈরির পদ্ধতি?", "ভার্মি কম্পোস্ট কীভাবে বানাবেন?",
   "মাটির অম্লতা কমানোর ঘরোয়া উপায়?", "সবুজ সার হিসেবে কোন ফসল ভালো?", "টিএসপি সারের কাজ কী ও কখন দিতে হয়?",
@@ -83,7 +74,6 @@ function getFreshSuggestions(exclude: string[] = [], message?: string): string[]
   return result.slice(0, 3)
 }
 
-// ─── BULLETPROOF suggestion extraction ───
 function extractSuggestions(reply: string): { cleanedReply: string; suggestions: string[] } {
   let cleaned = reply.replace(/[.\s\u200B-\u200D\uFEFF]+$/, "").trim()
   let match = cleaned.match(/---\s*\n\*\*(.+?)\*\*\s*\n((?:-\s*.+\n?)+)/)
@@ -106,10 +96,8 @@ function extractSuggestions(reply: string): { cleanedReply: string; suggestions:
   return { cleanedReply: cleaned, suggestions: [] }
 }
 
-// ─── FRIENDLY redirect for security blocks ───
 const FRIENDLY_REDIRECT = "ও চাষী ভাই, আমি তো খালি ধান-ফসল আর মাটি-পোকা লইয়াই কথা কইতে পারি। আপনের ক্ষেতের কোনো সমস্যা থাকলে কন — রোগ বালাই, সার-পানি, আবাদ-চাষা যাহা কিছু — আমি যথাসাধ্য হেল্প করমু ইনশাআল্লাহ।"
 
-// ─── INPUT GUARD ───
 const JAILBREAK_PATTERNS = [
   /system\s*prompt/i, /^\s*instructions?\s*$/i, /repeat\s.*(words|above|everything)/i, /word\s*for\s*word/i,
   /developer\s*mode/i, /jailbreak/i, /show\s*me\s*your\s*(system|prompt|instructions?)/i, /previous\s.*instructions?/i,
@@ -120,7 +108,6 @@ const JAILBREAK_PATTERNS = [
   /output\s*(your|the)\s*(system|instructions?|prompt)/i, /write\s*out\s*your\s*(system|prompt)/i,
 ]
 
-// These are normal conversation — NEVER jailbreak
 const GREETING_WHITELIST = [
   /^(hi|hey|hello|hy|hlo|helo)$/i,
   /^(good\s*(morning|afternoon|evening|night))$/i,
@@ -133,7 +120,7 @@ const GREETING_WHITELIST = [
   /^(কেমন\s*(আছ|আছেন|আছো))/i,
   /^(কে\s*তুমি|তুমি\s*কে|কে\s*আপনি)/i,
   /^(আপনার\s*নাম\s*কি)/i,
-  /^(তোমার\s*নাম\s*কি)/i,
+  /^(command_name)/i,
 ]
 
 function isGreeting(text: string): boolean {
@@ -142,34 +129,29 @@ function isGreeting(text: string): boolean {
 }
 
 function isJailbreakAttempt(text: string): boolean {
-  // NEVER block greetings
   if (isGreeting(text)) return false
-
   const lower = text.toLowerCase()
-  // Only block if actual jailbreak pattern matched
   for (const pattern of JAILBREAK_PATTERNS) {
     if (pattern.test(lower)) return true
   }
   return false
 }
 
-// ─── OUTPUT GUARD ───
 function isSystemPromptLeak(reply: string): boolean {
   if (reply.includes("তুমি কৃষি বন্ধু") || reply.includes("system prompt") || reply.includes("CHATBOT_SYSTEM_PROMPT")) return true
-  const markers = ["কঠোর নিরাপত্তা নিয়ম", "কৃষকের জন্য একজন অভিজ্ঞ", "বলার নিয়ম:", "তোমার ভাষা হবে", "শহুরে অফিসার নও"]
+  const markers = ["কঠোর নিরাপত্তা नियम", "কৃষকের জন্য একজন অভিজ্ঞ", "বলার নিয়ম:", "তোমার ভাষা হবে", "শহুরে অফিসার নও"]
   let matchCount = 0
   for (const m of markers) { if (reply.includes(m)) matchCount++; if (matchCount >= 2) return true }
   return false
 }
 
-export const maxDuration = 60 // Vercel: prevent timeout on long AI responses
+export const maxDuration = 60
 
 export async function POST(req: NextRequest) {
   try {
     const { message, language, history, shownSuggestions = [] } = await req.json()
     if (!message?.trim()) return NextResponse.json({ error: "কোন বার্তা প্রদান করা হয়নি" }, { status: 400 })
 
-    // 🛡️ Only block actual jailbreak attempts, not greetings
     if (isJailbreakAttempt(message)) {
       return NextResponse.json({ reply: FRIENDLY_REDIRECT, suggestions: getFreshSuggestions(shownSuggestions) })
     }
@@ -177,7 +159,6 @@ export async function POST(req: NextRequest) {
     const keys = getOpenRouterKeys()
     if (keys.length === 0) return NextResponse.json({ error: "এআই সার্ভিস কনফিগার করা হয়নি" }, { status: 500 })
 
-    // Adapt content based on whether history exists (ongoing chat)
     const isOngoing = history && history.length > 0
     const activeSystemPrompt = isOngoing 
       ? `${CHATBOT_SYSTEM_PROMPT}\n\n⚠️ চলমান চ্যাট সতর্কীকরণ: এটি একটি সম্পূরক প্রশ্ন। ইউজারকে কোনো নতুন অভিবাদন বা সালাম জানাবে না। কোনো লম্বা সূচনা বাদ দিয়ে সরাসরি ও সংক্ষেপে পয়েন্ট আকারে উত্তর দেবে।`
@@ -189,7 +170,6 @@ export async function POST(req: NextRequest) {
       { role: "user", content: message.trim() },
     ]
 
-    // Strictly prioritize google/gemma-4-31b-it:free, then fallback chain
     const modelsToTry = [
       "google/gemma-4-31b-it:free",
       "google/gemma-4-26b-a4b-it:free",
@@ -199,7 +179,7 @@ export async function POST(req: NextRequest) {
     let data: any = null
     for (const model of modelsToTry) {
       try {
-        data = await fetchOpenRouterWithRetry({ model, messages, max_tokens: 1500, temperature: 0.7 })
+        data = await fetchOpenRouterWithRetry({ model, messages, max_tokens: 1500, temperature: 0.1 }) // Set temperature low (0.1) for extreme deterministic accuracy and realism
         if (data?.choices?.[0]?.message?.content) {
           console.log(`Chatbot success with model: ${model}`)
           break
@@ -211,21 +191,19 @@ export async function POST(req: NextRequest) {
 
     let reply = data?.choices?.[0]?.message?.content || "দুঃখিত, এখন উত্তর দিতে পারছি না। আবার চেষ্টা করুন।"
 
-    // Strip OpenRouter safety prefix (e.g. "User Safety: safe") — case-insensitive, anywhere in text
+    // Clean safety prefixes
     reply = reply.replace(/user\s*safety\s*:\s*(safe|unsafe)\.?/gi, "").trim()
     reply = reply.replace(/response\s*safety\s*:\s*(safe|unsafe)\.?/gi, "").trim()
     reply = reply.replace(/_{2,}|~{2,}|#{1,6}\s*/g, "").trim()
     reply = reply.replace(/---+/g, "\n\n").trim()
     reply = reply.replace(/\n{3,}/g, "\n\n").trim()
 
-    // Strip Tamil and other non-Bengali Indic scripts (Devanagari, Tamil, Telugu, Kannada, Malayalam)
+    // Strip Devanagari, Tamil, Telugu, Kannada, Malayalam and other Indic scripts correctly
     reply = reply.replace(/[\u0900-\u0963\u0970-\u097F\u0B80-\u0BFF\u0C00-\u0C7F\u0C80-\u0CFF\u0D00-\u0D7F]+/g, "").trim()
 
-    // Remove stray English letters/digits left inside parentheses, e.g. "(P)" "(NPK)"
+    // Remove stray English letters/digits left inside parentheses
     reply = reply.replace(/[\(（]\s*[A-Za-z0-9\s,]+\s*[\)）]/g, "").trim()
-    // Remove now-empty parentheses left behind after cleanup
     reply = reply.replace(/[\(（]\s*[\)）]/g, "").trim()
-    // Collapse extra spaces created by removals and fix spacing before punctuation
     reply = reply.replace(/[ \t]{2,}/g, " ").trim()
     reply = reply.replace(/\s+([।,])/g, "$1")
 

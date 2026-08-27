@@ -27,14 +27,14 @@ export default function SuggestionCarousel({
         </div>
       </div>
 
-      {/* ── Single-Line Horizontal Suggestions (No wrap, scrollable, beautifully centered) ── */}
-      <div className="flex flex-nowrap items-center justify-start md:justify-center gap-2.5 max-w-4xl w-full overflow-x-auto scrollbar-hide px-4 py-1">
+      {/* ── Single-Line Horizontal Suggestions (No wrap, scrollable, beautifully centered, no cropped edges) ── */}
+      <div className="flex flex-nowrap items-center justify-start md:justify-center gap-2.5 max-w-full w-full overflow-x-auto scrollbar-hide px-6 py-1 scroll-smooth scroll-px-6">
         {suggestions.map((s, i) => (
           <button
             key={i}
             onClick={() => onSelect(s)}
             disabled={disabled}
-            className="group shrink-0 text-center px-5 py-2.5 bg-white border border-gray-150 border-l-2 border-l-leaf-500 hover:border-l-leaf-600 hover:border-gray-200 hover:shadow-md rounded-2xl text-[12.5px] font-extrabold text-gray-700 hover:text-leaf-700 transition-all duration-200 disabled:opacity-40 whitespace-nowrap shadow-sm active:scale-95"
+            className="group shrink-0 text-center px-4.5 py-2.5 bg-white border border-gray-150 border-l-2 border-l-leaf-500 hover:border-l-leaf-600 hover:border-gray-200 hover:shadow-md rounded-2xl text-[12.5px] font-extrabold text-gray-700 hover:text-leaf-700 transition-all duration-200 disabled:opacity-40 whitespace-nowrap shadow-sm active:scale-95"
           >
             {s}
           </button>
