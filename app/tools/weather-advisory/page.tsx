@@ -44,7 +44,13 @@ export default function WeatherAdvisoryPage() {
       if (ar.ok) { const ad = await ar.json(); setAdvisory(ad.advisory) }
 
       if (user) {
-        supabase.from("weather_advisories").insert({ user_id: user.id, district, crop }).then(() => {})
+        // Wait for the insert to complete rather than running floating promise with .then() to guarantee it is saved to DB
+        const { error: insErr } = await supabase.from("weather_advisories").insert({ user_id: user.id, district, crop })
+        if (insErr) {
+          console.error("Failed to insert weather advisory history:", insErr)
+        } else {
+          console.log("Weather advisory history saved successfully")
+        }
       }
     } catch (e: any) { setError(e.message || "তথ্য পাওয়া যায়নি") }
     finally { setLoading(false) }
@@ -58,197 +64,176 @@ export default function WeatherAdvisoryPage() {
 
         {/* ── Selectors ── */}
         <div className="flex flex-wrap items-stretch gap-2 mb-4 shrink-0">
-          <div className="relative flex-1 min-w-[130px]">
-            <MapPin className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <select value={district} onChange={e => setDistrict(e.target.value)} className="w-full pl-9 pr-8 py-2.5 rounded-2xl border-2 border-gray-100 text-sm font-semibold text-gray-700 focus:border-leaf-400 outline-none bg-white shadow-sm hover:border-leaf-200 transition-colors appearance-none cursor-pointer">
+          <div className="flex-1 min-w-[140px] relative">
+            <select value={district} onChange={e => setDistrict(e.target.value)} className="w-full pl-3 pr-8 py-2.5 rounded-2xl border border-gray-200 bg-gray-50 focus:bg-white text-sm outline-none appearance-none font-bold text-gray-700">
               {DISTRICTS.map(d => <option key={d.name_en} value={d.name_en}>{d.name_bn}</option>)}
             </select>
             <ChevronDown className="w-4 h-4 text-gray-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
-          <div className="relative flex-1 min-w-[130px]">
-            <Sprout className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <select value={crop} onChange={e => setCrop(e.target.value)} className="w-full pl-9 pr-8 py-2.5 rounded-2xl border-2 border-gray-100 text-sm font-semibold text-gray-700 focus:border-leaf-400 outline-none bg-white shadow-sm hover:border-leaf-200 transition-colors appearance-none cursor-pointer">
+          <div className="flex-1 min-w-[140px] relative">
+            <select value={crop} onChange={e => setCrop(e.target.value)} className="w-full pl-3 pr-8 py-2.5 rounded-2xl border border-gray-200 bg-gray-50 focus:bg-white text-sm outline-none appearance-none font-bold text-gray-700">
               {CROPS.map(c => <option key={c.name_en} value={c.name_en}>{c.name_bn}</option>)}
             </select>
             <ChevronDown className="w-4 h-4 text-gray-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
-          <button onClick={fetchAll} disabled={loading} className="bg-gradient-to-r from-leaf-500 to-leaf-600 hover:from-leaf-600 hover:to-leaf-700 disabled:from-gray-300 disabled:to-gray-400 text-white px-5 py-2.5 rounded-2xl text-sm font-bold shadow-md shadow-leaf-200/40 active:scale-[0.98] transition-all disabled:shadow-none flex items-center justify-center gap-2 shrink-0">
+          <button onClick={fetchAll} disabled={loading} className="bg-gradient-to-r from-leaf-500 to-leaf-600 hover:from-leaf-600 hover:to-emerald-700 disabled:from-gray-300 disabled:to-gray-400 text-white px-5 py-2.5 rounded-2xl text-sm font-bold shadow-md shadow-leaf-200/40 active:scale-[0.98] transition-all disabled:shadow-none flex items-center justify-center gap-2 shrink-0">
             {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> নিচ্ছে</> : <><Search className="w-4 h-4" /> পরামর্শ নিন</>}
           </button>
         </div>
 
-        {/* ── Content ── */}
-        <div className={`flex-1 min-h-0 ${weather && !loading ? 'overflow-y-auto' : 'flex items-center justify-center'}`}>
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm flex items-center gap-2 mb-3">
-              <AlertTriangle className="w-4 h-4 shrink-0" />{error}
-            </div>
-          )}
+        {error && <div className="p-4 bg-red-50 text-red-600 text-sm font-bold rounded-2xl flex items-center gap-2 mb-4 shrink-0 border border-red-200"><AlertCircle className="w-4 h-4" />{error}</div>}
 
-          {loading && (
-            <div className="flex flex-col items-center justify-center py-20 gap-3">
-              <Loader2 className="w-8 h-8 text-leaf-500 animate-spin" />
-              <p className="text-sm text-gray-400">আবহাওয়া ও পরামর্শ নেওয়া হচ্ছে…</p>
-            </div>
-          )}
-
-          {!weather && !loading && !error && (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center max-w-xs">
-                <div className="w-16 h-16 bg-gradient-to-br from-leaf-100 to-leaf-200 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm">
-                  <CloudSun className="w-8 h-8 text-leaf-600" />
-                </div>
-                <h2 className="text-lg font-bold text-gray-800 mb-1">আবহাওয়া পরামর্শ নিন</h2>
-                <p className="text-sm text-gray-500 mb-5">জেলা ও ফসল সিলেক্ট করে আবহাওয়ার ভিত্তিতে সঠিক কৃষি পরামর্শ পান</p>
-                <button onClick={fetchAll} className="btn-primary-sm">পরামর্শ নিন</button>
+        {/* ── Main View ── */}
+        {!weather && !loading && (
+          <div className="flex-1 flex items-center justify-center border border-dashed border-gray-200 rounded-3xl p-6 bg-gray-50/50">
+            <div className="text-center max-w-sm">
+              <div className="w-16 h-16 bg-gradient-to-br from-leaf-100 to-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm">
+                <CloudSun className="w-8 h-8 text-leaf-600" />
               </div>
+              <h2 className="text-lg font-bold text-gray-800 mb-1">আবহাওয়া পরামর্শ নিন</h2>
+              <p className="text-sm text-gray-500 mb-5">জেলা ও ফসল সিলেক্ট করে আবহাওয়ার ভিত্তিতে সঠিক কৃষি পরামর্শ পান</p>
+              <button onClick={fetchAll} className="btn-primary-sm">পরামর্শ নিন</button>
             </div>
-          )}
+          </div>
+        )}
 
-          {weather && !loading && (
-            <div className="space-y-3 pb-4">
-              {/* ── Current Weather Card ── */}
-              <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-leaf-500 via-leaf-600 to-teal-600 p-5 text-white shadow-lg shadow-leaf-200/40">
-                <div className="absolute -right-6 -top-6 w-36 h-36 rounded-full bg-white/10 blur-2xl" />
-                <div className="absolute -left-8 -bottom-10 w-32 h-32 rounded-full bg-teal-400/20 blur-2xl" />
-                <div className="relative flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-leaf-50 text-xs font-bold flex items-center gap-1.5 mb-2">
-                      <MapPin className="w-3.5 h-3.5" />{districtBn} · {cropBn}
-                    </p>
-                    <div className="flex items-end gap-1">
-                      <span className="text-5xl font-extrabold tracking-tight leading-none">{Math.round(weather.current.temp)}</span>
-                      <span className="text-xl text-leaf-100 mb-0.5">°C</span>
-                    </div>
-                    <p className="text-leaf-50 text-sm font-medium mt-1.5">{desc}</p>
+        {loading && (
+          <div className="flex-1 flex flex-col items-center justify-center py-20 gap-3">
+            <Loader2 className="w-8 h-8 text-leaf-500 animate-spin" />
+            <p className="text-sm text-gray-500 font-bold">আবহাওয়া ও এআই পরামর্শ তৈরি হচ্ছে...</p>
+          </div>
+        )}
+
+        {weather && !loading && (
+          <div className="flex-1 overflow-y-auto space-y-4 pb-4 pr-1">
+
+            {/* ── Current & Seasonal ── */}
+            <div className="grid md:grid-cols-2 gap-4">
+              {/* Current */}
+              <div className="bg-gradient-to-br from-leaf-50 to-emerald-50/40 border border-leaf-100/60 p-4 rounded-3xl relative overflow-hidden flex flex-col justify-between">
+                <div className="absolute top-0 right-0 text-7xl translate-x-4 -translate-y-2 opacity-15">{WI[weather.current.icon] || "☀️"}</div>
+                <div>
+                  <div className="flex items-center gap-2 text-leaf-700 text-xs font-bold uppercase tracking-wider mb-2">
+                    <MapPin className="w-3.5 h-3.5" />
+                    <span>{districtBn} জেলা</span>
                   </div>
-                  <div className="flex gap-5 pr-1">
-                    <div className="text-center">
-                      <Droplets className="w-5 h-5 mx-auto mb-1 text-leaf-100" />
-                      <p className="text-lg font-bold">{weather.current.humidity}%</p>
-                      <p className="text-[10px] text-leaf-100">আর্দ্রতা</p>
-                    </div>
-                    <div className="text-center">
-                      <Wind className="w-5 h-5 mx-auto mb-1 text-leaf-100" />
-                      <p className="text-lg font-bold">{weather.current.wind_kmh}</p>
-                      <p className="text-[10px] text-leaf-100">কিমি/ঘ</p>
-                    </div>
+                  <div className="flex items-baseline gap-1 mb-1">
+                    <span className="text-4xl font-extrabold text-gray-900">{Math.round(weather.current.temp)}°C</span>
+                    <span className="text-xs font-semibold text-gray-400">সর্বোচ্চ: {Math.round(weather.current.temp_max)}° / সর্বনিম্ন: {Math.round(weather.current.temp_min)}°</span>
                   </div>
+                  <p className="text-sm font-bold text-gray-800 capitalize flex items-center gap-1.5">{WI[weather.current.icon]} {desc}</p>
+                </div>
+                <div className="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-leaf-100/60 text-xs font-bold text-gray-600">
+                  <div className="flex items-center gap-1"><Droplets className="w-3.5 h-3.5 text-blue-500" />{weather.current.humidity}% আর্দ্রতা</div>
+                  <div className="flex items-center gap-1"><CloudRain className="w-3.5 h-3.5 text-sky-500" />{weather.current.rain_mm} মিমি বৃষ্টি</div>
+                  <div className="flex items-center gap-1"><Wind className="w-3.5 h-3.5 text-teal-500" />{weather.current.wind_kmh} কিমি/ঘণ্টা</div>
                 </div>
               </div>
 
-              {/* ── Seasonal Outlook ── */}
+              {/* Seasonal */}
               {seasonal && (
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-                  <div className="flex items-center gap-2 mb-2.5">
-                    <div className="w-7 h-7 bg-amber-50 rounded-lg flex items-center justify-center border border-amber-100">
-                      <CalendarDays className="w-4 h-4 text-amber-600" />
+                <div className="bg-white border border-gray-100 p-4 rounded-3xl flex flex-col justify-between shadow-sm">
+                  <div>
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-amber-600 uppercase tracking-wider mb-2">
+                      <CalendarDays className="w-3.5 h-3.5" />
+                      <span>মৌসুমি পূর্বাভাস ({seasonal.season.name_bn})</span>
                     </div>
-                    <div>
-                      <p className="text-sm font-extrabold text-gray-800">{seasonal.season.name_bn}</p>
-                      <p className="text-[11px] text-gray-400 font-semibold">মৌসুমভিত্তিক পরামর্শ</p>
-                    </div>
+                    <p className="text-xs text-gray-500 leading-relaxed mb-3">{seasonal.season.desc_bn}</p>
+                    {seasonal.phase && (
+                      <div className="p-2.5 bg-amber-50/50 rounded-2xl border border-amber-100/40 text-xs">
+                        <span className="font-extrabold text-amber-800">ফসলের পর্যায়: </span>
+                        <span className="font-bold text-gray-700">{seasonal.phase.phase_bn}</span>
+                        <p className="text-gray-500 mt-1">{seasonal.phase.action_bn}</p>
+                      </div>
+                    )}
                   </div>
-                  <p className="text-xs text-gray-600 leading-relaxed mb-2.5">{seasonal.season.desc_bn}</p>
                   {seasonal.season.hazards_bn?.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mb-2.5">
+                    <div className="mt-3 pt-3 border-t border-gray-50 flex flex-wrap gap-1.5">
                       {seasonal.season.hazards_bn.map((h, i) => (
-                        <span key={i} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-100 text-[11px] font-bold">
-                          ⚠️ {h}
-                        </span>
+                        <span key={i} className="px-2 py-1 bg-red-50 text-red-600 rounded-lg text-[10px] font-bold flex items-center gap-1"><AlertTriangle className="w-3 h-3" />{h}</span>
                       ))}
                     </div>
                   )}
-                  {seasonal.phase ? (
-                    <div className="flex items-start gap-2.5 bg-leaf-50 rounded-xl border border-leaf-100 p-3">
-                      <ArrowRight className="w-4 h-4 text-leaf-600 mt-0.5 shrink-0" />
-                      <div>
-                        <p className="text-xs font-bold text-leaf-800">{seasonal.crop?.crop_bn || ""} — {seasonal.phase.phase_bn}</p>
-                        <p className="text-xs text-leaf-700 leading-relaxed mt-0.5">{seasonal.phase.action_bn}</p>
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="text-xs text-gray-400">এই ফসলের নির্দিষ্ট মৌসুম-উইন্ডো তথ্য এখনও যোগ করা হয়নি।</p>
-                  )}
                 </div>
               )}
+            </div>
 
-              {/* ── 7-Day Forecast ── */}
-              <button onClick={() => setShowForecast(!showForecast)} className="w-full bg-white rounded-2xl border border-gray-100 px-4 py-3 flex items-center justify-between text-sm font-bold text-gray-700 hover:bg-gray-50 transition-colors shadow-sm">
-                <span className="flex items-center gap-2"><CloudRain className="w-4 h-4 text-leaf-500" /> ৭ দিনের পূর্বাভাস</span>
-                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showForecast ? "rotate-180" : ""}`} />
-              </button>
-              {showForecast && (
-                <div className="flex justify-center gap-1.5 bg-white rounded-2xl border border-gray-100 shadow-sm p-3 flex-wrap">
-                  {weather.forecast.map((day, i) => {
-                    const dayEn = new Date(day.date).toLocaleDateString("en", { weekday: "short" })
-                    return (
-                      <div key={i} className={`w-[72px] text-center rounded-xl py-2.5 px-1 ${i === 0 ? "bg-leaf-50 border border-leaf-100" : "hover:bg-gray-50 transition-colors"}`}>
-                        <p className={`text-[10px] font-bold ${i === 0 ? "text-leaf-600" : "text-gray-400"}`}>{i === 0 ? "আজ" : WDAY[dayEn] || dayEn}</p>
-                        <div className="text-xl my-1.5">{WI[day.icon] || "🌤️"}</div>
-                        <p className="text-xs font-bold text-gray-800">{Math.round(day.temp_max)}° <span className="text-gray-400 font-normal">{Math.round(day.temp_min)}°</span></p>
-                        <div className="text-[9px] text-gray-400 mt-1 flex justify-center gap-1.5">
-                          <span className="inline-flex items-center gap-0.5"><Droplets className="w-2.5 h-2.5" />{day.humidity}%</span>
-                          {day.rain_mm > 0 && <span className="inline-flex items-center gap-0.5 text-sky-600">💧{day.rain_mm}</span>}
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-
-              {/* ── Advisory Section ── */}
-              <div className="space-y-2.5">
-                <div className="flex items-center gap-2 px-1">
-                  <div className="w-7 h-7 bg-gradient-to-br from-leaf-500 to-leaf-600 rounded-lg flex items-center justify-center shadow-sm">
-                    <Lightbulb className="w-4 h-4 text-white" />
+            {/* ── AI Advisory ── */}
+            {advisory && (
+              <div className="bg-white border border-gray-100 rounded-3xl p-4 md:p-5 shadow-sm space-y-4">
+                <div className="flex items-center gap-2 border-b border-gray-50 pb-3">
+                  <div className="w-8 h-8 bg-leaf-100 rounded-xl flex items-center justify-center shrink-0">
+                    <Lightbulb className="w-4 h-4 text-leaf-600" />
                   </div>
-                  <h3 className="text-sm font-bold text-gray-800">{districtBn} — {cropBn} কৃষি পরামর্শ</h3>
+                  <div>
+                    <h3 className="font-bold text-gray-800 text-sm">আবহাওয়া ভিত্তিক কাস্টম পরামর্শ ({cropBn})</h3>
+                    <p className="text-xs text-gray-400 font-medium">কৃত্রিম বুদ্ধিমত্তা দ্বারা কাস্টমাইজড</p>
+                  </div>
                 </div>
 
-                {advisory ? (
-                  <>
-                    <div className="bg-gradient-to-r from-leaf-50 to-teal-50 rounded-2xl border border-leaf-100 p-4 shadow-sm">
-                      <p className="text-sm text-leaf-900 font-semibold leading-relaxed">{advisory.summary}</p>
+                <div className="space-y-3 text-sm">
+                  {/* Summary */}
+                  <p className="text-gray-600 leading-relaxed font-semibold bg-gray-50/50 p-3 rounded-2xl border border-gray-100">{advisory.summary}</p>
+
+                  <div className="grid md:grid-cols-2 gap-4 pt-1">
+                    {/* Actions */}
+                    <div className="space-y-2">
+                      <h4 className="font-extrabold text-gray-800 text-xs uppercase tracking-wider flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-leaf-500" />করণীয় পদক্ষেপ</h4>
+                      <ul className="space-y-1.5 text-xs text-gray-500 font-semibold pl-1">
+                        {advisory.actions.map((a, i) => <li key={i} className="flex items-start gap-1.5"><ArrowRight className="w-3.5 h-3.5 text-leaf-500 mt-0.5 shrink-0" />{a}</li>)}
+                      </ul>
                     </div>
 
-                    {advisory.actions?.length > 0 && (
-                      <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm space-y-2.5">
-                        <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">করণীয়</p>
-                        {advisory.actions.map((a, i) => (
-                          <div key={i} className="flex items-start gap-2.5 p-3 rounded-xl bg-gray-50 hover:bg-leaf-50/60 transition-colors">
-                            <div className="w-5 h-5 bg-leaf-500 rounded-full flex items-center justify-center shrink-0 mt-0.5"><CheckCircle2 className="w-3 h-3 text-white" /></div>
-                            <p className="text-sm text-gray-700 font-semibold leading-relaxed">{a}</p>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    <div className="space-y-2.5">
+                    {/* Irrigation & Warning */}
+                    <div className="space-y-3">
                       {advisory.irrigation && (
-                        <div className="bg-gradient-to-br from-sky-50 to-blue-50 rounded-2xl border border-sky-100 p-4 shadow-sm">
-                          <p className="text-[11px] font-bold text-sky-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5"><Droplets className="w-3.5 h-3.5" />সেচ</p>
-                          <p className="text-sm text-sky-900 font-semibold leading-relaxed">{advisory.irrigation}</p>
+                        <div className="p-3 bg-blue-50/30 border border-blue-100/50 rounded-2xl space-y-1">
+                          <h5 className="font-extrabold text-blue-700 text-xs flex items-center gap-1.5"><Droplets className="w-3.5 h-3.5" />সেচ পরামর্শ</h5>
+                          <p className="text-xs text-blue-600 font-bold leading-relaxed">{advisory.irrigation}</p>
                         </div>
                       )}
                       {advisory.warning && (
-                        <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl border border-amber-100 p-4 shadow-sm">
-                          <p className="text-[11px] font-bold text-amber-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5"><AlertCircle className="w-3.5 h-3.5" />সতর্কতা</p>
-                          <p className="text-sm text-amber-900 font-semibold leading-relaxed">{advisory.warning}</p>
+                        <div className="p-3 bg-red-50/30 border border-red-100/50 rounded-2xl space-y-1">
+                          <h5 className="font-extrabold text-red-700 text-xs flex items-center gap-1.5"><AlertTriangle className="w-3.5 h-3.5" />বিশেষ সতর্কতা</h5>
+                          <p className="text-xs text-red-600 font-bold leading-relaxed">{advisory.warning}</p>
                         </div>
                       )}
                     </div>
-                  </>
-                ) : (
-                  <div className="bg-gray-50 rounded-2xl border border-gray-100 p-6 text-center">
-                    <Loader2 className="w-5 h-5 text-gray-400 animate-spin mx-auto mb-2" />
-                    <p className="text-sm text-gray-400">পরামর্শ তৈরি হচ্ছে…</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ── Forecast ── */}
+            {weather.forecast && (
+              <div className="bg-white border border-gray-100 rounded-3xl p-4 shadow-sm">
+                <button onClick={() => setShowForecast(!showForecast)} className="flex items-center justify-between w-full font-bold text-gray-800 text-sm">
+                  <span className="flex items-center gap-1.5"><CalendarDays className="w-4 h-4 text-leaf-500" />৭ দিনের আবহাওয়ার পূর্বাভাস</span>
+                  <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showForecast ? "rotate-180" : ""}`} />
+                </button>
+                {showForecast && (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 mt-4 pt-1">
+                    {weather.forecast.map((f, i) => {
+                      const day = WDAY[f.date.split(",")[0].trim()] || f.date.split(",")[0]
+                      const dateNum = f.date.split(",")[1]?.trim() || f.date
+                      return (
+                        <div key={i} className="p-3 bg-gray-50 border border-gray-100 rounded-2xl text-center space-y-1.5 hover:bg-leaf-50/30 hover:border-leaf-100/40 transition-colors">
+                          <p className="text-xs font-bold text-gray-700">{day}</p>
+                          <p className="text-[10px] text-gray-400 font-medium">{dateNum}</p>
+                          <div className="text-2xl py-0.5">{WI[f.icon] || "☀️"}</div>
+                          <p className="text-xs font-extrabold text-gray-800">{Math.round(f.temp)}°</p>
+                          <p className="text-[9px] text-gray-400 font-semibold">{f.description_bn || f.description || ""}</p>
+                        </div>
+                      )
+                    })}
                   </div>
                 )}
               </div>
-            </div>
-          )}
-        </div>
+            )}
+
+          </div>
+        )}
+
       </div>
     </ToolPageLayout>
   )
