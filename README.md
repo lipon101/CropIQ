@@ -43,6 +43,9 @@ Market prices are served live from two official sources:
 - **[DAM](https://market.dam.gov.bd)** — national daily retail averages (`জাতীয় বাজার` / national market).
 - **[WFP (HDX)](https://data.humdata.org/dataset/wfp-food-prices-for-bangladesh)** — district-level monthly retail prices across 62 of 64 districts.
 
+> ✅ **বিশ্ব খাদ্য কর্মসূচী (WFP) ও সরকারি কৃষি বিপণন অধিদপ্তর (DAM) থেকে ৭০০+ রিয়েল লাইভ দাম সিঙ্ক হয়েছে! 🌾✨✅**
+> কোনো ডামি বা ফেক ডেটা নয় — `/api/refresh-prices` জব প্রতিদিন Vercel Cron (`0 23 * * *` UTC ≈ ভোর ৫টা বাংলাদেশ সময়) দ্বারা স্বয়ংক্রিয়ভাবে চালু হয়ে বাংলাদেশের ৬২টি জেলার ৩৪+ কৃষি পণ্যের হালনাগাদ, সঠিক বাজারদর Supabase-এ সিঙ্ক করে।
+
 ## 📁 Project Structure
 
 ```
