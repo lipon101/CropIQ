@@ -62,21 +62,21 @@ export default function WeatherAdvisoryPage() {
     <ToolPageLayout title="আবহাওয়া পরামর্শ" icon={<CloudSun className="w-4 h-4 text-white" />} currentIndex={3}>
       <div className="flex flex-col flex-1 min-h-0 overflow-hidden w-full pt-1">
 
-        {/* ── Selectors ── */}
-        <div className="flex flex-wrap items-stretch gap-2 mb-4 shrink-0">
-          <div className="flex-1 min-w-[140px] relative">
-            <select value={district} onChange={e => setDistrict(e.target.value)} className="w-full pl-3 pr-8 py-2.5 rounded-2xl border border-gray-200 bg-gray-50 focus:bg-white text-sm outline-none appearance-none font-bold text-gray-700">
+        {/* ── Selectors (Expanded and Wider spacing) ── */}
+        <div className="flex flex-wrap items-stretch gap-3 mb-6 shrink-0 w-full">
+          <div className="flex-1 min-w-[180px] relative">
+            <select value={district} onChange={e => setDistrict(e.target.value)} className="w-full pl-4 pr-8 py-3 rounded-2xl border border-gray-200 bg-gray-50 focus:bg-white text-sm outline-none appearance-none font-bold text-gray-700">
               {DISTRICTS.map(d => <option key={d.name_en} value={d.name_en}>{d.name_bn}</option>)}
             </select>
-            <ChevronDown className="w-4 h-4 text-gray-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <ChevronDown className="w-4 h-4 text-gray-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
-          <div className="flex-1 min-w-[140px] relative">
-            <select value={crop} onChange={e => setCrop(e.target.value)} className="w-full pl-3 pr-8 py-2.5 rounded-2xl border border-gray-200 bg-gray-50 focus:bg-white text-sm outline-none appearance-none font-bold text-gray-700">
+          <div className="flex-1 min-w-[180px] relative">
+            <select value={crop} onChange={e => setCrop(e.target.value)} className="w-full pl-4 pr-8 py-3 rounded-2xl border border-gray-200 bg-gray-50 focus:bg-white text-sm outline-none appearance-none font-bold text-gray-700">
               {CROPS.map(c => <option key={c.name_en} value={c.name_en}>{c.name_bn}</option>)}
             </select>
-            <ChevronDown className="w-4 h-4 text-gray-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <ChevronDown className="w-4 h-4 text-gray-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
-          <button onClick={fetchAll} disabled={loading} className="bg-gradient-to-r from-leaf-500 to-leaf-600 hover:from-leaf-600 hover:to-emerald-700 disabled:from-gray-300 disabled:to-gray-400 text-white px-5 py-2.5 rounded-2xl text-sm font-bold shadow-md shadow-leaf-200/40 active:scale-[0.98] transition-all disabled:shadow-none flex items-center justify-center gap-2 shrink-0">
+          <button onClick={fetchAll} disabled={loading} className="bg-gradient-to-r from-leaf-500 to-leaf-600 hover:from-leaf-600 hover:to-emerald-700 disabled:from-gray-300 disabled:to-gray-400 text-white px-6 py-3 rounded-2xl text-sm font-bold shadow-md shadow-leaf-200/40 active:scale-[0.98] transition-all disabled:shadow-none flex items-center justify-center gap-2 shrink-0">
             {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> নিচ্ছে</> : <><Search className="w-4 h-4" /> পরামর্শ নিন</>}
           </button>
         </div>
@@ -105,21 +105,21 @@ export default function WeatherAdvisoryPage() {
         )}
 
         {weather && !loading && (
-          <div className="flex-1 overflow-y-auto space-y-4 pb-4 pr-1">
+          <div className="flex-1 overflow-y-auto space-y-5 pb-4 pr-1 w-full">
 
-            {/* ── Current & Seasonal ── */}
-            <div className="grid md:grid-cols-2 gap-4">
-              {/* Current */}
-              <div className="bg-gradient-to-br from-leaf-50 to-emerald-50/40 border border-leaf-100/60 p-4 rounded-3xl relative overflow-hidden flex flex-col justify-between">
+            {/* ── Current & Seasonal (Beautiful wide horizontal alignment) ── */}
+            <div className="grid md:grid-cols-2 gap-5 w-full">
+              {/* Current Weather Card */}
+              <div className="bg-gradient-to-br from-leaf-50 to-emerald-50/40 border border-leaf-100/60 p-5 rounded-3xl relative overflow-hidden flex flex-col justify-between shadow-sm min-h-[160px]">
                 <div className="absolute top-0 right-0 text-7xl translate-x-4 -translate-y-2 opacity-15">{WI[weather.current.icon] || "☀️"}</div>
                 <div>
                   <div className="flex items-center gap-2 text-leaf-700 text-xs font-bold uppercase tracking-wider mb-2">
                     <MapPin className="w-3.5 h-3.5" />
                     <span>{districtBn} জেলা</span>
                   </div>
-                  <div className="flex items-baseline gap-1 mb-1">
+                  <div className="flex items-baseline gap-2 mb-1">
                     <span className="text-4xl font-extrabold text-gray-900">{Math.round(weather.current.temp)}°C</span>
-                    <span className="text-xs font-semibold text-gray-400">সর্বোচ্চ: {Math.round(weather.current.temp_max)}° / সর্বনিম্ন: {Math.round(weather.current.temp_min)}°</span>
+                    <span className="text-xs font-semibold text-gray-500">সর্বোচ্চ: {Math.round(weather.current.temp_max)}° / সর্বনিম্ন: {Math.round(weather.current.temp_min)}°</span>
                   </div>
                   <p className="text-sm font-bold text-gray-800 capitalize flex items-center gap-1.5">{WI[weather.current.icon]} {desc}</p>
                 </div>
@@ -130,9 +130,9 @@ export default function WeatherAdvisoryPage() {
                 </div>
               </div>
 
-              {/* Seasonal */}
+              {/* Seasonal Outlook Card */}
               {seasonal && (
-                <div className="bg-white border border-gray-100 p-4 rounded-3xl flex flex-col justify-between shadow-sm">
+                <div className="bg-white border border-gray-100 p-5 rounded-3xl flex flex-col justify-between shadow-sm min-h-[160px]">
                   <div>
                     <div className="flex items-center gap-1.5 text-xs font-bold text-amber-600 uppercase tracking-wider mb-2">
                       <CalendarDays className="w-3.5 h-3.5" />
@@ -140,10 +140,10 @@ export default function WeatherAdvisoryPage() {
                     </div>
                     <p className="text-xs text-gray-500 leading-relaxed mb-3">{seasonal.season.desc_bn}</p>
                     {seasonal.phase && (
-                      <div className="p-2.5 bg-amber-50/50 rounded-2xl border border-amber-100/40 text-xs">
+                      <div className="p-3 bg-amber-50/50 rounded-2xl border border-amber-100/40 text-xs leading-relaxed">
                         <span className="font-extrabold text-amber-800">ফসলের পর্যায়: </span>
-                        <span className="font-bold text-gray-700">{seasonal.phase.phase_bn}</span>
-                        <p className="text-gray-500 mt-1">{seasonal.phase.action_bn}</p>
+                        <span className="font-bold text-gray-700">{seasonal.phase.phase_bn} — </span>
+                        <span className="text-gray-500 font-semibold">{seasonal.phase.action_bn}</span>
                       </div>
                     )}
                   </div>
@@ -158,9 +158,9 @@ export default function WeatherAdvisoryPage() {
               )}
             </div>
 
-            {/* ── AI Advisory ── */}
+            {/* ── AI Advisory Card (Redesigned to be Wider and Clean) ── */}
             {advisory && (
-              <div className="bg-white border border-gray-100 rounded-3xl p-4 md:p-5 shadow-sm space-y-4">
+              <div className="bg-white border border-gray-100 rounded-3xl p-5 md:p-6 shadow-sm space-y-5 w-full">
                 <div className="flex items-center gap-2 border-b border-gray-50 pb-3">
                   <div className="w-8 h-8 bg-leaf-100 rounded-xl flex items-center justify-center shrink-0">
                     <Lightbulb className="w-4 h-4 text-leaf-600" />
@@ -171,29 +171,34 @@ export default function WeatherAdvisoryPage() {
                   </div>
                 </div>
 
-                <div className="space-y-3 text-sm">
+                <div className="space-y-4 text-sm w-full">
                   {/* Summary */}
-                  <p className="text-gray-600 leading-relaxed font-semibold bg-gray-50/50 p-3 rounded-2xl border border-gray-100">{advisory.summary}</p>
+                  <p className="text-gray-600 leading-relaxed font-semibold bg-gray-50/50 p-3.5 rounded-2xl border border-gray-100/80">{advisory.summary}</p>
 
-                  <div className="grid md:grid-cols-2 gap-4 pt-1">
+                  <div className="grid md:grid-cols-2 gap-5 pt-1 w-full">
                     {/* Actions */}
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       <h4 className="font-extrabold text-gray-800 text-xs uppercase tracking-wider flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-leaf-500" />করণীয় পদক্ষেপ</h4>
-                      <ul className="space-y-1.5 text-xs text-gray-500 font-semibold pl-1">
-                        {advisory.actions.map((a, i) => <li key={i} className="flex items-start gap-1.5"><ArrowRight className="w-3.5 h-3.5 text-leaf-500 mt-0.5 shrink-0" />{a}</li>)}
+                      <ul className="space-y-2.5 text-xs text-gray-600 font-semibold pl-1 leading-relaxed">
+                        {advisory.actions.map((a, i) => (
+                          <li key={i} className="flex items-start gap-2 border-b border-gray-50 pb-1.5 last:border-0 last:pb-0">
+                            <ArrowRight className="w-3.5 h-3.5 text-leaf-500 mt-0.5 shrink-0" />
+                            <span className="flex-1">{a}</span>
+                          </li>
+                        ))}
                       </ul>
                     </div>
 
                     {/* Irrigation & Warning */}
                     <div className="space-y-3">
                       {advisory.irrigation && (
-                        <div className="p-3 bg-blue-50/30 border border-blue-100/50 rounded-2xl space-y-1">
+                        <div className="p-4 bg-blue-50/30 border border-blue-100/50 rounded-2xl space-y-1.5">
                           <h5 className="font-extrabold text-blue-700 text-xs flex items-center gap-1.5"><Droplets className="w-3.5 h-3.5" />সেচ পরামর্শ</h5>
                           <p className="text-xs text-blue-600 font-bold leading-relaxed">{advisory.irrigation}</p>
                         </div>
                       )}
                       {advisory.warning && (
-                        <div className="p-3 bg-red-50/30 border border-red-100/50 rounded-2xl space-y-1">
+                        <div className="p-4 bg-red-50/30 border border-red-100/50 rounded-2xl space-y-1.5">
                           <h5 className="font-extrabold text-red-700 text-xs flex items-center gap-1.5"><AlertTriangle className="w-3.5 h-3.5" />বিশেষ সতর্কতা</h5>
                           <p className="text-xs text-red-600 font-bold leading-relaxed">{advisory.warning}</p>
                         </div>
@@ -204,25 +209,29 @@ export default function WeatherAdvisoryPage() {
               </div>
             )}
 
-            {/* ── Forecast ── */}
+            {/* ── 7-Day Forecast (Optimized, Spacious and perfectly centered) ── */}
             {weather.forecast && (
-              <div className="bg-white border border-gray-100 rounded-3xl p-4 shadow-sm">
+              <div className="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm w-full">
                 <button onClick={() => setShowForecast(!showForecast)} className="flex items-center justify-between w-full font-bold text-gray-800 text-sm">
                   <span className="flex items-center gap-1.5"><CalendarDays className="w-4 h-4 text-leaf-500" />৭ দিনের আবহাওয়ার পূর্বাভাস</span>
                   <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showForecast ? "rotate-180" : ""}`} />
                 </button>
                 {showForecast && (
-                  <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 mt-4 pt-1">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 mt-4 pt-1 w-full">
                     {weather.forecast.map((f, i) => {
                       const day = WDAY[f.date.split(",")[0].trim()] || f.date.split(",")[0]
                       const dateNum = f.date.split(",")[1]?.trim() || f.date
                       return (
-                        <div key={i} className="p-3 bg-gray-50 border border-gray-100 rounded-2xl text-center space-y-1.5 hover:bg-leaf-50/30 hover:border-leaf-100/40 transition-colors">
-                          <p className="text-xs font-bold text-gray-700">{day}</p>
-                          <p className="text-[10px] text-gray-400 font-medium">{dateNum}</p>
-                          <div className="text-2xl py-0.5">{WI[f.icon] || "☀️"}</div>
-                          <p className="text-xs font-extrabold text-gray-800">{Math.round(f.temp)}°</p>
-                          <p className="text-[9px] text-gray-400 font-semibold">{f.description_bn || f.description || ""}</p>
+                        <div key={i} className="p-3 bg-gray-50 border border-gray-100 rounded-2xl text-center space-y-2 hover:bg-leaf-50/30 hover:border-leaf-100/40 transition-all flex flex-col justify-between min-h-[140px] shadow-sm hover:shadow-md">
+                          <div>
+                            <p className="text-xs font-bold text-gray-700">{day}</p>
+                            <p className="text-[10px] text-gray-400 font-semibold mt-0.5">{dateNum}</p>
+                          </div>
+                          <div className="text-3xl py-1">{WI[f.icon] || "☀️"}</div>
+                          <div>
+                            <p className="text-xs font-extrabold text-gray-800">{Math.round(f.temp)}°</p>
+                            <p className="text-[9px] text-gray-400 font-bold truncate mt-0.5" title={f.description_bn || f.description}>{f.description_bn || f.description || ""}</p>
+                          </div>
                         </div>
                       )
                     })}

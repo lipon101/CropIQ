@@ -63,17 +63,16 @@ export function ToolPageLayout({ title, icon, currentIndex, children }: ToolPage
             </Link>
           ) : (
             <Link href={TOOLS[0].href} className="group flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-all whitespace-nowrap">
-              <span>CropIQ টুলস</span>
+              <span>CropIQ টিনস</span>
               <ChevronRight className="w-3.5 h-3.5 shrink-0 group-hover:translate-x-0.5 transition-transform" />
             </Link>
           )}
         </div>
       </div>
 
-      {/* ── Content ── */}
-      <div className="flex-1 overflow-hidden px-4 md:px-6 py-5 md:py-6 max-w-3xl mx-auto w-full">
+      {/* ── Content (WIDENED TO MAX-W-6XL FOR EXPANSIVE HORIZONTAL VIEW) ── */}
+      <div className="flex-1 overflow-hidden px-4 md:px-6 py-5 md:py-6 max-w-6xl mx-auto w-full">
         {children}
-
       </div>
     </div>
   )
