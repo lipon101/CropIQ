@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client"
 import { Microscope, MessageCircle, CloudSun, Bookmark, TrendingUp, ChevronRight, Sprout, Zap, Clock, ArrowRight, Loader2, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { formatDate } from "@/lib/utils"
+import { DISTRICTS } from "@/lib/constants/districts"
 
 interface ActivityItem {
   type: "scan" | "chat" | "advisory"
@@ -25,9 +26,37 @@ export default function DashboardPage() {
   const [stats, setStats] = useState({ scans: 0, chats: 0, advisories: 0, saved: 0 })
   const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [userDistrictBn, setUserDistrictBn] = useState("ঢাকা")
+  const [userTemp, setUserTemp] = useState("৩২")
 
   const fetchAll = async () => {
     if (!user) return
+    
+    // ── Load User Profile & Current Weather ──
+    let userDistrict = "Dhaka"
+    try {
+      const { data: profile } = await supabase.from("profiles").select("district").eq("id", user.id).maybeSingle()
+      if (profile?.district) {
+        userDistrict = profile.district
+      }
+    } catch (e) {
+      console.error("Failed to load profile for weather:", e)
+    }
+
+    const matchedDistrict = DISTRICTS.find(d => d.name_en === userDistrict)
+    setUserDistrictBn(matchedDistrict ? matchedDistrict.name_bn : "ঢাকা")
+
+    try {
+      const weatherRes = await fetch(`/api/weather?district=${encodeURIComponent(userDistrict)}`)
+      if (weatherRes.ok) {
+        const weatherData = await weatherRes.json()
+        const tempVal = Math.round(weatherData.current?.temp ?? 32).toString()
+        setUserTemp(tempVal)
+      }
+    } catch (e) {
+      console.error("Failed to fetch weather for dashboard:", e)
+    }
+
     // ── Real counts (parallel) ──
     const [scanR, chatR, advR, savedR] = await Promise.allSettled([
       supabase.from("disease_scans").select("*", { count: "exact", head: true }).eq("user_id", user.id),
@@ -135,7 +164,7 @@ export default function DashboardPage() {
   const statCards = [
     { icon: Microscope, iconBg: "bg-red-100 text-red-600", label: "রোগ স্ক্যান", value: stats.scans, href: "/tools/disease-detector" },
     { icon: MessageCircle, iconBg: "bg-blue-100 text-blue-600", label: "চ্যাট সেশন", value: stats.chats, href: "/tools/chatbot" },
-    { icon: CloudSun, iconBg: "bg-sky-100 text-sky-600", label: "আবহাওয়া পরামর্শ", value: stats.advisories, href: "/tools/weather-advisory" },
+    { icon: CloudSun, iconBg: "bg-sky-100 text-sky-600", label: `আবহাওয়া (${userDistrictBn})`, value: `${userTemp}°C`, href: "/tools/weather-advisory" },
     { icon: Bookmark, iconBg: "bg-amber-100 text-amber-600", label: "সংরক্ষিত", value: stats.saved, href: "/tools/disease-detector" },
   ]
 
