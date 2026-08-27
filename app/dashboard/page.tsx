@@ -50,9 +50,15 @@ export default function DashboardPage() {
     ])
 
     const items: ActivityItem[] = []
-    if (scans.status === "fulfilled" && scans.value.data) items.push(...scans.value.data.map((s: any) => ({ type: "scan" as const, ...s })))
-    if (chats.status === "fulfilled" && chats.value.data) items.push(...chats.value.data.map((c: any) => ({ type: "chat" as const, ...c })))
-    if (advisories.status === "fulfilled" && advisories.value.data) items.push(...advisories.value.data.map((a: any) => ({ type: "advisory" as const, ...a })))
+    if (scans.status === "fulfilled" && scans.value.data) {
+      items.push(...scans.value.data.map((s: any) => ({ type: "scan" as const, ...s })))
+    }
+    if (chats.status === "fulfilled" && chats.value.data) {
+      items.push(...chats.value.data.map((c: any) => ({ type: "chat" as const, ...c })))
+    }
+    if (advisories.status === "fulfilled" && advisories.value.data) {
+      items.push(...advisories.value.data.map((a: any) => ({ type: "advisory" as const, ...a })))
+    }
 
     items.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     setRecentActivity(items.slice(0, 15))
@@ -141,7 +147,7 @@ export default function DashboardPage() {
             <div>
               <div className="flex items-center gap-2 mb-1"><Sprout className="w-7 h-7 bg-white/15 rounded-lg flex items-center justify-center backdrop-blur-sm p-1" /><span className="text-emerald-200 text-xs font-bold uppercase tracking-wider">ড্যাশবোর্ড</span></div>
               <h1 className="text-xl md:text-2xl font-extrabold">স্বাগতম, {user?.email?.split("@")[0] || "কৃষক"}! 👋</h1>
-              <p className="text-emerald-200 mt-1 text-sm">আপনার স্মার্ট কৃষি ড্যাশবোর্ড</p>
+              <p className="text-emerald-200 mt-1 text-sm">আপনার SMART কৃষি ড্যাশবোর্ড</p>
             </div>
             <Link href="/tools/disease-detector" className="inline-flex items-center gap-2 bg-white/15 hover:bg-white/25 backdrop-blur-sm text-white font-bold px-5 py-2.5 rounded-2xl transition-all border border-white/20 text-sm">
               <Microscope className="w-4 h-4" />নতুন স্ক্যান <ArrowRight className="w-4 h-4" />
@@ -224,10 +230,10 @@ export default function DashboardPage() {
                     const { icon: Icon, bg } = activityIcon(item)
                     const { title, badge, badgeClass } = activityText(item)
                     const linkHref = item.type === "scan" 
-                      ? "/tools/disease-detector" 
+                      ? `/tools/disease-detector?id=${item.id}` 
                       : item.type === "chat" 
-                        ? "/tools/chatbot" 
-                        : "/tools/weather-advisory"
+                        ? `/tools/chatbot?id=${item.id}` 
+                        : `/tools/weather-advisory?district=${encodeURIComponent(item.district || "")}&crop=${encodeURIComponent(item.crop || "")}`
                     return (
                       <div key={`${item.type}_${item.id}`} className="flex items-center gap-3 p-3 bg-gray-50/70 rounded-xl hover:bg-gray-100/70 transition-colors group">
                         <Link href={linkHref} className="flex items-center gap-3 flex-1 min-w-0">

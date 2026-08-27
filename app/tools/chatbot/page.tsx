@@ -6,12 +6,15 @@ import { ToolPageLayout, TOOLS } from "@/components/tools/ToolPageLayout"
 import { useAuth } from "@/lib/auth/AuthContext"
 import SuggestionCarousel from "@/components/ui/SuggestionCarousel"
 import { createClient } from "@/lib/supabase/client"
+import { useSearchParams } from "next/navigation"
+import React from "react"
 
 interface ChatMessage { role: "user" | "assistant"; content: string }
 
-export default function ChatbotPage() {
+function ChatbotInner() {
   const { user } = useAuth()
   const supabase = createClient()
+  const searchParams = useSearchParams()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
@@ -84,19 +87,45 @@ export default function ChatbotPage() {
     }
   }
 
-
-  
-function renderMessage(text: string) {
-  const parts = text.split(/(\*\*[^*]+\*\*)/g)
-  return parts.map((part, i) => {
-    if (part.startsWith("**") && part.endsWith("**")) {
-      return <strong key={i}>{part.slice(2, -2)}</strong>
+  // ── Retrieve previous chat session detail from ID dynamically ──
+  useEffect(() => {
+    if (!user) return
+    const idParam = searchParams.get("id")
+    if (idParam && messages.length === 0 && !loading) {
+      const loadPastChat = async () => {
+        try {
+          const { data, error } = await supabase
+            .from("chat_sessions")
+            .select("question, answer")
+            .eq("id", idParam)
+            .single()
+          if (data && data.answer && !error) {
+            setMessages([
+              { role: "user", content: data.question },
+              { role: "assistant", content: data.answer }
+            ])
+          }
+        } catch (e) {
+          console.error("Error loading chat:", e)
+        }
+      }
+      loadPastChat()
     }
-    return part
-  })
-}
+  }, [user, searchParams])
 
-return (
+  function renderMessage(text: string) {
+    const parts = text.split(/(\*\*?[^*]+\*\*?)/g)
+    return parts.map((part, i) => {
+      if (part.startsWith("**") && part.endsWith("**")) {
+        return <strong key={i} className="font-extrabold text-leaf-950">{part.slice(2, -2)}</strong>
+      } else if (part.startsWith("*") && part.endsWith("*")) {
+        return <em key={i} className="font-semibold">{part.slice(1, -1)}</em>
+      }
+      return part
+    })
+  }
+
+  return (
     <ToolPageLayout title="কৃষি চ্যাটবট" icon={<MessageCircle className="w-4 h-4 text-white" />} currentIndex={2}>
       <div className="flex flex-col flex-1 min-h-0 overflow-hidden pt-2">
 
@@ -163,5 +192,18 @@ return (
         </form>
       </div>
     </ToolPageLayout>
+  )
+}
+
+export default function ChatbotPage() {
+  return (
+    <React.Suspense fallback={
+      <div className="flex flex-col items-center justify-center py-20 gap-3">
+        <Loader2 className="w-8 h-8 text-leaf-500 animate-spin" />
+        <p className="text-sm text-gray-400">অপেক্ষা করুন...</p>
+      </div>
+    }>
+      <ChatbotInner />
+    </React.Suspense>
   )
 }

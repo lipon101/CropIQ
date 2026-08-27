@@ -28,59 +28,82 @@ export async function POST(req: NextRequest) {
   "prevention_bn": "বাংলায় প্রতিরোধের উপায়। সহজ ও কাজের কথা। যেমন: 'জমিতে পানি জমতে দেবেন না, ফসল কাটার পর নাড়া পুড়িয়ে ফেলবেন।'"
 }`
 
-    const body = {
-      model: "google/gemini-2.0-flash-001",
-      messages: [
-        { role: "system", content: prompt },
-        { role: "user", content: [
-          { type: "image_url", image_url: { url: `data:${file.type || "image/jpeg"};base64,${base64}` } },
-          { type: "text", text: "ফসলের রোগ সনাক্ত করো। সহজ বাংলায় চিকিৎসা বলো। শুধু JSON দাও।" },
-        ]},
-      ],
-      max_tokens: 600,
-      temperature: 0.2,
-    }
+    // Models ordered by quality, fallback availability, and free availability on OpenRouter.
+    // 1. "google/gemini-2.5-flash" - Excellent multi-lingual Bengali OCR capability, fast and free-tier supported.
+    // 2. "qwen/qwen3.8-flash" - Very strong multimodal OCR & structured JSON capabilities from Alibaba, fully active on free-tier.
+    const modelsToTry = [
+      "google/gemini-2.5-flash",
+      "qwen/qwen3.8-flash"
+    ]
 
-    // 🔄 Key rotation
     let lastError = ""
-    for (let i = 0; i < keys.length; i++) {
-      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${keys[i]}`,
-          "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
-          "X-Title": "CropIQ",
-        },
-        body: JSON.stringify(body),
-      })
 
-      if (response.status === 429) {
-        console.warn(`⚠️ Disease-detect: key #${i + 1} rate limited, rotating...`)
-        continue
+    // Loop through each model in order
+    for (const model of modelsToTry) {
+      const body = {
+        model: model,
+        messages: [
+          { role: "system", content: prompt },
+          { role: "user", content: [
+            { type: "image_url", image_url: { url: `data:${file.type || "image/jpeg"};base64,${base64}` } },
+            { type: "text", text: "ফসলের রোগ সনাক্ত করো। সহজ বাংলায় চিকিৎসা বলো। শুধু JSON দাও।" },
+          ]},
+        ],
+        max_tokens: 600,
+        temperature: 0.2,
       }
 
-      if (response.ok) {
-        const data = await response.json()
-        const content = data.choices?.[0]?.message?.content || ""
+      // Key rotation loop inside each model attempt
+      for (let i = 0; i < keys.length; i++) {
+        try {
+          const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${keys[i]}`,
+              "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+              "X-Title": "CropIQ",
+            },
+            body: JSON.stringify(body),
+          })
 
-        // 🔒 Safety block detection
-        const isSafetyBlocked = /(safety|unauthorized|harmful|dangerous|medical advice)/i.test(content) && !content.includes("{")
-        if (isSafetyBlocked) {
-          return NextResponse.json({ error: "ছবি বিশ্লেষণ করা যায়নি। আরও পরিষ্কার ও ভালো আলোতে তোলা ফসলের ছবি ব্যবহার করুন।" }, { status: 422 })
-        }
-
-        let result: any
-        const jsonMatch = content.match(/\{[\s\S]*\}/)
-        if (jsonMatch) {
-          try { result = JSON.parse(jsonMatch[0]) } catch {
-            result = { crop_type: "অজানা", disease_name: "বিশ্লেষণ অসম্পূর্ণ", confidence: 0, cause: "", remedy_bn: "বিশ্লেষণ ব্যর্থ — আবার চেষ্টা করুন", prevention_bn: "" }
+          if (response.status === 429) {
+            console.warn(`⚠️ Disease-detect: model ${model} - key #${i + 1} rate limited, rotating keys...`)
+            continue
           }
-        } else {
-          result = { crop_type: "অজানা", disease_name: "নির্ণয় করা যায়নি", confidence: 0, cause: "", remedy_bn: "আরও পরিষ্কার ছবি দিয়ে আবার চেষ্টা করুন", prevention_bn: "" }
-        }
 
-        return NextResponse.json({ result })
+          if (response.ok) {
+            const data = await response.json()
+            const content = data.choices?.[0]?.message?.content || ""
+
+            // 🔒 Safety block detection
+            const isSafetyBlocked = /(safety|unauthorized|harmful|dangerous|medical advice)/i.test(content) && !content.includes("{")
+            if (isSafetyBlocked) {
+              return NextResponse.json({ error: "ছবি বিশ্লেষণ করা যায়নি। আরও পরিষ্কার ও ভালো আলোতে তোলা ফসলের ছবি ব্যবহার করুন।" }, { status: 422 })
+            }
+
+            let result: any
+            const jsonMatch = content.match(/\{[\s\S]*\}/)
+            if (jsonMatch) {
+              try {
+                result = JSON.parse(jsonMatch[0])
+              } catch {
+                result = { crop_type: "অজানা", disease_name: "বিশ্লেষণ অসম্পূর্ণ", confidence: 0, cause: "", remedy_bn: "বিশ্লেষণ ব্যর্থ — আবার চেষ্টা করুন", prevention_bn: "" }
+              }
+            } else {
+              result = { crop_type: "অজানা", disease_name: "নির্ণয় করা যায়নি", confidence: 0, cause: "", remedy_bn: "আরও পরিষ্কার ছবি দিয়ে আবার চেষ্টা করুন", prevention_bn: "" }
+            }
+
+            return NextResponse.json({ result })
+          } else {
+            const errText = await response.text()
+            console.warn(`⚠️ Model ${model} failed with status ${response.status} using key #${i + 1}:`, errText)
+            lastError = `Model ${model} returned ${response.status}`
+          }
+        } catch (fetchErr: any) {
+          console.error(`Fetch error with model ${model} and key #${i + 1}:`, fetchErr)
+          lastError = fetchErr.message || "Network error"
+        }
       }
     }
 
