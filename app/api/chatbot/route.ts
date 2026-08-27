@@ -212,24 +212,25 @@ export async function POST(req: NextRequest) {
     let reply = data?.choices?.[0]?.message?.content || "দুঃখিত, এখন উত্তর দিতে পারছি না। আবার চেষ্টা করুন।"
 
     // Strip OpenRouter safety prefix (e.g. "User Safety: safe") — case-insensitive, anywhere in text
-    reply = reply.replace(/user\\s*safety\\s*:\\s*(safe|unsafe)\\.?/gi, "").trim()
-    reply = reply.replace(/_{2,}|~{2,}|#{1,6}\\s*/g, "").trim()
-    reply = reply.replace(/---+/g, "\\n\\n").trim()
-    reply = reply.replace(/\\n{3,}/g, "\\n\\n").trim()
+    reply = reply.replace(/user\s*safety\s*:\s*(safe|unsafe)\.?/gi, "").trim()
+    reply = reply.replace(/response\s*safety\s*:\s*(safe|unsafe)\.?/gi, "").trim()
+    reply = reply.replace(/_{2,}|~{2,}|#{1,6}\s*/g, "").trim()
+    reply = reply.replace(/---+/g, "\n\n").trim()
+    reply = reply.replace(/\n{3,}/g, "\n\n").trim()
 
     // Strip Tamil and other non-Bengali Indic scripts (Devanagari, Tamil, Telugu, Kannada, Malayalam)
-    reply = reply.replace(/[\\u0900-\\u0963\\u0970-\\u097F\\u0B80-\\u0BFF\\u0C00-\\u0C7F\\u0C80-\\u0CFF\\u0D00-\\u0D7F]+/g, "").trim()
+    reply = reply.replace(/[\u0900-\u0963\u0970-\u097F\u0B80-\u0BFF\u0C00-\u0C7F\u0C80-\u0CFF\u0D00-\u0D7F]+/g, "").trim()
 
     // Remove stray English letters/digits left inside parentheses, e.g. "(P)" "(NPK)"
-    reply = reply.replace(/[\\(（]\\s*[A-Za-z0-9\\s,]+\\s*[\\)）]/g, "").trim()
+    reply = reply.replace(/[\(（]\s*[A-Za-z0-9\s,]+\s*[\)）]/g, "").trim()
     // Remove now-empty parentheses left behind after cleanup
-    reply = reply.replace(/[\\(（]\\s*[\\)）]/g, "").trim()
+    reply = reply.replace(/[\(（]\s*[\)）]/g, "").trim()
     // Collapse extra spaces created by removals and fix spacing before punctuation
-    reply = reply.replace(/[ \\t]{2,}/g, " ").trim()
-    reply = reply.replace(/\\s+([।,])/g, "$1")
+    reply = reply.replace(/[ \t]{2,}/g, " ").trim()
+    reply = reply.replace(/\s+([।,])/g, "$1")
 
     // Ensure line breaks before numbered points for readability
-    reply = reply.replace(/([।:])\\s*([\\p{Nd}]+[\\.\\)])/gu, "$1\\n\\n$2")
+    reply = reply.replace(/([।:])\s*([\p{Nd}]+[\.\)])/gu, "$1\n\n$2")
     if (!reply) reply = "দুঃখিত, এখন উত্তর দিতে পারছি না। আবার চেষ্টা করুন।"
 
     if (isSystemPromptLeak(reply)) {
