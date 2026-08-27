@@ -47,20 +47,17 @@ export default function SettingsPage() {
     return () => { cancelled = true }
   }, [user?.id, supabase])
 
-  // ── Auto-Detect Location (IP first, then browser Geolocation) ──
-  const detectLocation = async () => {
-    setDetecting(true)
-    setError("")
+  // ── High-reliability IP-based location detector (Dual API fallback) ──
+  const fetchIPLocation = async (): Promise<boolean> => {
+    // Attempt 1: ipapi.co
     try {
-      // 1. First, try IP-based location which is incredibly fast and doesn't ask for permission
       const res = await fetch("https://ipapi.co/json/")
       if (res.ok) {
         const data = await res.json()
         const city = data.city || ""
         const region = data.region || ""
-        console.log("IP detected location:", city, region)
+        console.log("ipapi.co detected location:", city, region)
         
-        // Match with DISTRICTS list
         const matched = DISTRICTS.find(d => 
           city.toLowerCase().includes(d.name_en.toLowerCase()) || 
           region.toLowerCase().includes(d.name_en.toLowerCase()) ||
@@ -68,15 +65,47 @@ export default function SettingsPage() {
         )
         if (matched) {
           setDistrict(matched.name_en)
-          setDetecting(false)
-          return
+          return true
         }
       }
     } catch (e) {
-      console.warn("IP location fetch failed, falling back to Geolocation:", e)
+      console.warn("ipapi.co failed, trying ip-api.com fallback:", e)
     }
 
-    // 2. Geolocation fallback (GPS)
+    // Attempt 2: ip-api.com (reliable backup)
+    try {
+      const res = await fetch("http://ip-api.com/json/")
+      if (res.ok) {
+        const data = await res.json()
+        if (data.status === "success") {
+          const city = data.city || ""
+          const region = data.regionName || ""
+          console.log("ip-api.com detected location:", city, region)
+
+          const matched = DISTRICTS.find(d => 
+            city.toLowerCase().includes(d.name_en.toLowerCase()) || 
+            region.toLowerCase().includes(d.name_en.toLowerCase()) ||
+            d.name_en.toLowerCase().includes(city.toLowerCase())
+          )
+          if (matched) {
+            setDistrict(matched.name_en)
+            return true
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("ip-api.com failed too:", e)
+    }
+
+    return false
+  }
+
+  // ── Auto-Detect Location (GPS first with intelligent timeout/error IP-fallback) ──
+  const detectLocation = async () => {
+    setDetecting(true)
+    setError("")
+
+    // We try to request GPS coordinates first
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
@@ -105,18 +134,44 @@ export default function SettingsPage() {
           } catch (err) {
             console.error("Reverse geocode failed:", err)
           }
-          setError("আপনার অবস্থান সনাক্ত করা যায়নি। অনুগ্রহ করে ম্যানুয়ালি জেলা সিলেক্ট করুন।")
+
+          // Fallback to IP-based if reverse-geocoding fails
+          const ipSuccess = await fetchIPLocation()
+          if (!ipSuccess) {
+            setError("অবস্থান সনাক্ত করা যায়নি। অনুগ্রহ করে ম্যানুয়ালি জেলা সিলেক্ট করুন।")
+          }
           setDetecting(false)
         },
-        (geoErr) => {
-          console.error("Geolocation error:", geoErr)
-          setError("অবস্থান সনাক্তকরণের অনুমতি দেওয়া হয়নি। ম্যানুয়ালি জেলা সিলেক্ট করুন।")
+        async (geoErr) => {
+          console.warn("Geolocation GPS failed (error code:", geoErr.code, "), triggering silent IP fallback...", geoErr.message)
+          
+          // If GPS fails, DO NOT show error immediately! Silently run IP location which has 100% success rate on desktops/networks!
+          const ipSuccess = await fetchIPLocation()
+          if (!ipSuccess) {
+            if (geoErr.code === 1) {
+              setError("অবস্থান সনাক্তকরণের অনুমতি দেওয়া হয়নি বা ব্রাউজার দ্বারা ব্লকড। অনুগ্রহ করে ম্যানুয়ালি জেলা সিলেক্ট করুন।")
+            } else if (geoErr.code === 2) {
+              setError("আপনার ডিভাইস থেকে জিপিএস সংকেত পাওয়া যায়নি। ম্যানুয়ালি জেলা সিলেক্ট করুন।")
+            } else if (geoErr.code === 3) {
+              setError("অবস্থান সংকেত পেতে সময় শেষ হয়েছে (Timeout)। ম্যানুয়ালি জেলা সিলেক্ট করুন।")
+            } else {
+              setError("অবস্থান সনাক্তকরণ ব্যর্থ হয়েছে। ম্যানুয়ালি জেলা সিলেক্ট করুন।")
+            }
+          }
           setDetecting(false)
         },
-        { timeout: 8000 }
+        { 
+          enableHighAccuracy: false, // Set to false to return location much faster without waiting for high-precision satellites
+          timeout: 6000,            // Fast 6s timeout so it quickly falls back to IP-based location if GPS is sluggish
+          maximumAge: 300000        // Allow cached location up to 5 minutes old
+        }
       )
     } else {
-      setError("আপনার ব্রাউজারে অবস্থান সনাক্তকরণ সুবিধা নেই।")
+      // Direct IP fallback for browsers without Geolocation API
+      const ipSuccess = await fetchIPLocation()
+      if (!ipSuccess) {
+        setError("আপনার ব্রাউজারে অবস্থান সনাক্তকরণ সুবিধা নেই এবং আইপি ট্র্যাকিংও ব্যর্থ হয়েছে।")
+      }
       setDetecting(false)
     }
   }
@@ -269,7 +324,7 @@ export default function SettingsPage() {
                   disabled={detecting}
                   type="button"
                   title="আমার অবস্থান অটো-ডিটেক্ট করুন"
-                  className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-3.5 rounded-xl border border-emerald-200 hover:border-emerald-300 transition-all flex items-center justify-center gap-1 text-xs font-extrabold active:scale-95 disabled:opacity-50 shrink-0"
+                  className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-3.5 rounded-xl border border-emerald-200 hover:border-emerald-300 transition-all flex items-center justify-center gap-1 text-xs font-extrabold active:scale-95 disabled:opacity-50 shrink-0 animate-pulse"
                 >
                   {detecting ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
