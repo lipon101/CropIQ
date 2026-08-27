@@ -6,8 +6,8 @@ import { getSeasonalOutlook } from "@/lib/seasonal"
 
 const weatherDescBn: Record<string, string> = {
   "light rain": "হালকা বৃষ্টি", "moderate rain": "মাঝারি বৃষ্টি", "heavy intensity rain": "ভারী বৃষ্টি",
-  "very heavy rain": "অতি ভারী বৃষ্টি", "overcast clouds": "মেঘলা", "scattered clouds": "আংশিক মেঘলা",
-  "few clouds": "সামান্য মেঘ", "clear sky": "পরিষ্কার আকাশ", "broken clouds": "ভাঙা মেঘ",
+  "very heavy rain": "অতি ভারী বৃষ্টি", "overcast clouds": "মেঘলা আকাশ", "scattered clouds": "আংশিক মেঘলা",
+  "few clouds": "হালকা মেঘলা", "clear sky": "পরিষ্কার আকাশ", "broken clouds": "আংশিক মেঘলা",
   "thunderstorm": "বজ্রসহ বৃষ্টি", "drizzle": "গুঁড়ি গুঁড়ি বৃষ্টি", "mist": "কুয়াশা",
   "haze": "ধোঁয়াশা", "fog": "ঘন কুয়াশা", "smoke": "ধোঁয়া",
 }
