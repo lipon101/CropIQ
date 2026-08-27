@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useAuth } from "@/lib/auth/AuthContext"
 import { createClient } from "@/lib/supabase/client"
-import { Microscope, MessageCircle, CloudSun, Bookmark, TrendingUp, ChevronRight, Sprout, Zap, Clock, ArrowRight, Loader2, Trash2 } from "lucide-react"
+import { Microscope, MessageCircle, CloudSun, Bookmark, TrendingUp, ChevronRight, Sprout, Zap, Clock, ArrowRight, Loader2, Trash2, AlertTriangle, X } from "lucide-react"
 import Link from "next/link"
 import { formatDate } from "@/lib/utils"
 import { DISTRICTS } from "@/lib/constants/districts"
@@ -12,11 +12,8 @@ interface ActivityItem {
   type: "scan" | "chat" | "advisory"
   id: string
   created_at: string
-  // scan fields
   crop_type?: string; disease_name?: string; confidence?: number
-  // chat fields
   question?: string
-  // advisory fields
   district?: string; crop?: string
 }
 
@@ -29,10 +26,13 @@ export default function DashboardPage() {
   const [userDistrictBn, setUserDistrictBn] = useState("ঢাকা")
   const [userTemp, setUserTemp] = useState("৩২")
 
+  // Custom modern delete modal states
+  const [deleteTarget, setDeleteTarget] = useState<ActivityItem | null>(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
+
   const fetchAll = async () => {
     if (!user) return
     
-    // ── Load User Profile & Current Weather ──
     let userDistrict = "Dhaka"
     try {
       const { data: profile } = await supabase.from("profiles").select("district").eq("id", user.id).maybeSingle()
@@ -57,7 +57,6 @@ export default function DashboardPage() {
       console.error("Failed to fetch weather for dashboard:", e)
     }
 
-    // ── Real counts (parallel) ──
     const [scanR, chatR, advR, savedR] = await Promise.allSettled([
       supabase.from("disease_scans").select("*", { count: "exact", head: true }).eq("user_id", user.id),
       supabase.from("chat_sessions").select("*", { count: "exact", head: true }).eq("user_id", user.id),
@@ -65,17 +64,14 @@ export default function DashboardPage() {
       supabase.from("saved_items").select("*", { count: "exact", head: true }).eq("user_id", user.id),
     ])
     
-    // Fallback: If saved_items table doesn't have custom bookmarks, let it equal the count of disease_scans that are high confidence (>90%)
     let savedCount = 0
     if (savedR.status === "fulfilled" && savedR.value.count !== null && savedR.value.count > 0) {
       savedCount = savedR.value.count
     } else {
-      // Dynamic fallback to show high-confidence disease scans as "saved/সংরক্ষিত" items
       const { count } = await supabase.from("disease_scans").select("*", { count: "exact", head: true }).eq("user_id", user.id).gte("confidence", 0.9)
       savedCount = count ?? 0
     }
 
-    // Direct check: query weather advisories count securely and directly. If it is 0, we can securely set it to at least 1 if recent queries exist.
     let advisoriesCount = advR.status === "fulfilled" ? (advR.value.count ?? 0) : 0
     if (advisoriesCount === 0) {
       const { data: recentAdvs } = await supabase.from("weather_advisories").select("id").eq("user_id", user.id).limit(10)
@@ -91,7 +87,6 @@ export default function DashboardPage() {
       saved: savedCount,
     })
 
-    // ── Unified recent activity ──
     const [scans, chats, advisories] = await Promise.allSettled([
       supabase.from("disease_scans").select("id,crop_type,disease_name,confidence,created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(5),
       supabase.from("chat_sessions").select("id,question,created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(5),
@@ -110,7 +105,6 @@ export default function DashboardPage() {
     }
 
     items.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-    // LIMIT TO EXACTLY THE LAST 5 RECENT ACTIVITIES
     setRecentActivity(items.slice(0, 5))
     setLoading(false)
   }
@@ -120,13 +114,15 @@ export default function DashboardPage() {
     fetchAll().catch(() => setLoading(false))
   }, [user])
 
-  // ── Delete activity item ──
-  const deleteActivity = async (item: ActivityItem) => {
-    if (!user) return
-    const label = item.type === "scan" ? "স্ক্যান" : item.type === "chat" ? "চ্যাট" : "পরামর্শ"
-    if (!confirm(`এই ${label} রেকর্ড ডিলিট করতে চান?`)) return
+  const initiateDelete = (item: ActivityItem) => {
+    setDeleteTarget(item)
+  }
 
-    // Animate out
+  const confirmDelete = async () => {
+    if (!user || !deleteTarget) return
+    const item = deleteTarget
+    setDeleteLoading(true)
+
     setRecentActivity(prev => prev.filter(a => !(a.type === item.type && a.id === item.id)))
 
     try {
@@ -142,22 +138,23 @@ export default function DashboardPage() {
 
       if (error || !data || data.length === 0) {
         if (error) console.error("Dashboard delete failed:", error)
-        else console.warn("Dashboard delete: no rows deleted (RLS?)")
         setLoading(true)
         fetchAll()
         return
       }
 
-      // Update stats
       setStats(prev => ({
         ...prev,
         scans: item.type === "scan" ? prev.scans - 1 : prev.scans,
         chats: item.type === "chat" ? prev.chats - 1 : prev.chats,
         advisories: item.type === "advisory" ? prev.advisories - 1 : prev.advisories,
       }))
-    } catch {
-      // Re-fetch on unexpected error
+    } catch (e) {
+      console.error(e)
       fetchAll()
+    } finally {
+      setDeleteTarget(null)
+      setDeleteLoading(false)
     }
   }
 
@@ -188,7 +185,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div>
+    <div className="relative">
       {/* Hero */}
       <div className="bg-gradient-to-r from-leaf-600 via-leaf-700 to-emerald-800 text-white relative overflow-hidden">
         <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(circle_at_30%_50%,white_0%,transparent_60%)]" />
@@ -207,7 +204,6 @@ export default function DashboardPage() {
       </div>
 
       <div className="container-cropiq py-5 md:py-6">
-        {/* Stat cards — REAL counts from Supabase */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
           {statCards.map((s, i) => (
             <Link key={i} href={s.href} className="card-hover group p-4">
@@ -244,7 +240,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Recent Activity — FEED from all tools */}
+          {/* Recent Activity */}
           <div className="lg:col-span-2">
             <div className="card-default h-full flex flex-col min-h-[400px]">
               <div className="flex items-center gap-2 mb-4">
@@ -299,7 +295,7 @@ export default function DashboardPage() {
                           )}
                         </Link>
                         <button
-                          onClick={(e) => { e.preventDefault(); deleteActivity(item) }}
+                          onClick={(e) => { e.preventDefault(); initiateDelete(item) }}
                           className="shrink-0 p-1.5 rounded-lg hover:bg-red-50 text-gray-300 hover:text-red-400 transition-all "
                           title="ডিলিট"
                         >
@@ -314,6 +310,69 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Modern Premium Confirmation Modal */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-x-hidden overflow-y-auto animate-in fade-in duration-200">
+          <div 
+            className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" 
+            onClick={() => { if (!deleteLoading) setDeleteTarget(null) }}
+          />
+          
+          <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-gray-100 p-6 flex flex-col transform transition-all scale-in duration-300">
+            <button
+              onClick={() => setDeleteTarget(null)}
+              disabled={deleteLoading}
+              className="absolute top-4 right-4 p-1.5 rounded-xl hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-all"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="flex items-start gap-4 mb-4 mt-2">
+              <div className="w-11 h-11 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-5 h-5 text-red-500 animate-pulse" />
+              </div>
+              <div>
+                <h3 className="text-md font-extrabold text-gray-900">রেকর্ড মুছে ফেলতে চান?</h3>
+                <p className="text-xs text-gray-500 mt-1 font-semibold leading-relaxed">
+                  আপনি কি নিশ্চিতভাবে এই রেকর্ডটি চিরতরে মুছে ফেলতে চান? একবার মুছে ফেললে এই ডাটা পুনরুদ্ধার করা সম্ভব হবে না।
+                </p>
+              </div>
+            </div>
+
+            <div className="px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl mb-5 flex items-center gap-3">
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${activityIcon(deleteTarget).bg}`}>
+                <div className="text-current"><Sprout className="w-4 h-4" /></div>
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-gray-700 truncate">{activityText(deleteTarget).title}</p>
+                <p className="text-[10px] text-gray-400 font-semibold mt-0.5">{formatDate(deleteTarget.created_at)}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 justify-end">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                disabled={deleteLoading}
+                className="px-4 py-2.5 rounded-2xl border border-gray-150 text-xs font-extrabold text-gray-600 hover:bg-gray-50 transition-all active:scale-95 disabled:opacity-40"
+              >
+                বাতিল
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={deleteLoading}
+                className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 hover:shadow-lg hover:shadow-red-100 text-white text-xs font-extrabold flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-60"
+              >
+                {deleteLoading ? (
+                  <><Loader2 className="w-3.5 h-3.5 animate-spin" />মুছে ফেলা হচ্ছে...</>
+                ) : (
+                  <><Trash2 className="w-3.5 h-3.5" />মুছে ফেলুন</>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )} 
     </div>
   )
 }
