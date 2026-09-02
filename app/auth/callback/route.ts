@@ -1,4 +1,17 @@
 import { NextResponse } from "next/server"
+function parseCookies(cookieHeader: string) {
+  return cookieHeader
+    .split(";")
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .map((part) => {
+      const idx = part.indexOf("=")
+      const name = part.slice(0, idx)
+      const value = part.slice(idx + 1)
+      return { name, value }
+    })
+}
+
 import { createServerClient, type CookieOptions } from "@supabase/ssr"
 
 export async function GET(request: Request) {
@@ -15,7 +28,7 @@ export async function GET(request: Request) {
       {
         cookies: {
           getAll() {
-            return request.cookies.getAll()
+            return parseCookies(request.headers.get("cookie") ?? "")
           },
           setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
             cookiesToSet.forEach(({ name, value, options }) => {
