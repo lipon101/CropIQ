@@ -160,7 +160,7 @@ export async function POST(req: NextRequest) {
             "X-Title": "CropIQ",
           },
           body: JSON.stringify({
-            model: "google/gemini-2.0-flash-001",
+            model: "google/gemma-4-31b-it:free",
             messages: [
               { role: "system", content: ADVISORY_PROMPT },
               { role: "user", content: `জেলা: ${district}\nফসল: ${cropBn}\nআগামী ৭ দিনের আবহাওয়া:\n${forecastText}\n\nউপরে দেয়া তথ্যের ভিত্তিতে কৃষককে করণীয় পরামর্শ দাও। শুধু JSON দাও।` },
