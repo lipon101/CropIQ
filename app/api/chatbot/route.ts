@@ -25,6 +25,8 @@ const CHATBOT_SYSTEM_PROMPT = `আসসালামু আলাইকুম �
 ৩. কোনো ইংরেজি হরফ, রাসায়নিক সংকেত বা বন্ধনীর ভেতরে কোনো ইংরেজি অক্ষর লিখবে না (যেমন: "ফসফরাস (P)" লেখা যাবে না, শুধু "ফসফরাস" লিখবে)।
 ৪. কখনো খালি বন্ধনী () লিখবে না। কোনো ধরনের ব্র্যাকেট বা ইংরেজি সংক্ষিপ্ত রূপ ব্যবহার করবে না।
 ৫. মার্কডাউন ফরম্যাট দেবে না - ** বা --- বা ### বা ## - কিছুই না। শুধু সরল বাংলা টেক্সট।
+৬. তোমার ভেতরের চিন্তা, বিশ্লেষণ বা যুক্তি (chain-of-thought / reasoning) কখনোই ইউজারকে দেখাবে না। "Okay, the user is asking…", "Let me recall…" বা এই ধরনের কোনো ইংরেজি ভাবনা-চিন্তা বা যুক্তি-পর্যায় লিখবে না। সরাসরি শুধু চূড়ান্ত বাংলা উত্তরটাই দেবে - মাঝখানের কোনো চিন্তা প্রসেস, সিদ্ধান্ত বা ব্যাখ্যা নয়।
+৭. উত্তরে সম্পূর্ণ ১০০% বিশুদ্ধ বাংলা লিখবে। কোনো ইংরেজি শব্দ, ইংরেজি অক্ষর বা বাংলা-ইংরেজি মিশ্রণ একদমই নয় - not, tolerant, best, variety, submergence, election, trust এই ধরনের কোনো ইংরেজি শব্দের টুকরোও উত্তরে আসবে না।
 ৬. শেষে ৩টি সম্পর্কিত প্রশ্ন সুপারিশ করবে।
 
 উত্তরের শেষে ৩টি প্রকৃত ও প্রাসঙ্গিক প্রশ্ন দেবে এই ফরম্যাটে (নিচের প্রশ্নগুলো উদাহরণ — এগুলো হুবহু কপি করবে না, বরং ব্যবহারকারীর বিষয়ের সাথে মিলিয়ে ৩টি নতুন বাস্তব প্রশ্ন বানিয়ে লিখবে):
@@ -145,6 +147,40 @@ function isJailbreakAttempt(text: string): boolean {
   return false
 }
 
+// ─── Strip leaked chain-of-thought / thinking monologue ───
+// Reasoning models (Gemma etc.) sometimes emit an internal "Okay, the user is
+// asking…" monologue BEFORE the real answer. Remove any leading English
+// thinking block and any trailing English prose so only Bengali remains.
+function stripReasoning(raw: string): string {
+  let s = raw.trim()
+  if (!s) return s
+
+  const lines = s.split("\n")
+  // Find the first line that contains actual Bengali script
+  const bengaliIdx = lines.findIndex((l) => /[\u0980-\u09FF]/.test(l))
+
+  // If there is a block of English BEFORE the first Bengali line, and that
+  // block looks like internal reasoning (mentions "the user", "let me", etc.),
+  // drop the whole leading block.
+  if (bengaliIdx > 0) {
+    const leading = lines.slice(0, bengaliIdx).join(" ").trim()
+    const looksLikeReasoning =
+      leading.length > 15 &&
+      /[a-zA-Z]{3,}/.test(leading) &&
+      /(okay|so\b|let me|first|i need|i should|i remember|the user|i recall|structur|answer|recall|check|guideline|rule|thinking)/i.test(leading)
+    if (looksLikeReasoning) {
+      s = lines.slice(bengaliIdx).join("\n")
+    }
+  }
+
+  // Strip a trailing English "let me answer / respond in Bengali" style tail
+  s = s
+    .replace(/\n*(okay|ok|so|now|alright)[\s,]+(the user|i|let me|to answer|to respond)[\s\S]{10,}$/gi, "")
+    .trim()
+
+  return s.trim()
+}
+
 function isSystemPromptLeak(reply: string): boolean {
   if (reply.includes("তুমি কৃষি বন্ধু") || reply.includes("system prompt") || reply.includes("CHATBOT_SYSTEM_PROMPT")) return true
   const markers = ["কঠোর নিরাপত্তা নিয়ম", "কৃষকের জন্য একজন অভিজ্ঞ", "বলার নিয়ম:", "তোমার ভাষা হবে", "শহুরে অফিসার নও"]
@@ -198,6 +234,8 @@ export async function POST(req: NextRequest) {
     }
 
     let reply = data?.choices?.[0]?.message?.content || "দুঃখিত, এখন উত্তর দিতে পারছি না। আবার চেষ্টা করুন।"
+    // Strip any leaked chain-of-thought / reasoning monologue before cleanup
+    reply = stripReasoning(reply)
 
     // Clean safety prefixes
     reply = reply.replace(/user\s*safety\s*:\s*(safe|unsafe)\.?/gi, "").trim()
@@ -212,6 +250,14 @@ export async function POST(req: NextRequest) {
     // Remove stray English letters/digits left inside parentheses
     reply = reply.replace(/[\(（]\s*[A-Za-z0-9\s,]+\s*[\)）]/g, "").trim()
     reply = reply.replace(/[\(（]\s*[\)）]/g, "").trim()
+    // ─── Bengali purity filter: remove stray English words that leaked ───
+    // If a reply is mostly Bengali but contains isolated English words (e.g.
+    // "tolerant", "election", "trust"), drop those English tokens so the output
+    // stays 100% Bengali. We preserve BRRI-style variety codes (BRRI dhan71)
+    // and units by keeping short-safe tokens, but nuke obvious English prose.
+    reply = reply.replace(/\b(?:tolerant|election|trust|transplanted|harvested|submergence|salinity|high\s*[-]?\s*yielding|blast|susceptible|resistant|resistance|moderate|medium|yield|variety|varieties|season|normal|stress|advice|wait|check|verify|giving|answer|recall|remember|structure|depend|depends|location|region|flood|risk|areas?|soil|question|user|farmer|guidelines?|rule|rules|fictional|unrealistic|general|example|point|points|important|note|also|actually|specifically|currently|recommended|popular|release|released|older|newer|good|best|better|general)\b/gi, "")
+    reply = reply.replace(/[\t ]{2,}/g, " ").trim()
+reply = reply.replace(/^[\s\.\u200B-\u200D\uFEFF]+|[\s\.\u200B-\u200D\uFEFF]+$/g, "").trim()
     reply = reply.replace(/[ \t]{2,}/g, " ").trim()
     reply = reply.replace(/\s+([।,])/g, "$1")
 
