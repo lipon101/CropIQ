@@ -38,8 +38,8 @@ export async function POST(req: NextRequest) {
     // Models ordered by quality, fallback availability, and free availability on OpenRouter.
     // We strictly use temperature: 0.0 to prevent any non-deterministic output or variance.
     const modelsToTry = [
-      "google/gemma-4-26b-a4b-it:free",
-      "google/gemma-4-31b-it:free"
+      "google/gemini-2.5-flash",
+      "qwen/qwen3.8-flash"
     ]
 
     let lastError = ""
