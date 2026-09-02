@@ -17,11 +17,62 @@ export default function SignUpPage() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault(); setLoading(true); setError("")
+
+    const trimmedEmail = email.trim().toLowerCase()
+    const trimmedName = name.trim()
+
+    if (!trimmedName) { setError("আপনার পুরো নাম লিখুন"); setLoading(false); return }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) { setError("সঠিক ইমেইল অ্যাড্রেস লিখুন"); setLoading(false); return }
     if (password.length < 6) { setError("পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে"); setLoading(false); return }
-    const { error: err } = await supabase.auth.signUp({ email, password, options: { data: { full_name: name } } })
-    if (err) setError("রেজিস্ট্রেশন ব্যর্থ হয়েছে। আবার চেষ্টা করুন।")
-    else setSuccess(true)
-    setLoading(false)
+
+    try {
+      const { error: err } = await supabase.auth.signUp({
+        email: trimmedEmail,
+        password,
+        options: {
+          data: { full_name: trimmedName },
+          // Point the email-confirmation link back to the app so verification works end-to-end
+          emailRedirectTo: `${window.location.origin}/auth/signin`,
+        },
+      })
+
+      if (err) {
+        // ─── Map Supabase error to a clear Bengali message ───
+        const msg = (err.message || "").toLowerCase()
+        const code = (err as any)?.code || ""
+        if (
+          code === "user_already_exists" ||
+          /already registered|already been registered|already exists/i.test(msg)
+        ) {
+          setError("এই ইমেইলে ইতিমধ্যে একটি অ্যাকাউন্ট আছে। নিচের লগইন লিংক ব্যবহার করুন, অথবা আপনার ইমেইলে পাঠানো ভেরিফিকেশন লিংকটি খুলুন।")
+        } else if (/email.*(exist|taken|registered)|registered.*email/i.test(msg)) {
+          setError("এই ইমেইলটি ইতিমধ্যে ব্যবহার করা হয়েছে। লগইন করার চেষ্টা করুন অথবা ভুলে গেলে পাসওয়ার্ড রিসেট করুন।")
+        } else if (/password/i.test(msg) || code === "weak_password") {
+          setError("পাসওয়ার্ড আরও শক্তিশালী করুন — কমপক্ষে ৬ অক্ষর, বড় হাতের অক্ষর ও সংখ্যা ব্যবহার করুন।")
+        } else if (/rate limit|too many request|limit/i.test(msg)) {
+          setError("অনেকবার চেষ্টা করা হয়েছে। দয়া করে কয়েক মিনিট অপেক্ষা করে আবার চেষ্টা করুন।")
+        } else if (/network|fetch failed|timeout/i.test(msg)) {
+          setError("ইন্টারনেট সংযোগ সমস্যা হয়েছে। সংযোগ চেক করে আবার চেষ্টা করুন।")
+        } else if (/api key|invalid.*key|provide.*key/i.test(msg)) {
+          setError("সার্ভারে একটি কনফিগারেশন সমস্যা আছে। একটু পরে আবার চেষ্টা করুন।")
+        } else {
+          setError("রেজিস্ট্রেশন সম্পন্ন হয়নি, একটু পরে আবার চেষ্টা করুন।")
+        }
+        setLoading(false)
+        return
+      }
+
+      // ─── Success path ───
+      // If Supabase enabled "Confirm email", the user is created but unconfirmed.
+      // We still show a clear success + next-step screen (email check), which is the
+      // safe, correct behaviour for a working, secure signup flow.
+      setSuccess(true)
+      setLoading(false)
+    } catch (anyErr) {
+      // Unexpected runtime error (network drop, etc.) — never leave the user hanging
+      setError("রেজিস্ট্রেশন সম্পন্ন হয়নি। ইন্টারনেট সংযোগ চেক করে আবার চেষ্টা করুন।")
+      setLoading(false)
+    }
   }
 
   if (success) return (
@@ -29,7 +80,8 @@ export default function SignUpPage() {
       <div className="card-hover max-w-md w-full text-center space-y-5 p-10">
         <div className="w-16 h-16 mx-auto bg-gradient-to-br from-leaf-500 to-emerald-600 rounded-full flex items-center justify-center shadow-xl shadow-leaf-200/50"><CheckCircle className="w-8 h-8 text-white" /></div>
         <h1 className="text-xl font-extrabold text-gray-900">রেজিস্ট্রেশন সফল হয়েছে!</h1>
-        <p className="text-sm text-gray-500 leading-relaxed">আপনার ইমেইলে একটি ভেরিফিকেশন লিংক পাঠানো হয়েছে। দয়া করে ইমেইল চেক করুন।</p>
+        <p className="text-sm text-gray-500 leading-relaxed">আপনার ইমেইলে একটি ভেরিফিকেশন লিংক পাঠানো হয়েছে। ইমেইলটি খুলে লিংকে ক্লিক করলে অ্যাকাউন্ট সক্রিয় হবে।</p>
+        <p className="text-xs text-gray-400 leading-relaxed">ইমেইল না পেলে স্প্যাম/জাংক ফোল্ডার দেখুন, অথবা কয়েক মিনিট পর আবার দেখুন।</p>
         <Link href="/auth/signin" className="btn-primary inline-flex">লগইন পেজে যান <ArrowRight className="w-4 h-4" /></Link>
       </div>
     </div>
